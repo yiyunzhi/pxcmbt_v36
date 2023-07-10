@@ -30,51 +30,27 @@ class MBTArtProvider(wx.ArtProvider):
         self.fontIconCategory = FontIconIconRepoCategory(name='fi')
         self.iconRepo.register(self.fontIconCategory)
 
-    def CreateBitmap(self, art_id, client=wx.ART_TOOLBAR, size=wx.Size(16, 16), **kwargs):
+    def CreateBitmap(self, art_id: str, client=wx.ART_TOOLBAR, size=wx.Size(16, 16)):
         # You can do anything here you want, such as using the same
         # image for any size, any client, etc., or using specific
         # images for specific sizes, whatever...
-
+        if art_id.startswith('wxART'):
+            return super().CreateBitmap(art_id, client, size)
         # See end of file for the image data
-
         _bmp = wx.NullBitmap
-        # use this one for all 48x48 images
-        # if size.width == 48:
-        #     _bmp = makeBitmap(smile48_png)
-        #
-        # # but be more specific for these
-        # elif size.width == 16 and artid == wx.ART_ADD_BOOKMARK:
-        #     _bmp = makeBitmap(smile16_png)
-        # elif size.width == 32 and artid == wx.ART_ADD_BOOKMARK:
-        #     _bmp = makeBitmap(smile32_png)
-        #
-        # # and just ignore the size for these
-        # elif artid == wx.ART_GO_BACK:
-        #     _bmp = makeBitmap(left_png)
-        # elif artid == wx.ART_GO_FORWARD:
-        #     _bmp = makeBitmap(right_png)
-        # elif artid == wx.ART_GO_UP:
-        #     _bmp = makeBitmap(up_png)
-        # elif artid == wx.ART_GO_DOWN:
-        #     _bmp = makeBitmap(down_png)
-        # elif artid == wx.ART_GO_TO_PARENT:
-        #     _bmp = makeBitmap(back_png)
-        #
-        # elif artid == wx.ART_CROSS_MARK:
-        #     _bmp = makeBitmap(cross_png)
-        # elif artid == wx.ART_TICK_MARK:
-        #     _bmp = makeBitmap(tick_png)
-        _bmp = self.iconRepo.get_bmp(category='fi', name=art_id, size=size)
+        _bmp = self.iconRepo.get_bmp(category=self.fontIconCategory.name, name=art_id, size=size)
         if not _bmp.IsOk():
-            print("MyArtProvider error: providing %s:%s at %s \n" % (art_id, client, size))
+            print("MBTArtProvider error: providing %s:%s at size %s \n" % (art_id, client, size))
         return _bmp
 
-    def GetBitmapEnhance(self, art_id, client=wx.ART_OTHER, size=wx.DefaultSize, **kwargs):
+    def GetBitmapEnhance(self, art_id:str, client=wx.ART_OTHER, size=wx.DefaultSize, **kwargs):
         if isinstance(size, tuple):
             size = wx.Size(*size)
-        _bmp = self.iconRepo.get_bmp(category='fi', name=art_id, size=size, **kwargs)
+        if art_id.startswith('wxART'):
+            return super().CreateBitmap(art_id, client, size)
+        _bmp = self.iconRepo.get_bmp(category=self.fontIconCategory.name, name=art_id, size=size, **kwargs)
         if not _bmp.IsOk():
-            print("MyArtProvider error: providing %s:%s at %s \n" % (art_id, client, size))
+            print("MBTArtProvider error: providing %s:%s at size %s \n" % (art_id, client, size))
         return _bmp
 
 
@@ -135,11 +111,16 @@ class Frame(wx.Frame):
         # self.label = wx.BitmapButton(self, bitmap=get_bmp('\uf019'), size=(32, 32))
         self.label = wx.BitmapButton(self, bitmap=wx.ArtProvider.GetBitmap('fa47.user'), size=(32, 32))
         # self.label2 = wx.BitmapButton(self, bitmap=get_bmp('\uf0fe'), size=(32, 32))
-        self.label2 = wx.BitmapButton(self, bitmap=wx.ArtProvider.GetBitmap('ri.user-line'), size=(32, 32))
+        self.label2 = wx.BitmapButton(self, bitmap=wx.ArtProvider.GetBitmap('ri.user-line', size=(24, 24)),
+                                      size=(32, 32))
         # self.bmp1 = wx.StaticBitmap(self, bitmap=get_bmp('\uf13a'))
         self.bmp1 = wx.StaticBitmap(self, bitmap=wx.ArtProvider.GetBitmap('pi.user', size=(24, 24)), size=(48, 48))
-        self.bmp2 = wx.StaticBitmap(self, bitmap=_mbt_art_provider.GetBitmapEnhance('md5.account-child-circle', size=(24, 24), color='red'), size=(48, 48))
-        self.bmp3 = wx.StaticBitmap(self, bitmap=wx.ArtProvider.GetBitmap(wx.ART_ERROR, size=(24, 24)), size=(48, 48))
+        self.bmp2 = wx.StaticBitmap(self, bitmap=wx.ArtProvider.GetBitmap('md5.account-child-circle', size=(24, 24)),
+                                    size=(48, 48))
+        self.bmp3 = wx.StaticBitmap(self,
+                                    bitmap=_mbt_art_provider.GetBitmapEnhance('md5.account-child-circle', size=(24, 24),
+                                                                              color='red'), size=(48, 48))
+        self.bmp4 = wx.StaticBitmap(self, bitmap=wx.ArtProvider.GetBitmap(wx.ART_ERROR, size=(24, 24)), size=(48, 48))
         # self.bmp2.SetBackgroundColour(wx.Colour('red'))
 
         self.label.Disable()
@@ -148,6 +129,7 @@ class Frame(wx.Frame):
         self.mainLayout.Add(self.bmp1, 0)
         self.mainLayout.Add(self.bmp2, 0)
         self.mainLayout.Add(self.bmp3, 0)
+        self.mainLayout.Add(self.bmp4, 0)
         self.SetSizer(self.mainLayout)
         self.Layout()
 

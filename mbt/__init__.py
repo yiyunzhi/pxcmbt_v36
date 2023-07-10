@@ -19,9 +19,13 @@
 #
 #
 # ------------------------------------------------------------------------------
+import wx
 from framework import appCtxRegistry
 from .application.class_application_context import MBTApplicationContext
 
-appCtx = MBTApplicationContext()
+appCtx: MBTApplicationContext = MBTApplicationContext()
 
-appCtxRegistry.register(appCtx)
+
+def setup_application_context(app: wx.App):
+    appCtx.setup(app)
+    appCtxRegistry.register(appCtx)

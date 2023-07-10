@@ -1,0 +1,15 @@
+en:
+  help: help
+  new: new
+  new_f: 'new %s'
+  name: name
+  description: description
+  type: type
+  error: Error
+  warning: Warning
+  success: Success
+  prompt_detail: detail prompt
+  project_name: ProjectName
+  project_path: ProjectPath
+  project_open: OpenProject
+  project_save: SaveProject

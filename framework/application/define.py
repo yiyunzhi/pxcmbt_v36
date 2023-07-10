@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-import os, enum
+import os, enum,wx
 
 
 APP_CONSOLE_TIME_WX_FMT = '%m/%d %H:%M:%S.%l'
@@ -32,6 +32,12 @@ MB_ATTACH_LABEL_REGEX = r'^@(.*)@$'
 
 RECENT_MAX_LEN = 3
 
+# language domain
+THIS_LANG_DOMAIN = "I18N_MBT"
+# support languages
+SUPPORTED_LANG = {u"en": wx.LANGUAGE_ENGLISH,
+                  u"de": wx.LANGUAGE_GERMAN,
+                  }
 
 class EnumAppMsg:
     sigAppModeChanged = 'sigAppModeChanged'

@@ -20,5 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 APP_NAME = 'PxCE MBT'
-APP_VERSION = '4.014'
+APP_VENDOR_NAME = 'PxCE MBT'
+APP_VERSION = '3.605'
 APP_RELEASE = '09.2023'
+REQ_WX_VERSION_STRING = '4.2.1'

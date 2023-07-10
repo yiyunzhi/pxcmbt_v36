@@ -175,8 +175,10 @@ class FontIconIconRepoCategory(IconRepoCategory):
         _gbmp = wx.Bitmap(_w * 2, _h * 2)
         _ddc = wx.MemoryDC(_gbmp)
         _ddc.Clear()
+        #_ddc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
         # Create graphics context from it
         gcdc = wx.GCDC(_ddc)
+        #gcdc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
         # follow comments show the example use difference DC instance to draw the bitmap
         # gc = wx.GraphicsContext.Create(_ddc)
         # gc.SetAntialiasMode(wx.ANTIALIAS_DEFAULT)

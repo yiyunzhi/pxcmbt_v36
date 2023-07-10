@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import wx
 
 # ------------------------------------------------------------------------------
 #                                                                            --
@@ -21,15 +22,10 @@
 # ------------------------------------------------------------------------------
 from .application.class_application_context import FrameworkApplicationContext, ApplicationContextRegistry
 
-#from core.gui.core.class_icon_repository import IconRepository
-#from core.gui.core.class_i18n_repository import I18nRepository
-
-frameworkAppCtx = FrameworkApplicationContext()
 appCtxRegistry: ApplicationContextRegistry = ApplicationContextRegistry()
 
 
-# def init(app: QtWidgets.QApplication):
-#     frameworkAppCtx.iconResp = IconRepository(app)
-#     #coreAppCtx.i18nResp = I18nRepository()
-#     frameworkAppCtx.setup(app)
-#     appCtxRegistry.register(frameworkAppCtx)
+def setup_application_context(app: wx.App):
+    _framework_app_ctx: FrameworkApplicationContext = FrameworkApplicationContext()
+    _framework_app_ctx.setup(app)
+    appCtxRegistry.register(_framework_app_ctx)

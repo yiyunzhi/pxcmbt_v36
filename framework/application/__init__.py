@@ -19,4 +19,28 @@
 #
 #
 # ------------------------------------------------------------------------------
+import os
+import yaml as zYaml
+import i18n as zI18n
+import anytree as zAnyTree
+from .base.base import Serializable
 
+
+def yml_eval_constructor(loader, node):
+    if isinstance(node, zYaml.ScalarNode):
+        return eval(node.value, globals())
+    elif isinstance(node, zYaml.MappingNode):
+        _dict = loader.construct_mapping(node, deep=True)
+        return eval(_dict.get('expr'), globals(), _dict.get('ctx'))
+
+
+def yml_include_constructor(loader, node):
+    _path = loader.construct_scalar(node)
+    if not os.path.exists(_path):
+        return None
+    with open(_path, 'r', encoding='utf-8') as f:
+        return zYaml.load(f, zYaml.Loader)
+
+
+zYaml.add_constructor('!e', yml_eval_constructor)
+zYaml.add_constructor('!include', yml_include_constructor)

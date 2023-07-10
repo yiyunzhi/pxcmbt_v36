@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import wx
 
 # ------------------------------------------------------------------------------
 #                                                                            --
@@ -49,10 +50,11 @@ class MBTApplicationContext(IApplicationContext):
         self.zViewFactory = None
         self.uriHandleMgr = None
 
-    def setup(self, app: QtWidgets.QApplication):
+    def setup(self, app: wx.App):
         try:
-            self.addonsManager.resolve_addons(ADDONS_PATH)
-            self.mbtSolutionManager.resolve_solutions(THIS_PATH)
+            print('--->todo setup mbt context')
+            #self.addonsManager.resolve_addons(ADDONS_PATH)
+            #self.mbtSolutionManager.resolve_solutions(THIS_PATH)
         except Exception as e:
             raise MBTAppCtxSetupException('MBT Application context setup error.\n%s' % e)
 

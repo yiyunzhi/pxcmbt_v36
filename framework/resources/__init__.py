@@ -22,8 +22,4 @@
 import os
 
 THIS_PATH = os.path.dirname(os.path.abspath(__file__))
-IMAGES_PATH = os.path.join(THIS_PATH, 'images')
 LOCALE_PATH = os.path.join(THIS_PATH, 'locale')
-SPLASH_IMAGE = os.path.join(IMAGES_PATH, 'splash.png')
-LOGO_IMAGE = os.path.join(IMAGES_PATH, 'logo.png')
-HELP_PATH = os.path.join(THIS_PATH, 'help')

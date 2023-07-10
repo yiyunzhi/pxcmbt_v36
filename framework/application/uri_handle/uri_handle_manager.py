@@ -1,8 +1,7 @@
 import typing
-import addict
-from urllib import parse
 from framework.application.base.base import singleton
-from uri_app import AppURI,URLObject
+from .uri_app import AppURI, URLObject
+
 
 class URIHandleRegisterError(Exception):
     pass
@@ -17,14 +16,14 @@ class URIHandleExecutionError(Exception):
 
 
 class URIHandle(AppURI):
-    def __init__(self, uri_scheme: str, uri_path: str,app_ctx=None):
-        AppURI.__init__(self,uri_path,uri_scheme)
+    def __init__(self, uri_scheme: str, uri_path: str, app_ctx=None):
+        AppURI.__init__(self, uri_path, uri_scheme)
         assert uri_scheme is not None and uri_path is not None, URIHandleUrlError('invalid uri string')
-        self.appCtx=app_ctx
+        self.appCtx = app_ctx
 
     @property
     def uri_str(self):
-        return self._uri.toString()
+        return self._uri
 
     def is_handleable(self, uri: typing.Union[str, URLObject]) -> bool:
         if isinstance(uri, str):

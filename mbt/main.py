@@ -1,21 +1,30 @@
 import datetime, ctypes, builtins, platform
 import os, sys, logging, logging.config
 import time
+import warnings
+
 import wx
 import wx.adv
 import wx.lib.mixins.inspection
+import wx.html as whtml
+from framework import setup_application_context
+from framework.application import zI18n
+from framework.resources import LOCALE_PATH as FRAMEWORK_LOCALE_PATH
+from framework.application.class_application_context import IApplicationContext
 from framework.application.io.class_yaml_file_io import AppYamlFileIO
 from framework.application.uri_handle import *
-from mbt import appCtx
-from mbt.application.define_base import APP_NAME, APP_VERSION, REQ_WX_VERSION_STRING, BASE_PATH, APP_DATA_BUILTIN_PATH
-
-from application.class_yaml_tags import *
+from mbt import appCtx, setup_application_context as setup_mbt_app_ctx
+from mbt.application.define_base import APP_NAME, APP_VERSION, REQ_WX_VERSION_STRING, APP_VENDOR_NAME
 from mbt.application.log.class_logger import get_logger
-from application.class_content_iod_action import IOD_ACTION_EXT_MGR
-from application.class_application_config import APP_CONFIG
-from application.class_ipod_engine import IPOD_ENGINE_MGR
-from .gui_main_frame import AppFrame
+# from application.class_content_iod_action import IOD_ACTION_EXT_MGR
+# from application.class_application_config import APP_CONFIG
+# from application.class_ipod_engine import IPOD_ENGINE_MGR
+# from application.class_yaml_tags import *
+from .resources import LOCALE_PATH, HELP_PATH
+from .define import THIS_PATH, SUPPORTED_LANG, THIS_LANG_DOMAIN
+# from .gui_main_frame import AppFrame
 from .gui_splash import SplashScreen
+from .class_art_provider import MBTArtProvider
 
 # from pxct_driver.application.application import Application as SessionApplication
 # from pxct_driver.bootstrap import bootstrap as session_log_bootstrap
@@ -23,12 +32,16 @@ from .gui_splash import SplashScreen
 sys.stdin.reconfigure(encoding='utf-8')
 sys.stdout.reconfigure(encoding='utf-8')
 
+_log = get_logger('application')
+builtins.__dict__['_'] = zI18n.t
+URI_HANDLE_MANAGER = URIHandleManager()
+
 
 # Install a custom displayhook to keep Python from setting the global
 # _ (underscore) to the value of the last evaluated expression.
 # If we don't do this, our mapping of _ to gettext can get overwritten.
 # This is useful/needed in interactive debugging with PyShell.
-def _displayHook(obj):
+def _display_hook(obj):
     """
     Custom display hook to prevent Python stealing '_'.
     """
@@ -38,8 +51,9 @@ def _displayHook(obj):
 
 
 def _init_logging():
-    os.environ.update({'LOG_CFG_DIR': BASE_PATH})
-    logging.config.fileConfig(os.path.join(BASE_PATH, 'log', 'logger.cfg'), disable_existing_loggers=False)
+    _log_dir = os.path.join(THIS_PATH, 'log')
+    os.environ.update({'LOG_CFG_DIR': _log_dir})
+    logging.config.fileConfig(os.path.join(_log_dir, 'logger.cfg'), disable_existing_loggers=False)
 
 
 def _chk_ipod_engines():
@@ -53,15 +67,13 @@ def _chk_ipod_engines():
     return _chk_ver_ret, _chk_ver_msg
 
 
-_log = get_logger('application')
-builtins.__dict__['_'] = wx.GetTranslation
+def _init_art_provider(app_ctx: IApplicationContext):
+    _mbt_art_provider = MBTArtProvider()
+    wx.ArtProvider.Push(_mbt_art_provider)
+    app_ctx.set_property('artProvider', _mbt_art_provider)
 
 
 class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
-    # def InitLocale(self):
-    #     if sys.platform.startswith('win') and sys.version_info > (3,8):
-    #         import locale
-    #         locale.setlocale(locale.LC_ALL, 'C')
     def OnInit(self):
         if REQ_WX_VERSION_STRING != wx.VERSION_STRING:
             wx.MessageBox(caption="Warning",
@@ -78,11 +90,14 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         except AttributeError:
             wx.MessageBox('can not pass the current DPI setting.\nthere could be some display issues.')
         except OSError:
-            wx.MessageBox('can not pass the current DPI setting since access problem.\nthere could be some display issues.')
+            wx.MessageBox(
+                'can not pass the current DPI setting since access problem.\nthere could be some display issues.')
         # attach the displayhook in sys
-        sys.displayhook = _displayHook
+        sys.displayhook = _display_hook
 
         _current_dt = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+
+        wx.SystemOptions.SetOption('msw.dark-mode',2)
         # Create and show the splash screen.  It will then create and
         # show the main frame when it is time to do so.  Normally when
         # using a SplashScreen you would create it, show it and then
@@ -93,63 +108,79 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # can see the SplashScreen effect.
         _splash = SplashScreen()
         wx.Yield()
-        # todo: init help doc
-        # todo: lowercase
-        URI_HANDLE_MANAGER = URIHandleManager()
+        _splash.set_message('init logger')
+        _init_logging()
+        _splash.set_message('init application context')
         URI_HANDLE_MANAGER.register(CallExternalURIHandle(app_ctx=appCtx))
         URI_HANDLE_MANAGER.register(PubsubURIHandle())
         URI_HANDLE_MANAGER.register(AppCurrentViewExecOperationURIHandle())
-        appCtx.zViewFactory = GUI_VIEW_FACTORY
-        appCtx.iconResp = IconRepository(_q_app)
-        appCtx.i18nResp = I18nRepository()
-        appCtx.mbtSolutionManager = MBTSolutionsManager(appCtx)
-        appCtx.addonsManager = AddonsManager(appCtx)
-        appCtx.uriHandleMgr = URI_HANDLE_MANAGER
-        appCtx.setup(_q_app)
-        _splash.set_message('read global config')
+
+        # appCtx.set_property('solutionManager', MBTSolutionsManager(appCtx))
+        appCtx.set_property('uriHandleMgr', URI_HANDLE_MANAGER)
+        # appCtx.set_property('addonsManager', AddonsManager(appCtx))
+
+        appCtx.setup(self)
+        _splash.set_message('Setup an application configuration file')
         # the config file generally in C:\Users\xxx\AppData\Roaming\APP_NAME.ini stored.
-        if gv.GLOBAL_CONFIG is None:
-            gv.GLOBAL_CONFIG = wx.FileConfig(APP_NAME, vendorName='PxCE')
-            gv.GLOBAL_CONFIG.Write("appVersion", APP_VERSION)
-            # todo: if computer name different then clear the recentList
-            _last_date = gv.GLOBAL_CONFIG.Read("lastStartAt")
-            if _last_date:
-                gv.GLOBAL_CONFIG.Write("previousStartAt", _last_date)
-            else:
-                gv.GLOBAL_CONFIG.Write("previousStartAt", _current_dt)
-            gv.GLOBAL_CONFIG.Write("lastStartAt", _current_dt)
-            if not gv.GLOBAL_CONFIG.HasEntry('recentProjectList'):
-                gv.GLOBAL_CONFIG.Write("recentProjectList", '')
-            gv.GLOBAL_CONFIG.Flush()
-        # _splash.set_message('init local')
-        # # Controls the current interface language
-        # self.language_prefix = "LANGUAGE_"
-        # self.language = self.language_prefix + self.app_config.Config(keys=("Settings", "Interface", "Language")).upper()
-        #
-        # # Setup the Locale
-        # self.InitI18n()
-        # self.Setlang(self.language)
-        _splash.set_message('init logger')
-        _init_logging()
+        # nix: \home\userid\appName
+        # this file store the version, last datetime, the recent file list and so on.
+        _sp = wx.StandardPaths.Get()
+        self.configLoc = _sp.GetUserConfigDir()
+        self.configLoc = os.path.join(self.configLoc, APP_NAME)
+        if not os.path.exists(self.configLoc):
+            os.mkdir(self.configLoc)
+        # AppConfig stuff is here
+        self.appConfig = wx.FileConfig(appName=APP_NAME,
+                                       vendorName=APP_VENDOR_NAME,
+                                       localFilename=os.path.join(self.configLoc, "appConfig"))
+
+        if not self.appConfig.HasEntry(u'language'):
+            # on first run we default to English
+            self.appConfig.Write(key=u'language', value=u'en')
+        if not self.appConfig.HasEntry('appVersion'):
+            self.appConfig.Write(key=u'appVersion', value=APP_VERSION)
+        _last_date = self.appConfig.Read("lastStartAt")
+        if _last_date:
+            self.appConfig.Write("previousStartAt", _last_date)
+        else:
+            self.appConfig.Write("previousStartAt", _current_dt)
+        self.appConfig.Write("lastStartAt", _current_dt)
+        if not self.appConfig.HasEntry('recentProjectList'):
+            self.appConfig.Write("recentProjectList", '')
+        self.appConfig.Flush()
+        appCtx.set_property('appConfig', self.appConfig)
+
+        _splash.set_message('init i18n')
+        # Controls the current interface language
+        self.locale = None
+        self.updateLanguage(self.appConfig.Read("language"))
+        _splash.set_message('init help controller')
+        self.updateHelpContent()
+        _splash.set_message('load addons')
         _splash.set_message('check IPOD Engines.')
-        _ret, _msg = _chk_ipod_engines()
-        if not _ret:
-            [_splash.set_message('-' * 5 + x) for x in _msg]
+        # _ret, _msg = _chk_ipod_engines()
+        # if not _ret:
+        #     [_splash.set_message('-' * 5 + x) for x in _msg]
         _splash.set_message('loading extends.')
-        _ext_path = os.path.join(BASE_PATH, *APP_CONFIG.scExtIODActionsPath)
-        if not IOD_ACTION_EXT_MGR.load_action_extends(_ext_path, '*.py'):
-            _error = IOD_ACTION_EXT_MGR.error
-            wx.MessageBox('Error on Extend init:\n%s' % _error)
-            _log.error('%s' % _error)
-            return False
-        _ext_iod_act_io = AppYamlFileIO(APP_DATA_BUILTIN_PATH, 'ext_iod_act.obj')
-        _ext_iod_act_io.write(IOD_ACTION_EXT_MGR.builtinContainer)
+        # _ext_path = os.path.join(BASE_PATH, *APP_CONFIG.scExtIODActionsPath)
+        # if not IOD_ACTION_EXT_MGR.load_action_extends(_ext_path, '*.py'):
+        #     _error = IOD_ACTION_EXT_MGR.error
+        #     wx.MessageBox('Error on Extend init:\n%s' % _error)
+        #     _log.error('%s' % _error)
+        #     return False
+        # _ext_iod_act_io = AppYamlFileIO(APP_DATA_BUILTIN_PATH, 'ext_iod_act.obj')
+        # _ext_iod_act_io.write(IOD_ACTION_EXT_MGR.builtinContainer)
         _splash.set_message('init session application.')
         # load session application
         # gv.SESSION_APP = SessionApplication()
         # session_log_bootstrap()
+        setup_application_context(self)
+        setup_mbt_app_ctx(self)
         _splash.set_message('start main application.')
-        _main_frm = AppFrame(None)
+        # _main_frm = AppFrame(None)
+        _main_frm = wx.Frame(None)
+
+
         # debug constructor and representer of yaml tag
         # for k,v in yaml.CFullLoader.yaml_constructors.items():
         #    print('yamlmeta->', k,v)
@@ -163,13 +194,69 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         self.SetTopWindow(_main_frm)
         _main_frm.Center()
         _main_frm.Show()
+
+        # try to set the dark mode on the given handle of window
+        _hwnd = _main_frm.GetHandle()
+        from mbt.gui.patch.low_level_sys_ui import llSetDarkWinTitlebar
+        llSetDarkWinTitlebar(_hwnd)
+
         del _splash
         return True
 
+    def updateLanguage(self, lang: str = None):
+        """
+        Update the language to the requested one.
+
+        Make *sure* any existing locale is deleted before the new
+        one is created.  The old C++ object needs to be deleted
+        before the new one is created, and if we just assign a new
+        instance to the old Python variable, the old C++ locale will
+        not be destroyed soon enough, likely causing a crash.
+
+        :param string `lang`: one of the supported language codes
+
+        """
+        # if an unsupported language is requested default to English
+        if lang in SUPPORTED_LANG:
+            _sel_lang = SUPPORTED_LANG[lang]
+        else:
+            _sel_lang = wx.LANGUAGE_ENGLISH
+
+        if self.locale:
+            assert sys.getrefcount(self.locale) <= 2
+            del self.locale
+
+        # create a locale object for this language
+        self.locale = wx.Locale(_sel_lang)
+        if self.locale.IsOk():
+            zI18n.load_path.append(FRAMEWORK_LOCALE_PATH)
+            zI18n.load_path.append(LOCALE_PATH)
+            zI18n.set('fallback', 'en')
+            zI18n.set('enable_memoization', True)
+            _lang_name = self.locale.GetSysName()
+            zI18n.set('locale', _lang_name)
+            self.appConfig.Write(key='language', value=_lang_name)
+        else:
+            self.locale = None
+            warnings.warn('localization setup failed, fall back to english.')
+
+        appCtx.set_property('locale', self.locale)
+
+    def updateHelpContent(self):
+        _hlp_ctrl = whtml.HtmlHelpController()
+        _list_of_files = {}
+        for (dir_path, dir_names, filenames) in os.walk(HELP_PATH):
+            for filename in filenames:
+                if filename.endswith('.hhp'):
+                    _list_of_files[filename] = os.sep.join(os.path.join(HELP_PATH,filename ))
+        for x in _list_of_files:
+            _hlp_ctrl.AddBook(x)
+        appCtx.set_property('helpController', _hlp_ctrl)
+
     def OnExit(self):
-        if gv.SESSION_APP:
-            gv.SESSION_APP.stop()
-        del gv.SESSION_APP
+        # if gv.SESSION_APP:
+        #     gv.SESSION_APP.stop()
+        # del gv.SESSION_APP
         # _rest_actor_ref = ActorRegistry.get_all()
         # if _rest_actor_ref:
         #     _dlg = wx.ProgressDialog('App Exit', 'waiting until the APP EXIT finish')
@@ -181,26 +268,6 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         #         _dlg.Pulse()
         #     del _dlg
         return 0
-
-    def InitI18n(self):
-        self.locale = wx.Locale(getattr(wx, self.language))
-        path = os.path.abspath("./gimelstudio/locale") + os.path.sep
-        self.locale.AddCatalogLookupPathPrefix(path)
-        self.locale.AddCatalog(self.GetAppName())
-
-    def Setlang(self, language):
-        supported_langs = {
-            "LANGUAGE_ENGLISH": "en",
-            "LANGUAGE_FRENCH": "fr",
-            "LANGUAGE_GERMAN": "de",
-        }
-
-        # To get some language settings to display properly on Linux
-        if platform.system() == "Linux":
-            try:
-                os.environ["LANGUAGE"] = supported_langs[language]
-            except (ValueError, KeyError) as error:
-                print(error)
 
 
 def start():
