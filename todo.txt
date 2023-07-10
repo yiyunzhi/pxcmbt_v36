@@ -1,0 +1,1 @@
+# todo: for RPC, the macro define of testrack or SUT could be in TestView imported(ext: .mcd)

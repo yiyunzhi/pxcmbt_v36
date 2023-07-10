@@ -1,0 +1,61 @@
+class {{ str_class_name|default('NewIODAction') }}(IODBasedAction):
+    def __init__(self, **kwargs):
+        super({{ str_class_name|default('NewIODAction') }}, self).__init__(**kwargs)
+        self.value1=0
+        self.value2=1
+
+    @classmethod
+    def get_description(cls):
+        """
+        class method to define the descriptions string
+        :return: str
+        """
+        _desc = '{{ str_description }}'
+        return _desc
+
+    @classmethod
+    def get_arguments(cls):
+        """
+        class method to define the required arguments for this class, those arguments initialed by follow:
+        option of type:
+                str
+                int
+                float
+                bool
+                list
+                dict
+                any
+        option of namespace:
+                .INTERNAL
+                .CUSTOM
+                .ANY
+                .INPUT
+                .DATA
+                .OUTPUT
+        those arguments will be bind while using. this behaviour determine which variable of blackboard could be used in
+        this class scope. like the example if value1 in namespace any define, then self.get_iod('any/value1') to get the
+        variable, same to the self.set_iod('any/value1').
+        :return: list of ArgumentMeta
+        """
+        return [ArgumentMeta(name='value1', type=any, default_value=None, namespace=EnumIPODArgumentNamespace.ANY),
+                ArgumentMeta(name='value2', type=any, default_value=None, namespace=EnumIPODArgumentNamespace.ANY)]
+
+    def initialise(self):
+        """
+        method to initialise the in get_arguments() defined variable
+        :return: None
+        """
+        pass
+
+    def update(self):
+        """
+        method to update the in get_arguments() defined variable, this is the most important method to
+        calculate the current state of variables, like set to or get from the blackboard.
+        :return: EnumBehaviourStatus,use one of attributes SUCCESS,FAILURE,INVALID.
+        """
+        try:
+            self.value2 -= self.value1
+            return True
+        except Exception as e:
+            self.feedback_message = '%s' % e
+            return False

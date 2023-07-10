@@ -1,0 +1,1 @@
+@iod_action_ext_entity('{{str_action_category|default('')}}',domain=PROJECT_FEATURE_UID,template='t_user_iodbase_action_v001')
