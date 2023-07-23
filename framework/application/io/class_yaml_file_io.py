@@ -46,6 +46,10 @@ class AppYamlFileIO(AppFileIO):
         _full_path = self.get_full_path()
         return os.path.exists(_full_path)
 
+    def get_section(self, section_name):
+        if self.data is not None and section_name in self.data:
+            return self.data[section_name]
+
 
 class AppYamlStreamer:
     # todo: may inherit from interface IAppStream for the extending which use xml, json some techs.

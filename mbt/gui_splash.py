@@ -1,6 +1,6 @@
 import os, wx
 import wx.lib.agw.advancedsplash as advsp
-from mbt.application.define_base import APP_NAME, APP_VERSION
+from mbt.application.define import APP_NAME, APP_VERSION
 from mbt.resources import SPLASH_IMAGE
 from framework.gui.utils import gui_util_get_default_font
 

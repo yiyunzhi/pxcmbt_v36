@@ -1,0 +1,39 @@
+meta: !ProjectMeta
+  requiredSolutions: []
+perspective: null
+project:
+  children:
+  - children:
+    - role: 0-1-0
+      uuid: 64d9c58f
+    - role: 0-1-1
+      uuid: 2eeead56
+    role: 0-1
+    uuid: e9d73719
+  - children:
+    - children:
+      - children:
+        - role: 0-2-0-0-0
+          uuid: '44878383'
+        - role: 0-2-0-0-1
+          uuid: 941e5eea
+        role: 0-2-0-0
+        uuid: 35bb9376
+      role: 0-2-0
+      uuid: 6170d4c9
+    - children:
+      - role: 0-2-1-0
+        uuid: 5190badf
+      role: 0-2-1
+      uuid: a08296f2
+    - role: 0-2-2
+      uuid: 184ff37d
+    - children:
+      - role: 0-2-3-0
+        uuid: aa952c40
+      role: 0-2-3
+      uuid: 671bef27
+    role: 0-2
+    uuid: 55b67248
+  role: '0'
+  uuid: d6ceda16

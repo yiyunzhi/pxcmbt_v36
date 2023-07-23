@@ -21,11 +21,12 @@
 # ------------------------------------------------------------------------------
 import ast, functools, json, decimal, gettext, pathlib
 import datetime
+import wx
 import os, sys, platform, math, uuid, bitstring, glob
 from collections import defaultdict
 from itertools import tee
 import psutil
-from .define import APP_CONSOLE_TIME_WX_FMT, SIZE_UNITS,APP_TIME_PY_FMT
+from .define import APP_CONSOLE_TIME_WX_FMT, SIZE_UNITS, APP_TIME_PY_FMT
 from .python.class_evaluator import DEFAULT_EXPRESSION_EVALUATOR
 
 RGET_RSET_DELIMITER = "."
@@ -34,6 +35,7 @@ RGET_RSET_DELIMITER = "."
 # gettext.textdomain('myapplication')
 _ = gettext.gettext
 
+
 def util_iterable(obj):
     try:
         iter(obj)
@@ -41,6 +43,7 @@ def util_iterable(obj):
         return False
     else:
         return True
+
 
 def util_remove_folder(file_path):
     _pth = pathlib.Path(file_path)
@@ -431,3 +434,28 @@ def util_get_actual_pubsub_topic_for_instance(instance: object, topic_name: str)
 
 def util_date_time_now():
     return datetime.datetime.now().strftime(APP_TIME_PY_FMT)
+
+
+def util_wx_date_time_now(fmt=APP_CONSOLE_TIME_WX_FMT):
+    return wx.DateTime.UNow().Format(fmt)
+
+
+def util_set_custom_data_to_clipboard(clipboard: wx.Clipboard, format_: wx.DataFormat, data: bytes) -> bool:
+    if clipboard.IsOpened() or clipboard.Open():
+        _data = wx.CustomDataObject(format=format_)
+        _data.SetData(data)
+        _ret = clipboard.SetData(_data)
+        clipboard.Close()
+        return _ret
+    return False
+
+
+def util_get_custom_data_from_clipboard(clipboard: wx.Clipboard, format_: wx.DataFormat) -> bytes:
+    if not clipboard.IsOpened():  # may crash, otherwise
+        _data = wx.CustomDataObject(format=format_)
+        clipboard.Open()
+        _success = clipboard.GetData(_data)
+        clipboard.Close()
+        if _success:
+            _ob = _data.GetData()
+            return _ob.tobytes() if isinstance(_ob, memoryview) else _ob

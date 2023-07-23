@@ -1,0 +1,424 @@
+# https://doc.qt.io/qt-5/qkeysequence.html#standard-shortcuts
+#the shortcut expression define:
+#  starts with ! : use the standard,
+#  starts with > : the keyname sequence
+
+
+label: _root
+children:
+  - label: file
+    uid: 100
+    oid: 0
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    actionGroup: document
+    shortcut:
+    handle:
+    children:
+      - label: new_project
+        uid: 101
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-add-line
+        checkable: false
+        initCheckState: false
+        actionGroup: document
+        actionName: new
+        shortcut: '!New'
+        handle:
+          uri: 'pubsub:sendMessage?msg=project.new'
+      - label: open_project
+        uid: 102
+        oid: 1
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.folder-open-line
+        checkable: false
+        initCheckState: false
+        actionGroup: document
+        actionName: open
+        shortcut: '!Open'
+        handle:
+          uri: 'pubsub:sendMessage?msg=project.open'
+      - label: '-'
+        oid: 2
+      - label: save_project
+        uid: 103
+        oid: 3
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.save-line
+        checkable: false
+        initCheckState: false
+        actionGroup: document
+        actionName: save
+        enabled: false
+        shortcut: '!Save'
+        handle:
+          uri: 'pubsub:sendMessage?msg=project.save'
+        stateGroupEnabled: [ 'project:opened' ]
+      - label: save_project_all
+        uid: 104
+        oid: 4
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.save-line
+        checkable: false
+        initCheckState: false
+        actionGroup: document
+        actionName: saveAll
+        enabled: false
+        shortcut: '!SaveAs'
+        handle:
+          uri: 'pubsub:sendMessage?msg=project.saveAll'
+        stateGroupEnabled: [ 'project:opened' ]
+      - label: save_project_as
+        uid: 105
+        oid: 5
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.save-3-line
+        actionGroup: document
+        actionName: saveAs
+        checkable: false
+        initCheckState: false
+        enabled: false
+        shortcut:
+        handle:
+          uri: 'pubsub:sendMessage?msg=project.saveAs'
+        stateGroupEnabled: [ 'project:opened' ]
+      - label: '-'
+        oid: 6
+      - label: exit
+        uid: 1000
+        oid: 7
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.logout-box-line
+        checkable: false
+        initCheckState: false
+        actionGroup: app
+        actionName: exit
+        shortcut: '!Close'
+        handle:
+  - label: edit
+    uid: 200
+    oid: 1
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    actionGroup: edit
+    shortcut:
+    handle:
+    children:
+      - label: undo
+        uid: 201
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.arrow-go-back-line
+        checkable: false
+        initCheckState: false
+        actionGroup: edit
+        actionName: undo
+        enabled: false
+        shortcut: '!Undo'
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=undo'
+      - label: redo
+        uid: 202
+        oid: 1
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.arrow-go-forward-line
+        checkable: false
+        initCheckState: false
+        actionGroup: edit
+        actionName: redo
+        enabled: false
+        shortcut: '!Redo'
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=redo'
+      - label: '-'
+        oid: 2
+      - label: cut
+        uid: 203
+        oid: 3
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.scissors-cut-line
+        checkable: false
+        initCheckState: false
+        actionGroup: edit
+        actionName: cut
+        enabled: false
+        shortcut: '!Cut'
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=cut'
+      - label: copy
+        uid: 204
+        oid: 4
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-copy-line
+        checkable: false
+        initCheckState: false
+        actionGroup: edit
+        actionName: copy
+        enabled: false
+        shortcut: '!Copy'
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=copy'
+      - label: paste
+        uid: 205
+        oid: 5
+        i18nNs: mb
+        iconNs: fa
+        iconName: ph.clipboard
+        checkable: false
+        initCheckState: false
+        actionGroup: edit
+        actionName: paste
+        enabled: false
+        shortcut: '!Paste'
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=paste'
+      - label: remove
+        uid: 206
+        oid: 6
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.delete-bin-2-line
+        checkable: false
+        initCheckState: false
+        actionGroup: edit
+        actionName: remove
+        enabled: false
+        shortcut:
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=remove'
+      - label: delete
+        uid: 207
+        oid: 7
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.file-shred-line
+        checkable: false
+        initCheckState: false
+        enabled: false
+        actionGroup: edit
+        actionName: delete
+        shortcut: '!Delete'
+        handle:
+          uri: 'appCurrentView:execOperation?operationGroup=edit&operation=delete'
+  - label: view
+    uid: 300
+    oid: 2
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    enabled: true
+    actionGroup: view
+    shortcut:
+    handle:
+    children:
+      - label: window
+        uid: 301
+        oid: 0
+        asContainer: true
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.window-line
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: view
+        actionName: window
+        shortcut:
+        handle:
+  - label: tool
+    uid: 400
+    oid: 2
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    enabled: true
+    actionGroup: tool
+    shortcut:
+    handle:
+    children:
+      - label: external
+        uid: 401
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.external-link-line
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: tool
+        shortcut:
+        handle:
+        children:
+          - label: calculator
+            uid: 402
+            oid: 0
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.calculator-line
+            checkable: false
+            initCheckState: false
+            enabled: true
+            actionGroup: tool
+            actionName: calc
+            shortcut:
+            handle:
+              uri: 'os:startProgram?program=calc.exe'
+          - label: text_editor
+            uid: 403
+            oid: 1
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.file-text-line
+            checkable: false
+            initCheckState: false
+            enabled: true
+            actionGroup: tool
+            actionName: txtEditor
+            shortcut:
+            handle:
+              uri: 'os:startProgram?program=notepad.exe'
+          - label: screen_shoot
+            uid: 404
+            oid: 2
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.crop-line
+            checkable: false
+            initCheckState: false
+            enabled: true
+            actionGroup: tool
+            actionName: screenShoot
+            shortcut:
+            handle:
+              uri: 'os:startProgram?program=SnippingTool.exe'
+          - label: console
+            uid: 405
+            oid: 3
+            i18nNs: mb
+            iconNs: fa
+            iconName: ri.terminal-box-line
+            checkable: false
+            initCheckState: false
+            enabled: true
+            actionGroup: tool
+            actionName: console
+            shortcut:
+            handle:
+              uri: 'os:startProgram?command=start cmd.exe /K&mode=cmd'
+      - label: '-'
+        oid: 1
+      - label: options
+        uid: 410
+        oid: 2
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.settings-line
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: tool
+        actionName: options
+        shortcut:
+        handle:
+  - label: windows
+    uid: 500
+    oid: 3
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    enabled: true
+    actionGroup: windows
+    shortcut:
+    handle:
+    children:
+      - label: save_perspective
+        uid: 501
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.layout-4-line
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: windows
+        actionName: savePerspective
+        shortcut:
+        handle:
+      - label: load_perspective
+        uid: 502
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.layout-masonry-line
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: windows
+        actionName: loadPerspective
+        shortcut:
+        handle:
+  - label: help
+    uid: 600
+    oid: 4
+    i18nNs: mb
+    iconNs: fa
+    iconName: ri.dashboard-line
+    checkable: false
+    initCheckState: false
+    enabled: true
+    actionGroup: help
+    shortcut:
+    handle:
+    children:
+      - label: help
+        uid: 601
+        oid: 0
+        i18nNs: mb
+        iconNs: fa
+        iconName: mdi6.help-box
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: help
+        actionName: help
+        shortcut: '!HelpContents'
+        handle:
+          uri: 'pubsub:sendMessage?msg=help.open'
+      - label: '-'
+        oid: 1
+      - label: about
+        uid: 610
+        oid: 2
+        i18nNs: mb
+        iconNs: fa
+        iconName: ri.information-line
+        checkable: false
+        initCheckState: false
+        enabled: true
+        actionGroup: help
+        actionName: about
+        shortcut:
+        handle:

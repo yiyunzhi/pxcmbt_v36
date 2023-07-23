@@ -23,7 +23,7 @@ import os
 import yaml as zYaml
 import i18n as zI18n
 import anytree as zAnyTree
-from .base.base import Serializable
+from .base.base import Serializable, YAMLObject
 
 
 def yml_eval_constructor(loader, node):
@@ -32,6 +32,15 @@ def yml_eval_constructor(loader, node):
     elif isinstance(node, zYaml.MappingNode):
         _dict = loader.construct_mapping(node, deep=True)
         return eval(_dict.get('expr'), globals(), _dict.get('ctx'))
+
+
+def yml_list_extend_constructor(loader: zYaml.Loader, node):
+    if isinstance(node, zYaml.MappingNode):
+        _dict = loader.construct_mapping(node, deep=True)
+        _ret = []
+        _ret.extend(_dict.get('base', []))
+        _ret.extend(_dict.get('extend', []))
+        return _ret
 
 
 def yml_include_constructor(loader, node):
@@ -44,3 +53,4 @@ def yml_include_constructor(loader, node):
 
 zYaml.add_constructor('!e', yml_eval_constructor)
 zYaml.add_constructor('!include', yml_include_constructor)
+zYaml.add_constructor('!listExtend', yml_list_extend_constructor, Loader=YAMLObject.loader)

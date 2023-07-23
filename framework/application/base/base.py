@@ -257,11 +257,12 @@ class Content(Serializable):
         return {}
 
 
-class ContentContainer:
+class IContentContainer:
     def __init__(self):
         pass
 
-    def get_id(self):
+    @property
+    def uid(self):
         return hex(id(self))
 
     def set(self, content: Content):
@@ -316,3 +317,9 @@ class Validatable:
 
     def clear_validators(self):
         self._validators.clear()
+
+class ContentableMinxin:
+    def set_content(self,*args,**kwargs):
+        raise NotImplementedError
+    def get_content(self,*args,**kwargs):
+        raise NotImplementedError

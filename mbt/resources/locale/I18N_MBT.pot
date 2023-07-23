@@ -1,0 +1,71 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-07-11 15:08+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=cp65001\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#:
+#: mbt\application\mbt_solution_manager\solution_manager.py:47
+msgid "SOLUTION_ALREADY_EXIST"
+msgstr ""
+
+#:
+#: mbt\application\mbt_solution_manager\solution_manager.py:62
+msgid "FMT_UNKNOWN_SOLUTION_AT "
+msgstr ""
+
+#: mbt\gui_main_frame.py:150
+msgid "NewProject"
+msgstr ""
+
+#: mbt\gui_main_frame.py:151
+msgid "NewFile"
+msgstr ""
+
+#: mbt\gui_main_frame.py:153
+msgid "Open"
+msgstr ""
+
+#: mbt\gui_main_frame.py:154
+msgid "Save"
+msgstr ""
+
+#: mbt\gui_main_frame.py:155
+msgid "Save As"
+msgstr ""
+
+#: mbt\gui_main_frame.py:159
+msgid "Exit"
+msgstr ""
+
+#: mbt\gui_main_frame.py:193
+msgid "About..."
+msgstr ""
+
+#: mbt\main.py:64
+msgid "Warning"
+msgstr ""
+
+#: mbt\main.py:65
+msgid ""
+"You're using version %s of wxPython, but this copy of the demo was written for version %s.\n"
+"There may be some version incompatibilities..."
+msgstr ""
+
+#: mbt\main.py:76
+msgid ""
+"can not pass the current DPI setting.\n"
+"there could be some display issues."
+msgstr ""
+

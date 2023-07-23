@@ -19,6 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
+from mbt.mimp import _
 from .solution_scanner import MBTSolutionScanner
 from .solution import MBTSolution
 
@@ -36,15 +37,14 @@ class SolutionAssertException(Exception):
 
 
 class MBTSolutionsManager:
-    def __init__(self, app_ctx):
-        self.appCtx = app_ctx
+    def __init__(self):
         self.scanner = MBTSolutionScanner()
         self.solutions = dict()
 
     def add_solution(self, solution: MBTSolution):
         _k = '%s.%s' % (solution.solution_def.namespace, solution.solution_def.type)
         if _k in self.solutions:
-            raise SolutionRegisterException(zI18n.t('SOLUTION_ALREADY_EXIST'))
+            raise SolutionRegisterException(_('SOLUTION_ALREADY_EXIST'))
         self.solutions.update({_k: solution})
 
     def resolve_solutions(self, path):
@@ -58,7 +58,8 @@ class MBTSolutionsManager:
                 _slt = MBTSolution(module_path=p, module=mi[0], solution_def=mi[1])
                 self.add_solution(_slt)
         except Exception as e:
-            raise SolutionAssertException(zI18n.t('FMT_UNKNOWN_SOLUTION_AT', path=_cur_p))
+            # todo: format str
+            raise SolutionAssertException(_('FMT_UNKNOWN_SOLUTION_AT '))
 
     def get_solution_by_uuid(self, uuid):
         for k, v in self.solutions.items():

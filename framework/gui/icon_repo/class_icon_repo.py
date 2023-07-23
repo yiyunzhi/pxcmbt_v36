@@ -20,6 +20,8 @@
 #
 # ------------------------------------------------------------------------------
 import os, wx, json
+import wx.svg as wsvg
+from PIL import Image, ImageFont, ImageDraw
 from .define import THIS_RESOURCES_PATH
 
 
@@ -58,7 +60,40 @@ class IconRepo:
         return self._categories[_cate].get_bmp(**kwargs)
 
 
-# todo: maybe consider use cache
+class LocalIconRepoCategory(IconRepoCategory):
+    def __init__(self, **kwargs):
+        IconRepoCategory.__init__(self, **kwargs)
+        # required files dictionary {name: path}
+        self._files = kwargs.get('files', dict())
+        self._cache = dict()
+
+    def get_bmp(self, **kwargs):
+        _name = kwargs.get('name')
+        if _name is None or _name not in self._files:
+            return wx.NullBitmap
+        _color = kwargs.get('color')
+        _size: wx.Size = kwargs.get('size')
+        _w, _h = _size.GetWidth(), _size.GetHeight()
+        if _w == -1:
+            _w = 16
+        if _h == -1:
+            _h = 16
+        _cache_key = hash(((_w, _h), _name, _color))
+        if _cache_key in self._cache:
+            return wx.Bitmap(self._cache.get(_cache_key))
+        _path = self._files.get(_name)
+        if not os.path.exists(_path):
+            return wx.NullBitmap
+        _, _ext = os.path.splitext(_path)
+        if _ext.lower() == '.svg':
+            _img: wsvg.SVGimage = wsvg.SVGimage.CreateFromFile(_path)
+            _bmp = _img.ConvertToScaledBitmap(wx.Size(_w, _h))
+        else:
+            _bmp = wx.Bitmap(_path, wx.BITMAP_TYPE_PNG)
+        self._cache.update({_cache_key: _bmp})
+        return wx.Bitmap(_bmp)
+
+
 class FontIconIconRepoCategory(IconRepoCategory):
     FI_COD_ICON = 1
     FI_ELUSIVE_ICON = 2
@@ -96,8 +131,9 @@ class FontIconIconRepoCategory(IconRepoCategory):
     def __init__(self, **kwargs):
         _usage = kwargs.pop('usage') if 'usage' in kwargs else None
         IconRepoCategory.__init__(self, **kwargs)
-        assert wx.Font.CanUsePrivateFont(), IconRepoException('private font is not allowed.')
         self._charMap = dict()
+        self._cache = dict()
+        self._baseSize = 128
         _ret = True
         if _usage is None or self.FI_COD_ICON in _usage:
             _ret &= self._add_local_font('codicon.ttf',
@@ -143,16 +179,98 @@ class FontIconIconRepoCategory(IconRepoCategory):
 
     def _add_local_font(self, font_file, char_map_json_file, meta_info: dict):
         try:
-            _ret = wx.Font.AddPrivateFont(os.path.join(THIS_RESOURCES_PATH, font_file))
-            assert _ret, SystemError('can not add private font file %s' % font_file)
+            _font_file = os.path.join(THIS_RESOURCES_PATH, font_file)
             with open(os.path.join(THIS_RESOURCES_PATH, char_map_json_file)) as f:
-                self._charMap.update({meta_info.get('key'): {'map': json.load(f), 'meta': meta_info}})
+                self._charMap.update({meta_info.get('key'): {'map': json.load(f),
+                                                             'meta': meta_info,
+                                                             'fontObject': ImageFont.truetype(_font_file, self._baseSize, encoding='utf-8')}})
             return True
         except Exception as e:
             print('e:', str(e), font_file)
             return False
 
-    def get_bmp(self, **kwargs):
+    @staticmethod
+    def pil_image_to_wx_bitmap(pil_image: Image) -> wx.Bitmap:
+        return FontIconIconRepoCategory.wx_image_to_wx_bitmap(FontIconIconRepoCategory.pil_image_to_wx_image(pil_image))
+
+    @staticmethod
+    def wx_image_to_wx_bitmap(wx_image: wx.Image) -> wx.Bitmap:
+        return wx_image.ConvertToBitmap()
+
+    @staticmethod
+    def pil_image_to_wx_image(pil_image, copy_alpha=True) -> wx.Image:
+        _has_alpha = pil_image.mode[-1] == 'A'
+        if copy_alpha and _has_alpha:  # Make sure there is an alpha layer copy.
+            _wx_image = wx.Image(*pil_image.size)
+            _pil_image_copy_rgba = pil_image.copy()
+            _pil_image_copy_rgb = _pil_image_copy_rgba.convert('RGB')  # RGBA --> RGB
+            _pil_image_rgb_data = _pil_image_copy_rgb.tobytes()
+            _wx_image.SetData(_pil_image_rgb_data)
+            _wx_image.SetAlphaBuffer(_pil_image_copy_rgba.tobytes()[3::4])  # Create layer and insert alpha values.
+
+        else:  # The resulting image will not have alpha.
+            _wx_image = wx.Image(*pil_image.size)
+            _pil_image_copy = pil_image.copy()
+            _pil_image_copy_rgb = _pil_image_copy.convert('RGB')  # Discard any alpha from the PIL image.
+            _pil_image_rgb_data = _pil_image_copy_rgb.tobytes()
+            _wx_image.SetData(_pil_image_rgb_data)
+        return _wx_image
+
+    def get_bmp(self, **kwargs) -> wx.Bitmap:
+        """
+        for converting of image between pillow and wx see the reference:
+        https://wiki.wxpython.org/WorkingWithImages
+        Args:
+            **kwargs:
+
+        Returns: wx.Bitmap
+
+        """
+        _name = kwargs.get('name')
+        if _name is None:
+            return wx.NullBitmap
+        _s = _name.split('.')
+        _cm = self._charMap.get(_s[0])
+        if _cm is None:
+            return wx.NullBitmap
+        _code: str = _cm['map'].get(_s[1])
+        if _code is None:
+            return wx.NullBitmap
+        _color = kwargs.get('color', '#3f3f3f')
+        _size: wx.Size = kwargs.get('size')
+        _w, _h = _size.GetWidth(), _size.GetHeight()
+        if _w == -1:
+            _w = 16
+        if _h == -1:
+            _h = 16
+        _cache_key = hash(((_w, _h), _code, _color))
+        if _cache_key in self._cache:
+            return wx.Bitmap(self._cache.get(_cache_key))
+        _img = Image.new('RGBA', (self._baseSize, self._baseSize), (255, 0, 0, 0))
+        _draw = ImageDraw.Draw(_img)
+        _font_obj = _cm['fontObject']
+        _chr_int = int(_code, 16)
+        _draw.text((0, 0), chr(_chr_int), font=_font_obj, fill=_color)
+        _img = _img.resize((_w, _h))
+        # _img.save('test.png')
+        _bmp = self.pil_image_to_wx_bitmap(_img)
+        # _bmp.SaveFile('wxbmp.png', wx.BITMAP_TYPE_PNG)
+        # store in cache
+        self._cache.update({_cache_key: _bmp})
+        return wx.Bitmap(_bmp)
+
+    def clear_cache(self):
+        self._cache.clear()
+
+    def __get_bmp(self, **kwargs):
+        """
+        another solution use gcdc, but may not the best way.
+        Args:
+            **kwargs:
+
+        Returns:
+
+        """
         _name = kwargs.get('name')
         if _name is None:
             return wx.NullBitmap
@@ -164,8 +282,10 @@ class FontIconIconRepoCategory(IconRepoCategory):
         if _code is None:
             return wx.NullBitmap
         _face_name = _cm['meta'].get('faceName')
-        _color=kwargs.get('color','#3f3f3f')
-        _color=wx.Colour(_color)
+        _color = kwargs.get('color', '#3f3f3f')
+        _mask_color = kwargs.get('mask_color', wx.WHITE)
+        _color = wx.Colour(_color)
+        _mask_color = wx.Colour(_mask_color)
         _size: wx.Size = kwargs.get('size')
         _w, _h = _size.width, _size.height
         if _w == -1:
@@ -175,10 +295,11 @@ class FontIconIconRepoCategory(IconRepoCategory):
         _gbmp = wx.Bitmap(_w * 2, _h * 2)
         _ddc = wx.MemoryDC(_gbmp)
         _ddc.Clear()
-        #_ddc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
+        # _ddc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
+        # _ddc.SetTextBackground(_color)
         # Create graphics context from it
         gcdc = wx.GCDC(_ddc)
-        #gcdc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
+        # gcdc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
         # follow comments show the example use difference DC instance to draw the bitmap
         # gc = wx.GraphicsContext.Create(_ddc)
         # gc.SetAntialiasMode(wx.ANTIALIAS_DEFAULT)
@@ -187,6 +308,9 @@ class FontIconIconRepoCategory(IconRepoCategory):
         # gcdc.SetFont(wx.Font(wx.FontInfo(min(w*2, h*2) - 4*2).FaceName('FontAwesome')))
         gcdc.SetFont(wx.Font(wx.FontInfo(min(_w * 2, _h * 2) - 4 * 2).FaceName(_face_name)))
         gcdc.SetTextForeground(_color)
+        # gcdc.SetBrush(wx.TRANSPARENT_BRUSH)
+        # gcdc.SetTextBackground(_color)
+        # gcdc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
         if _code.startswith('0x'):
             _code = _code[2::]
         _chr_int = int(_code, 16)
@@ -195,4 +319,5 @@ class FontIconIconRepoCategory(IconRepoCategory):
         # gc.DrawText(code, 0, -2)
         gcdc.Destroy()
         _gbmp.Rescale(_gbmp, wx.Size(_w, _h))
+        _gbmp.SetMaskColour(_mask_color)
         return _gbmp

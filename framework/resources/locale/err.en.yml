@@ -1,5 +1,0 @@
-en:
-  empty_f: '{} could not be empty.'
-  exist_f: '{} already exist.'
-  not_exist_f: '{} not exist.'
-  unknown_format_f: '{} is unknown format.'

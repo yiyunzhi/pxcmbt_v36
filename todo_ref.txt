@@ -1,0 +1,171 @@
+-------------qtads-------------
+done: componentsFactory
+done: repolishstyle
+done: indicator not been right drawn
+done: dockSplitter color not painted
+done: tab not right been drawn
+done: titlebar seems not right displayed
+done: titlebar menu not right displayed
+done: tab not focused while dock content get focused
+done: autoHideTab initial in top area???
+done: auto hide tab could not restore: sideTabWidget not destroyed while removed from layout
+done: test EnumDockMgrConfigFlag.DragPreviewShowsContentPixmap in DOCK_MANAGER_DEFAULT_CONFIG in floating_drag_preview.py
+done: floatDock zindex not right
+done: tab->floating there a strange over on the mainwindow
+done: test window destroy
+done: test layout store and restore
+done: test restoreContainer in dockmanager
+done: test central widget
+done: test add floating widget
+
+done: auto hide tab style not good: css property not define in class
+done: auto hide collapsed  view can not resize: wrong implementation
+done: tabtitlebar maxheight and size not overlap
+todo: import for typing checking ugly
+todo: event hook while destroy??
+done: make dockmanager inherit or using individual stylesheet
+-------------theme--------------
+done: separator in menubar ugly
+done: replace standard icon
+done: style for qtads
+done: splash window
+done: copy pin, detach, arrowdown, to theme folder
+done: paletteChangeEvent not triggert or three times. use custom event instead.
+done: use weakref of icon in a global registry, if theme changed then change the icon color in weakref.
+-------------ModelViewTree--------------
+done: changeName of node,
+done: changeName of node at same time change the viewTitle,
+done: deleteNode of node at same time close the view,
+done: undostack, accept the menubar undo/redo only if this view has focused. zManger has signal report the stateChanged. commands:[rename]
+done: in userAppl use guiFactory register the core supplied zViewMgr and View.
+done: selected to new created or pasted item. if item delete, select the closest sibling, if no sibling select its parent.
+done: add prototype, prototype could label and descript editable.
+done: after clone, properties should be updated.
+done: changeDetect, use undoStack?? viewManager add a method name has_changed()->bool,
+-------------app--------------
+todo: nexversion->phosphoricons upgrade
+todo: logicExpr -> Req?? use first order predicate tech
+todo: nextVersion->QIdentityProxyModel could also be used in this project
+todo: nextVersion->SARibbon menubar could be used for complexer interaction
+todo: nextVersion->toolbar show windows toggle combobox??????
+done: aboutDialog finish.
+done: improve QTADS while darktheme setup
+done: left put a mode select sidebar, default only centraldockarea
+done: theme loaded from setting, if no setting use default.
+done: node of modelTreeNode has description
+done: the toolbar/menubar change the state base on the currentFocusedDockWidget
+done: the menubar change the state base on the currentFocusedDockWidget
+done: the toolbar/menubar change the undoRedo state base on the currentFocusedDockWidget
+todo: the dockWidget close emit to app, before close must be checked if content change, if yes then ask user whether save it?
+done: mode selector in group, every action from same group will in tabWidget grouped.
+done: help doc: https://doc.qt.io/qtforpython/overviews/qthelp-framework.html
+todo: toggle toolbar https://doc.qt.io/qtforpython/PySide6/QtWidgets/QToolBar.html?highlight=toggleviewaction#PySide6.QtWidgets.PySide6.QtWidgets.QToolBar.toggleViewAction
+        https://stackoverflow.com/questions/25277060/how-do-you-hide-restore-a-toolbar-when-switching-from-to-a-page-of-a-qstackedwid
+done: STE Editor https://gist.github.com/Axel-Erfurt/8c84b5e70a1faf894879cd2ab99118c2
+-------------stc---------------
+todo: use labeling replace direct expression or statement in the statechart, provide LabelingEditor use IOD user could write labeling script.
+todo: arrow overlap the shape.
+-------------ipod--------------
+deprecated: event in a host during the design phase is only an interface, if events host add to the model, then could bind event with the events from other model emitted.
+        in solution do a declaration of an event.
+deprecated: has builtin fn solution: sendEvent
+todo: prototype node uses FSM(STC) implemented.
+      prototype:
+        - one
+        - two ...
+      behaviours:
+        - b1 (BT)
+        - b2 (STC)...
+      the prototype is a FSM, whose [G]A could reference a behaviour from behaviours.
+      prototype either behaviour is an IPOD-Modul
+todo: the component in model could add IOD with contextmenu
+todo: IPODEntity muss have RT,IPOD
+todo: model only accepted IPODEntity while DND
+todo: tester only accepted IPODEntityModel while DND, create Test[Testrun,ReqLink]->drop IPODEntityModel->setting etc.constraint...->build testcase->run
+todo: model coverage criteria, all transitions, all states, or all conditions. all dataset
+-----------tester--------------
+deprecated: for generation of teststeps in tester could have follow types:
+->ExplorerDriven: the teststeps will be dynamic generated, base on the ability formal specification(TLA+ or LTL), let the as most as possible states changed.
+        (interrupt condition: the max coverage reached or iteration count reached or no new transitions happens)
+->dataDriven: the teststeps will be generated by given datasequence, which by domain permutation generated.
+        (interrupt condition: the max coverage reached or iteration count reached)
+
+------------constraint---------
+deprecated: FSM in MBT must be SingleWordHoming FSM
+deprecated: sequence constraint= directedGraph, limit the traversal of state, (limit1,limit n,no limit)???? use LTL and CTL !!!https://zh.wikipedia.org/wiki/%E7%BA%BF%E6%80%A7%E6%97%B6%E5%BA%8F%E9%80%BB%E8%BE%91
+        https://github.com/albertocasagrande/pyModelChecking
+        https://github.com/whitemech/LTLf2DFA/blob/master/ltlf2dfa/parser/ltlf.lark
+        https://github.com/mvcisback/py-metric-temporal-logic
+        http://ltlf2dfa.diag.uniroma1.it/dfa   LTL->DFA
+        https://github.com/git-afsantos/hpl-specs/blob/main/docs/lang.md
+        https://github.com/pyQode/pyQode
+deprecated: constraint type: focus on heuristics like code coverage, model coverage, timing constraints, randomness,
+
+LTL is typically used for properties that can be expressed as a formula involving temporal operators such as "eventually", "always", and "until". It is
+particularly useful for checking safety properties, which assert that something bad never happens.
+
+CTL, on the other hand, is better suited for expressing branching-time properties, where the behavior of a system can diverge into multiple possible futures.
+It is particularly useful for checking liveness properties, which assert that something good eventually happens.
+
+In general, LTL is more expressive than CTL, but CTL is more efficient to model-check. Therefore, LTL is often used for expressing complex safety properties,
+while CTL is often used for expressing liveness properties.
+
+
+In model checking, safety and liveness properties are two types of properties that are used to specify the desired behavior of a system.
+
+Safety properties are properties that express something that should never happen during the execution of the system. They specify that
+certain conditions should always hold true, regardless of the actions taken by the system. Examples of safety properties include "the system should never deadlock",
+"no two processes should be in the critical section at the same time", or "a request should always be followed by a response".
+
+Liveness properties, on the other hand, express something that should eventually happen during the execution of the system. They specify that certain conditions
+should eventually become true, given enough time and input. Examples of liveness properties include "eventually, every request will be satisfied", "there exists
+a path through the system that reaches a specified goal state", or "a system with a buffer should always eventually read all of the items in the buffer".
+
+
+there are other types of properties that can be verified using model checking, in addition to safety and liveness properties. Here are a few examples:
+
+Reachability properties: These specify whether a given state or set of states can be reached from an initial state.
+
+Temporal logic properties: These specify how properties hold over time, including past and future properties.
+
+Fairness properties: These specify constraints on the ordering of events or the distribution of resources over time.
+
+Equivalence properties: These specify whether two systems or models are equivalent in behavior.
+
+Consistency properties: These specify whether a set of requirements or specifications is internally consistent and free of contradictions.
+
+
+
+Model-based testing (MBT) can be used to generate test cases based on models, and those models can be used for model checking purposes as well.
+When generating test cases using MBT, test inputs are usually selected from a predefined domain, which is defined based on the properties of the system being tested.
+
+To generate properties for model checking using MBT, the following steps are usually taken:
+
+Define the system behavior: The first step is to define the behavior of the system being tested using a formal model, such as a finite state machine or a Markov chain.
+
+Define the property language: The next step is to define the property language, which is a set of rules that can be used to specify the desired properties of the system.
+The property language is usually based on a formal logic, such as Linear Temporal Logic (LTL) or Computation Tree Logic (CTL).
+
+Generate test cases: Test cases are generated based on the predefined domain of the system inputs, and the expected behavior of the system is specified using the property
+
+language.
+
+Verify the properties: Finally, the generated test cases are executed on the system, and the results are checked against the specified properties using a model checker.
+If any property is violated, a counterexample is generated, which can be used to diagnose and fix the problem in the system.
+-----------
+Here are the general steps to execute an LTL expression using SPIN:
+
+Model your system in Promela.
+Specify the LTL property you want to check in a file with the extension ".pml".
+Use the SPIN tool to check whether your system satisfies the LTL property.
+----------------------docu-------------------------
+---------------------ref---------------------------
+https://github.com/czyt1988/SARibbon
+comsol
+---------formal tool--------------
+pysmt
+z3
+
+https://stately.ai/registry/new
+https://github.com/zauberzeug/nicegui/tree/main
+https://github.com/wailsapp/wails

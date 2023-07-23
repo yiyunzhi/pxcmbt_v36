@@ -20,6 +20,9 @@
 #
 # ------------------------------------------------------------------------------
 class AppFileIO:
+    BODY_KEY = 'BODY'
+    HEADER_KEY = 'HEADER'
+
     def __init__(self):
         pass
 
@@ -27,4 +30,7 @@ class AppFileIO:
         pass
 
     def write(self, *args, **kwargs):
+        pass
+
+    def get_section(self):
         pass
