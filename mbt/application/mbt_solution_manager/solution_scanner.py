@@ -21,6 +21,7 @@
 # ------------------------------------------------------------------------------
 import pathlib
 import importlib.util
+from framework.application.define import _
 
 
 class MBTSolutionScanner:
@@ -31,7 +32,7 @@ class MBTSolutionScanner:
         _res = dict()
         _path = pathlib.Path(path)
         if not _path.exists():
-            return False, zI18n.t('SOLUTION_PATH_NOT_EXIST')
+            return False, _('solutions path not found.')
         for p in _path.glob('*/__init__.py'):
             _dir_name = p.parts[-2]
             _spec = importlib.util.spec_from_file_location('SOLUTION_PKG_%s' % _dir_name, p.resolve())

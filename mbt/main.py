@@ -19,7 +19,7 @@ from mbt.application.mbt_solution_manager.solution_manager import MBTSolutionsMa
 # from application.class_ipod_engine import IPOD_ENGINE_MGR
 # from application.class_yaml_tags import *
 from .resources import LOCALE_PATH, HELP_PATH
-from .application.define_path import MBT_ROOT_PATH
+from .application.define_path import MBT_ROOT_PATH,SOLUTIONS_PATH
 from .gui.art_provider.class_art_provider import MBTArtProvider
 from .gui_main_frame_mgr import AppMainFrameViewManager
 from .gui_splash import SplashScreen
@@ -168,8 +168,9 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # --------------------------------------------------------------
         # mbt solution
         # --------------------------------------------------------------
-        _splash.set_message('loading solutions.')
+        _splash.set_message('loading solutions into context.')
         _mbt_solution_mgr = MBTSolutionsManager()
+        _mbt_solution_mgr.resolve_solutions(SOLUTIONS_PATH)
         appCtx.set_property('mbtSolutionManager', _mbt_solution_mgr)
         # --------------------------------------------------------------
         # setup application main frame

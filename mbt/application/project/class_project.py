@@ -1,8 +1,9 @@
+import copy
 import os, pathlib, anytree
 from dataclasses import dataclass, field as data_field
 from anytree.exporter import DictExporter
 from anytree.importer import DictImporter
-from framework.application.base import Serializable, TreeModelAnyTreeNode, TreeModel
+from framework.application.base import Serializable, TreeModelAnyTreeNode, TreeModel, NodeContent
 from framework.application.utils_helper import util_remove_folder, util_get_uuid_string
 from framework.application.io.class_yaml_file_io import AppYamlFileIO
 from framework.application.define_path import ROOT
@@ -18,37 +19,41 @@ _log = get_logger('application.project')
 NODE_CONSTRUCTOR_CFG = os.path.join(os.path.dirname(__file__), 'project_tree_node.ctree')
 
 
-class ProjectNodeContent:
-    def __init__(self):
-        self.projectNode = None
+class ProjectNodeProfile(NodeContent):
+    serializeTag = '!Profile'
 
-    def get_child_node_by_role(self, role):
-        _node = self.projectNode
-        _filter = list(
-            filter(lambda x: x.role == role, _node.children))
-        return _filter[0] if _filter else None
+    def __init__(self, **kwargs):
+        _attr = {'name': kwargs.get('name', ''), 'description': kwargs.get('description', 'no description')}
+        _node = kwargs.get('node')
+        NodeContent.__init__(self, _node, _attr)
 
-    def exe_cmd(self, **kwargs):
-        return True, ''
+    def set(self, k, v, force=True):
+        if k not in ['name', 'description']:
+            return
+        super().set(k, v, force)
 
 
 class ProjectTreeNode(TreeModelAnyTreeNode):
     def __init__(self, **kwargs):
         TreeModelAnyTreeNode.__init__(self, **kwargs)
+        _flag = kwargs.get('flag', EnumProjectItemFlag.FLAG_DEFAULT)
         self.uuid = kwargs.get('uuid', util_get_uuid_string())
         self.role = kwargs.get('role')
-        _flag = kwargs.get('flag', EnumProjectItemFlag.FLAG_DEFAULT)
         self.flag = 0
         self._realize_flag(_flag)
         self.icon = kwargs.get('icon', self.icon)
-        self.description = kwargs.get('description', 'no description')
+        self.typeUri = kwargs.get('type_uri', 'type://file')
+        # typeUri define see below
+        # uri: type://solution?name=stc?uid=7dwdwxsswfa232swd23
+        # uri: type://addon?
+        # uri: type://file?path=dw\wd\a.obj (if path not explict<like a link> then use default get_file_path())
         self.contextMenu = kwargs.get('contextMenu')
         self.fileAttr = kwargs.get('fileAttr', EnumProjectNodeFileAttr.FOLDER)
         self.fileExtend = kwargs.get('fileExtend')
         self.fileName = kwargs.get('fileName', self.label.lower())
-        self.content = None
-        _content = kwargs.get('content')
-        self.set_content(_content)
+        self.profile = None
+        _profile = kwargs.get('profile', ProjectNodeProfile(node=self, name=self.label))
+        self.set_profile(_profile)
 
     def __repr__(self):
         return 'ProjectTreeNode: {} uid:{}, role:{}.'.format(self.label, self.uuid, EnumProjectItemRole(self.role).name)
@@ -59,12 +64,11 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
                 'role': self.role,
                 'flag': self.flag,
                 'icon': self.icon,
-                'label': self.label,
-                'description': self.description,
                 'contextMenu': self.contextMenu,
                 'fileAttr': self.fileAttr,
                 'fileExtend': self.fileExtend,
-                'fileName': self.fileName}
+                'fileName': self.fileName,
+                'profile': self.profile.serializer}
 
     def _realize_flag(self, val):
         if isinstance(val, list):
@@ -74,16 +78,16 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
             assert isinstance(val, int), 'invalid flag. %s' % val
             self.flag = val
 
+    @property
+    def description(self):
+        return self.profile.get('description')
+
     def update(self, **kwargs):
         if 'flag' in kwargs:
             self.flag = 0
             self._realize_flag(kwargs.get('flag'))
-        if 'label' in kwargs:
-            self.label = kwargs.get('label')
         if 'icon' in kwargs:
             self.icon = kwargs.get('icon')
-        if 'description' in kwargs:
-            self.description = kwargs.get('description')
         if 'contextMenu' in kwargs:
             self.contextMenu = kwargs.get('contextMenu')
         if 'fileAttr' in kwargs:
@@ -92,23 +96,29 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
             self.fileName = kwargs.get('fileName')
         if 'fileExtend' in kwargs:
             self.fileExtend = kwargs.get('fileExtend')
+        if 'profile' in kwargs:
+            _p = kwargs.get('profile')
+            if isinstance(_p, ProjectNodeProfile):
+                self.set_profile(_p)
+            elif isinstance(_p, dict):
+                self.update_profile(**_p)
 
-    def set_content(self, content):
-        if content is not None:
-            assert isinstance(content, ProjectNodeContent), 'ProjectNodeContent is required, given <%s>' % type(content)
-            self.content = content
-            self.content.projectNode = self
+    def set_profile(self, profile: ProjectNodeProfile):
+        if profile is not None:
+            assert isinstance(profile, ProjectNodeProfile), 'type ProjectNodeProfile is required, given <%s>' % type(
+                profile)
+            self.profile = profile
+            self.profile.link_node(self)
+            if self.has_flag(EnumProjectItemFlag.DESCRIBABLE.value):
+                self.label = self.profile.get('name')
+            else:
+                self.profile.set('name', self.label)
 
-    def clear_content(self):
-        self.content = None
-
-    def update_describable_data(self, name, description):
+    def update_profile(self, name: str, description: str):
+        self.profile.set('description', description)
         if self.has_flag(EnumProjectItemFlag.DESCRIBABLE):
+            self.profile.set('name', name)
             self.label = name
-            self.description = description
-            if self.content is not None:
-                if hasattr(self.content, 'generalInfo'):
-                    self.content.set_general_info(name, description)
 
     def get_file_name(self):
         if self.fileAttr != EnumProjectNodeFileAttr.LINK:
@@ -226,8 +236,9 @@ class Project:
     def do_save_project_node(self):
         _file_io = AppYamlFileIO(self.projectPath, self.name + PROJECT_FILE_EXTEND)
         # export exclusive the attribute contextMenu
-        _exporter = DictExporter(attriter=lambda attr: [(k, v) for k, v in attr if k in ['uuid', 'role']],
-                                 childiter=lambda children: [child for child in children if child.role not in self._noSavableRole])
+        _exporter = DictExporter(attriter=lambda attr: [(k, v) for k, v in attr if k in ['uuid', 'role', 'profile']],
+                                 childiter=lambda children: [child for child in children if
+                                                             child.role not in self._noSavableRole])
         _d = {'meta': self.meta,
               'project': _exporter.export(self.projectTreeRoot),
               'perspective': self.mainPerspective}
@@ -249,6 +260,8 @@ class Project:
             for x in anytree.LevelOrderIter(_imp_root):
                 _cfg = node_cfg.get(x.role)
                 x.update(**_cfg)
+                if x.has_flag(EnumProjectItemFlag.DESCRIBABLE.value):
+                    x.label = x.profile.get('name')
                 if x.is_root:
                     x.label = self.name
         self.projectTreeRoot = _imp_root

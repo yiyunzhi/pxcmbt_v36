@@ -42,7 +42,7 @@ class MBTSolutionsManager:
         self.solutions = dict()
 
     def add_solution(self, solution: MBTSolution):
-        _k = '%s.%s' % (solution.solution_def.namespace, solution.solution_def.type)
+        _k = '%s.%s' % (solution.solutionDef.namespace, solution.solutionDef.type)
         if _k in self.solutions:
             raise SolutionRegisterException(_('SOLUTION_ALREADY_EXIST'))
         self.solutions.update({_k: solution})

@@ -35,20 +35,7 @@ class MBTAppCtxSetupException(Exception):
 class MBTApplicationContext(IApplicationContext):
     def __init__(self):
         IApplicationContext.__init__(self, 'mbt')
-        self.mainWin = None
         self.editorMapper = UidObjectMapper()
-        self.app = None
-        self.project = None
-        self.appCss = None
-        self.appTheme = None
-        self.appThemeContext = None
-        self.addonsManager = None
-        self.mbtSolutionManager = None
-        self.paletteAppliedFlag = False
-        self.iconResp = None
-        self.i18nResp = None
-        self.zViewFactory = None
-        self.uriHandleMgr = None
 
     def setup(self, app: wx.App):
         try:

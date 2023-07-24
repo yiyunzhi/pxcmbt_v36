@@ -1,0 +1,92 @@
+meta: !ProjectMeta
+  requiredSolutions: []
+perspective: null
+project:
+  children:
+  - children:
+    - profile: !Profile
+        name: Prototypes
+        description: no description
+      role: 0-1-0
+      uuid: ed7d7e13
+    - children:
+      - profile: !Profile
+          name: dwfw2
+          description: description of Behaviour
+        role: 0-1-1-0
+        uuid: 9b314b3d
+      - profile: !Profile
+          name: dwfw2Copy
+          description: description of Behaviour
+        role: 0-1-1-0
+        uuid: ce91a7d3
+      profile: !Profile
+        name: Behaviours
+        description: no description
+      role: 0-1-1
+      uuid: 6fed6512
+    profile: !Profile
+      name: Model
+      description: no description
+    role: 0-1
+    uuid: fe1ca5e3
+  - children:
+    - children:
+      - children:
+        - profile: !Profile
+            name: setting
+            description: no description
+          role: 0-2-0-0-0
+          uuid: be3371ed
+        - profile: !Profile
+            name: result
+            description: no description
+          role: 0-2-0-0-1
+          uuid: ae0a1455
+        profile: !Profile
+          name: defaultTestCase
+          description: no description
+        role: 0-2-0-0
+        uuid: c76b48fd
+      profile: !Profile
+        name: TestCases
+        description: no description
+      role: 0-2-0
+      uuid: 9c768b39
+    - children:
+      - profile: !Profile
+          name: newEnv
+          description: no description
+        role: 0-2-1-0
+        uuid: d0724298
+      profile: !Profile
+        name: TestEnvs
+        description: no description
+      role: 0-2-1
+      uuid: 90256f14
+    - profile: !Profile
+        name: TestExecutor
+        description: no description
+      role: 0-2-2
+      uuid: 265165f8
+    - children:
+      - profile: !Profile
+          name: newReqRepo
+          description: no description
+        role: 0-2-3-0
+        uuid: b49a5aca
+      profile: !Profile
+        name: Req.Manager
+        description: no description
+      role: 0-2-3
+      uuid: 2d114cff
+    profile: !Profile
+      name: Tester
+      description: no description
+    role: 0-2
+    uuid: 16b4a709
+  profile: !Profile
+    name: Project
+    description: no description
+  role: '0'
+  uuid: fa55e84c

@@ -20,5 +20,5 @@
 #
 # ------------------------------------------------------------------------------
 from .define import *
-from .class_project import ProjectTreeNode, NODE_CONSTRUCTOR_CFG, Project,ProjectTreeModel
+from .class_project import ProjectTreeNode, NODE_CONSTRUCTOR_CFG, Project,ProjectTreeModel,ProjectNodeProfile
 from .class_node_constructor_cfg import TreeNodeConstructorImporter

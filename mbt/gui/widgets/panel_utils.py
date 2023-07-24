@@ -58,7 +58,8 @@ class ProfileEditPanel(wx.Panel, ContentableMinxin):
 
 
 class ChoiceEditPanel(wx.Panel):
-    def __init__(self, parent=None, label=_('Name:'), choices=list(), default_value='', choice_help: dict = None, use_bitmap=False):
+    def __init__(self, parent=None, label=_('Name:'), choices=list(), default_value='', choice_help: dict = None,
+                 use_bitmap=False):
         wx.Panel.__init__(self, parent)
         self._choiceHelp = choice_help
         self.mainSizer = wx.GridBagSizer(5, 5)
@@ -66,17 +67,18 @@ class ChoiceEditPanel(wx.Panel):
         if not use_bitmap:
             self.cEdit = wx.ComboBox(self, wx.ID_ANY, choices=choices, value=default_value, style=wx.CB_READONLY)
         else:
-            self.cEdit = wx.adv.BitmapComboBox(self, wx.ID_ANY, choices=choices, value=default_value, style=wx.CB_READONLY)
+            self.cEdit = wx.adv.BitmapComboBox(self, wx.ID_ANY, choices=choices, value=default_value,
+                                               style=wx.CB_READONLY)
         self.cEditHelp = wx.StaticText(self, wx.ID_ANY)
         self.cEditHelp.SetForegroundColour(wx.Colour('#7e7e7e'))
-        _hlp_font = wx.Font(8, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_THIN)
+        _hlp_font = wx.Font(8, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_NORMAL)
         self.cEditHelp.SetFont(_hlp_font)
         # bind event
         self.cEdit.Bind(wx.EVT_COMBOBOX, self.on_choice_changed)
         # layout
         self.SetSizer(self.mainSizer)
-        self.mainSizer.Add(self.cLabel, (0, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
-        self.mainSizer.Add(self.cEdit, (0, 1), (0, 1), wx.EXPAND)
+        self.mainSizer.Add(self.cLabel, (0, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.mainSizer.Add(self.cEdit, (0, 1), (0, 5), wx.EXPAND)
         self.mainSizer.Add(self.cEditHelp, (1, 0), (5, 5), wx.EXPAND | wx.TOP, 5)
         self.Layout()
 
@@ -110,11 +112,15 @@ class ChoiceEditPanel(wx.Panel):
                     _bmps = [_bmp] * len(_choices)
                 for idx, x in enumerate(_choices):
                     self.cEdit.Append(x, _bmps[idx])
-        if _selected: self.cEdit.SetValue(_selected)
+        if _selected:
+            self.cEdit.SetValue(_selected)
+        else:
+            self.cEdit.SetSelection(0)
         self.update_choice_help()
         if validators is not None:
             _validator = validators.get('default')
             if _validator: self.cEdit.SetValidator(_validator)
+        self.Layout()
 
     def get_content(self, ignore_validate=False):
         if not ignore_validate:

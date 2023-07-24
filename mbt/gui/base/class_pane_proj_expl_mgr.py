@@ -26,11 +26,17 @@ import os.path
 import wx.lib.newevent as wxevt
 from framework.application.define import _
 from framework.application.io import AppYamlFileIO
-from framework.application.utils_helper import util_set_custom_data_to_clipboard, util_get_custom_data_from_clipboard, util_get_uuid_string
+from framework.application.utils_helper import (util_set_custom_data_to_clipboard,
+                                                util_get_custom_data_from_clipboard,
+                                                util_get_uuid_string)
 from framework.gui.base.class_feedback_dialogs import FeedbackDialogs
 from framework.gui.utils import gui_util_get_simple_text_header
 from framework.application.base import TreeModel
-from mbt.application.project import ProjectTreeNode, EnumProjectItemFlag, DF_PROJECT_NODE_FMT, EnumProjectItemRole
+from mbt.application.project import (ProjectTreeNode,
+                                     EnumProjectItemFlag,
+                                     DF_PROJECT_NODE_FMT,
+                                     EnumProjectItemRole,
+                                     ProjectNodeProfile)
 from mbt.gui.base import MBTViewManager, MBTContentContainer
 from mbt.gui.widgets import ZWizardPage, ProfileEditPanel, ChoiceEditPanel
 from mbt.application.utils import WxMenuBuilder
@@ -118,7 +124,8 @@ class ProjectExplorerManager(MBTViewManager):
         """
         return {wx.ID_COPY: node.has_flag(EnumProjectItemFlag.CAN_COPY),
                 wx.ID_CUT: False,
-                wx.ID_PASTE: node.has_flag(EnumProjectItemFlag.CAN_PASTE) and wx.TheClipboard.IsSupported(DF_PROJECT_NODE_FMT),
+                wx.ID_PASTE: node.has_flag(EnumProjectItemFlag.CAN_PASTE) and wx.TheClipboard.IsSupported(
+                    DF_PROJECT_NODE_FMT),
                 wx.ID_DELETE: node.has_flag(EnumProjectItemFlag.REMOVABLE),
                 EnumProjectExplorerContextMenuIDs.RENAME: not node.has_flag(EnumProjectItemFlag.LABEL_READONLY),
                 EnumProjectExplorerContextMenuIDs.OPEN: node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT),
@@ -167,7 +174,8 @@ class ProjectExplorerManager(MBTViewManager):
         if _proj_name is not None and _project_path is not None:
             _ret = self._contentContainer.create_new_project(_proj_name, _project_path)
             if not _ret:
-                wx.MessageBox('Can not create the project %s, at %s.\nError:%s' % (_proj_name, _project_path, self._contentContainer.pop_error()))
+                wx.MessageBox('Can not create the project %s, at %s.\nError:%s' % (
+                    _proj_name, _project_path, self._contentContainer.pop_error()))
                 self._contentContainer.delete_project(_proj_name, _project_path)
             else:
                 self.set_project_tree(self._contentContainer.project.projectTreeModel)
@@ -191,7 +199,7 @@ class ProjectExplorerManager(MBTViewManager):
         _choice_desc = options.get('choice_description', _('Here select an option from given options.'))
         _bmp_id = options.get('bmp_id', 'pi.list-plus')
         _bmp = wx.ArtProvider.GetBitmap(_bmp_id, wx.ART_OTHER, wx.Size(64, 64))
-        _wz = wx.adv.Wizard(self.view, wx.ID_ANY, _title, _bmp, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        _wz = wx.adv.Wizard(self.view, wx.ID_ANY, _title, _bmp, style=wx.DEFAULT_DIALOG_STYLE)
         _wz.SetBitmapPlacement(wx.adv.WIZARD_VALIGN_CENTRE)
         _wz.SetBitmapBackgroundColour('#ddd')
         _wz.SetPageSize(wx.Size(360, -1))
@@ -215,7 +223,7 @@ class ProjectExplorerManager(MBTViewManager):
         _wz.GetPageAreaSizer().Add(_page1, 1, wx.EXPAND)
         if _wz.RunWizard(_page1):
             _ret = dict()
-            _ret.update(_page1.get_widget('profile').get_content())
+            _ret.update({'profile': _page1.get_widget('profile').get_content()})
             if _page2 is not None:
                 _ret.update(_page2.get_widget('choice').get_content())
             _wz.Destroy()
@@ -228,37 +236,59 @@ class ProjectExplorerManager(MBTViewManager):
         pass
 
     def add_node(self, role: EnumProjectItemRole):
-        _cc: ProjectExplorerContentContainer = self._contentContainer
-        _describable = _cc.check_flag_of_role_config(role, EnumProjectItemFlag.DESCRIBABLE)
-        _parent = _cc.find_parent_node_by_child_role(role)
-        _meta = dict()
-        _name = EnumProjectItemRole(role).name.capitalize()
-        if _describable:
-            _wz_options = dict()
-            _wz_options['title'] = 'New%sNode' % _name
-            _wz_options['profile_content'] = {'name': 'New%s' % _name, 'description': 'description of %s' % _name}
-            if role == EnumProjectItemRole.BEHAVIOUR.value:
-                _wz_options['choice_content'] = {'choices': ['A', 'B', 'C'],
-                                                 'selected': 'B',
-                                                 'bmp': None,
-                                                 'descriptions': {'A': 'Select A use \n item A', 'B': 'Select B use \n item B'}}
-                _wz_options['choice_title'] = 'Select Solution'
-                _wz_options['choice_description'] = 'Select a solution from given list.'
-                _wz_options['choice_label'] = 'Solution:'
-            _ret, _res = self._run_wizard_for_new_or_edit_node(**_wz_options)
-            print('_ret:_res:', _ret, _res)
-            pass
-            # _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode'%_name)
-            # _ret = self.undoStack.Submit(_cmd)
-            # assert _ret, 'command not be executed successfully.'
-        # return _cc.post_add_child_node_of(_parent, role, _meta)
+        try:
+            _cc: ProjectExplorerContentContainer = self._contentContainer
+            _describable = _cc.check_flag_of_role_config(role, EnumProjectItemFlag.DESCRIBABLE)
+            _parent = _cc.find_parent_node_by_child_role(role)
+            _meta = dict()
+            _name = EnumProjectItemRole(role).name.capitalize()
+            if _describable:
+                _wz_options = dict()
+                _wz_options['title'] = 'New%sNode' % _name
+                _wz_options['profile_content'] = {'name': 'New%s' % _name, 'description': 'description of %s' % _name}
+                _has_choice = False
+                _choice_update = lambda x: x
+                if role == EnumProjectItemRole.BEHAVIOUR.value:
+                    _has_choice = True
+                    _app_ctx = self.root.appContext
+                    _slt_mgr = _app_ctx.get_property('mbtSolutionManager')
+                    _bmps = [x.get_icon() for x in _slt_mgr.solutions.values() if x.isValid]
+                    _slts = {x.name: (x.uuid, x.type_) for x in _slt_mgr.solutions.values() if x.isValid}
+                    _choice_update = lambda x: _slts[x]
+                    _slt_descs = {v.name: v.description for v in _slt_mgr.solutions.values() if v.isValid}
+                    _wz_options['choice_content'] = {'choices': list(_slts.keys()),
+                                                     'bmps': _bmps,
+                                                     'descriptions': _slt_descs}
+                    _wz_options['choice_title'] = 'Select Solution'
+                    _wz_options['choice_description'] = 'Select a solution from given list.'
+                    _wz_options['choice_label'] = 'Solution:'
+                _ret, _res = self._run_wizard_for_new_or_edit_node(**_wz_options)
+                if _ret:
+                    if _has_choice:
+                        _slt_uid, _slt_typ = _choice_update(_res['selected'])
+                        _res.update({'typeUri': 'type://solution?name={}?uid={}'.format(_slt_typ, _slt_uid)})
+                        _res.pop('selected')
+                    _res['profile'] = ProjectNodeProfile(**_res['profile'])
+                    _res['role']=role
+                    # todo: assigned icon
+                    _res['icon']='role'
+                    _meta = _res
+                _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode' % _name)
+                _ret = self.undoStack.Submit(_cmd)
+                assert _ret, 'command not be executed successfully.'
+        except Exception as e:
+            FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not add node.since:%s') % e,
+                                            icon=wx.ICON_ERROR)
 
     def copy_node(self, node: ProjectTreeNode):
-        _d = json.dumps(node.meta)
-        _ret = util_set_custom_data_to_clipboard(wx.TheClipboard, DF_PROJECT_NODE_FMT, _d.encode('utf-8'))
-        if not _ret:
-            FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not copy the node into clipboard.'))
-            return
+        try:
+            _d = json.dumps(node.meta)
+            _ret = util_set_custom_data_to_clipboard(wx.TheClipboard, DF_PROJECT_NODE_FMT, _d.encode('utf-8'))
+        except Exception as e:
+            _ret = False
+            if not _ret:
+                FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not copy the node into clipboard.') + '\n%s' % e)
+                return
 
     def cut_node(self, node: ProjectTreeNode):
         # not supported
@@ -274,20 +304,22 @@ class ProjectExplorerManager(MBTViewManager):
                 _b = _b.tobytes()
             _meta = json.loads(_b)
             _meta['uuid'] = util_get_uuid_string()
-            _meta['label'] += 'copy'
+            _meta['profile']['name'] += 'Copy'
             _role = _meta.get('role')
             if node.is_children_role(_role):
                 _parent = node
             else:
                 _parent = self._contentContainer.find_parent_node_by_child_role(_role)
             if _parent is None:
-                FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not find the parent for the pasting node role %s.') % _role)
+                FeedbackDialogs.show_msg_dialog(_('Error'),
+                                                _('Can not find the parent for the pasting node role %s.') % _role)
                 return
             _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='PasteNode')
             _ret = self.undoStack.Submit(_cmd)
             assert _ret, 'command not be executed successfully.'
         except Exception as e:
-            FeedbackDialogs.show_msg_dialog('Error', _('can not paste node.\n%s') % e, flag=wx.OK_DEFAULT | wx.ICON_ERROR)
+            FeedbackDialogs.show_msg_dialog('Error', _('can not paste node.\n%s') % e,
+                                            icon=wx.ICON_ERROR)
             self.log.error('can not execute paste node, since:\n%s' % e)
 
     def delete_node(self, node: ProjectTreeNode):
@@ -298,7 +330,7 @@ class ProjectExplorerManager(MBTViewManager):
                 _ret = self.undoStack.Submit(_cmd)
                 assert _ret, 'command not be executed successfully.'
         except Exception as e:
-            FeedbackDialogs.show_msg_dialog('Error', _('can not delete node.\n%s') % e, flag=wx.ICON_ERROR)
+            FeedbackDialogs.show_msg_dialog('Error', _('can not delete node.\n%s') % e, icon=wx.ICON_ERROR)
             self.log.error('can not execute delete node, since:\n%s' % e)
 
     def open_node(self, node: ProjectTreeNode):

@@ -21,11 +21,12 @@
 # ------------------------------------------------------------------------------
 SOLUTION_DEF = {
     'uuid': 'c41e92bc-25f4-419a-8be7-f7cf94e166f0',
-    'icon': ['fa', 'ph.tree-structure'],
+    'icon': [None, 'pi.tree-structure'],
     'namespace': 'BehaviourTree',
     'type': 'bt',
     'version': '1.0.1',
     'view': '',
     'setup': None,
     'builtinEntitiesPath': '',
+    'description':'Solution with behaviourTree for modeling.'
 }

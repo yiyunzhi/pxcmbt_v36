@@ -39,4 +39,7 @@ MBT_I18N_PATH = _MBT_I18N_PATH.resolve()
 _ADDONS_PATH = _MBT_ROOT.joinpath('addons')
 ADDONS_PATH = _ADDONS_PATH.resolve()
 
+_SOLUTIONS_PATH = _MBT_ROOT.joinpath('solutions')
+SOLUTIONS_PATH = _SOLUTIONS_PATH.resolve()
+
 PROJECT_PATH=os.path.join(ROOT,'project')

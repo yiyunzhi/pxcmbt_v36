@@ -318,8 +318,61 @@ class Validatable:
     def clear_validators(self):
         self._validators.clear()
 
+
 class ContentableMinxin:
-    def set_content(self,*args,**kwargs):
+    def set_content(self, *args, **kwargs):
         raise NotImplementedError
-    def get_content(self,*args,**kwargs):
+
+    def get_content(self, *args, **kwargs):
         raise NotImplementedError
+
+
+class NodeContent(Serializable):
+    serializeTag = '!NodeContent'
+
+    def __init__(self, node=None, attrs=None):
+        self._node = node
+        self._attrs = dict() if attrs is None else attrs
+
+    def __copy__(self):
+        return NodeContent(self._node, copy.deepcopy(self._attrs))
+
+    @property
+    def node(self):
+        return self._node
+
+    @property
+    def attrs(self):
+        return self._attrs
+
+    @property
+    def serializer(self):
+        return self._attrs
+
+    def link_node(self, node, sync_attrs=False):
+        self._node = node
+        if sync_attrs:
+            self.sync_content_to_node()
+
+    def sync_node_to_content(self, exclusive: list = []):
+        for k, v in self._attrs.items():
+            if hasattr(self._node, k) and k not in exclusive:
+                self.set(k, v, True)
+
+    def sync_content_to_node(self, exclusive: list = []):
+        for k, v in self._attrs.items():
+            if hasattr(self._node, k) and k not in exclusive:
+                setattr(self._node, k, v)
+
+    def set(self, k, v, force=False):
+        if k in self._attrs:
+            if force:
+                self._attrs[k] = v
+        else:
+            self._attrs[k] = v
+
+    def has(self, k):
+        return k in self._attrs
+
+    def get(self, k: str):
+        return self._attrs.get(k)

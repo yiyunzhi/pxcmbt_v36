@@ -19,19 +19,18 @@
 #
 #
 # ------------------------------------------------------------------------------
-from core.gui.core.class_base import ZViewManager, ZViewContentContainer, ZViewContent
+from mbt.gui.base import MBTViewManager,MBTContentContainer
 
 
-class STCEditorContentContainer(ZViewContentContainer):
+class STCEditorContentContainer(MBTContentContainer):
     def __init__(self, **kwargs):
-        ZViewContentContainer.__init__(self, **kwargs)
+        MBTContentContainer.__init__(self, **kwargs)
 
-    def transform_data(self):
+    def transform_data(self,*args):
         return {}
 
 
-class STCEditorManager(ZViewManager):
-    aliveWithProject = True
+class STCEditorManager(MBTViewManager):
 
     def __init__(self, **kwargs):
-        ZViewManager.__init__(self, **kwargs)
+        MBTViewManager.__init__(self, **kwargs)

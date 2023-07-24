@@ -66,12 +66,16 @@ class AppMainFrameViewManager(MBTViewManager):
         return appCtx.get_property('appConfig')
 
     @property
+    def appContext(self):
+        return appCtx
+
+    @property
     def fileHistory(self):
         return self._fileHistory
 
     @property
     def windowsViewMenu(self):
-        return self._appMenubarMgr.get_menu_item(_('Window'), _('Views'))[0]
+        return self._appMenubarMgr.get_menu_item(_('&Window'), _('Views'))[0]
 
     def except_hook(self, etype, value, tb):
         """
@@ -151,7 +155,8 @@ class AppMainFrameViewManager(MBTViewManager):
         # --------------------------------------------------------------
         # create and append welcome pane in center
         # --------------------------------------------------------------
-        _welcome = WelcomeManager(parent=self, uid='_welcome_', view_title=_('Welcome'), view_allow_toggle_with_menu=True)
+        _welcome = WelcomeManager(parent=self, uid='_welcome_', view_title=_('Welcome'),
+                                  view_allow_toggle_with_menu=True)
         _welcome.create_view(parent=_view)
         _welcome.toggle_view(True, _view.centerPane)
         self._welcomeMgr = _welcome

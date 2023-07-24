@@ -28,11 +28,12 @@ def setup(app_ctx):
 
 SOLUTION_DEF = {
     'uuid': _uuid,
-    'icon': ['fa', 'mdi.function-variant'],
+    'icon': [None, 'md5.function-variant'],
     'namespace': 'Functions',
     'type': 'fn',
     'version': '1.0.1',
     'view': None,
     'setup': setup,
-    'builtinEntitiesPath': ''
+    'builtinEntitiesPath': '',
+    'description':'Solution with Python functions for modeling.'
 }

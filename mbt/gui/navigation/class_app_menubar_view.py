@@ -166,12 +166,12 @@ class AppMenubarView(wx.MenuBar, MBTUniView):
         _mi = help_menu.Append(wx.ID_ABOUT, _('About...'))
         _mi.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_MENU, _icon_size))
 
-        self.Append(_file_menu, "&File")
-        self.Append(_edit_menu, "&Edit")
-        self.Append(_view_menu, "&View")
-        self.Append(_tools_menu, "&Tool")
-        self.Append(_window_menu, "&Window")
-        self.Append(help_menu, "&Help")
+        self.Append(_file_menu, _("&File"))
+        self.Append(_edit_menu, _("&Edit"))
+        self.Append(_view_menu, _("&View"))
+        self.Append(_tools_menu, _("&Tool"))
+        self.Append(_window_menu, _("&Window"))
+        self.Append(help_menu, _("&Help"))
 
     def on_file_history_item_clicked(self, evt):
         _fileNum = evt.GetId() - wx.ID_FILE1
