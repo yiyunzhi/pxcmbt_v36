@@ -111,7 +111,14 @@ class ChoiceEditPanel(wx.Panel):
                     _bmp = wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_MENU)
                     _bmps = [_bmp] * len(_choices)
                 for idx, x in enumerate(_choices):
-                    self.cEdit.Append(x, _bmps[idx])
+                    _cb=_bmps[idx]
+                    if isinstance(_cb,str):
+                        _bmp=wx.ArtProvider.GetBitmap(_cb, wx.ART_MENU)
+                    elif isinstance(_cb,wx.Bitmap):
+                        _bmp=_cb
+                    else:
+                        _bmp = wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_MENU)
+                    self.cEdit.Append(x, _bmp)
         if _selected:
             self.cEdit.SetValue(_selected)
         else:

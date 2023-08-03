@@ -40,6 +40,12 @@ class MBTSolution:
         _solutionDef = kwargs.get('solution_def', dict())
         assert all([k in _solutionDef for k in self.EXPECT_DEF_KEY])
         self._solutionDef = Dict(_solutionDef)
+    @property
+    def key(self):
+        return '%s.%s' % (self.namespace, self.type_)
+    @property
+    def namespace(self):
+        return self._solutionDef.get('namespace')
 
     @property
     def module_(self) -> str:

@@ -45,11 +45,13 @@ class MBTArtProvider(wx.ArtProvider):
         # images for specific sizes, whatever...
         if art_id.startswith('wxART'):
             return super().CreateBitmap(art_id, client, size)
-        if art_id.startswith('local.'):
-            _cat=self.localIconCategory.name
-            art_id = art_id.replace('local.', '')
-        else:
-            _cat=self.fontIconCategory.name
+        _cat = self.fontIconCategory.name
+        _c,_n=art_id.split('.')
+        for k,v in self.iconRepo.categories.items():
+            if k==_c:
+                _cat=k
+        if _cat=='local':
+            art_id=_n
         # See end of file for the image data
         _bmp = wx.NullBitmap
         _bmp = self.iconRepo.get_bmp(category=_cat, name=art_id, size=size)

@@ -21,8 +21,11 @@ import copy
 # ------------------------------------------------------------------------------
 import os, shutil, anytree
 import wx
+from framework.application.define import _
 from framework.application.io import AppYamlFileIO
+from framework.application.urlobject import URLObject
 from framework.application.utils_helper import util_is_dir_exist
+from mbt.application.mbt_solution_manager import MBTSolutionsManager
 from mbt.application.project import (ProjectTreeNode,
                                      NODE_CONSTRUCTOR_CFG,
                                      TreeNodeConstructorImporter,
@@ -177,9 +180,16 @@ class ProjectExplorerContentContainer(MBTContentContainer):
 
     def open_project(self, path):
         _proj_path, _proj_name = os.path.split(path)
+        if self.project is not None and _proj_name == self.project.name:
+            self.push_error(_('Project %s already opened') % _proj_name)
+            return False
         self.project = Project(_proj_name)
         self.project.set_workspace_path(_proj_path)
         _ret = self.project.do_load_project(self.projectCNImporter.to_dict())
+        for x in anytree.iterators.LevelOrderIter(self.project.projectTreeRoot):
+            if x.role == EnumProjectItemRole.BEHAVIOUR.value:
+                self.update_solution_type_uri_node(x)
+            # todo: check if typeUri file has explict path, then load content
         # try:
         #     # load the blocks content into it's node, currently on blocks node considered
         #     _block_nodes = self.get_project_nodes_by_role(EnumProjectItemRole.ENGINE_IMPL_ITEMS.value)
@@ -195,7 +205,8 @@ class ProjectExplorerContentContainer(MBTContentContainer):
 
     def get_project_node_config(self, role):
         _elements = self.projectCNImporter.get_elements()
-        return _elements.get(role)
+        _element = _elements.get(role)
+        return _element
 
     def get_project_node_cm_config(self, role):
         _elements = self.projectCNImporter.get_elements()
@@ -213,6 +224,19 @@ class ProjectExplorerContentContainer(MBTContentContainer):
     def find_node_by_uid(self, uid):
         return self.projectModel.find_node_by_uid(uid)
 
+    def get_solution_manager(self) -> MBTSolutionsManager:
+        _app = wx.App.GetInstance()
+        return _app.mbtSolutionManager
+
+    def update_solution_type_uri_node(self, node: ProjectTreeNode):
+        _type_uri = URLObject(node.typeUri)
+        _qd = _type_uri.query_dict
+        if _type_uri.path == 'solution':
+            _slt_uid = _qd.get('uid')
+            _slt_mgr = self.get_solution_manager()
+            _slt = _slt_mgr.get_solution_by_uuid(_slt_uid)
+            node.icon = _slt.iconInfo[1]
+
     def post_add_child_node_of(self, parent_node, child_role, meta: dict, ignore_attr: list = None, use_constructor=True):
         _attrs = copy.deepcopy(meta)
         if ignore_attr is not None:
@@ -225,11 +249,11 @@ class ProjectExplorerContentContainer(MBTContentContainer):
             _uid = _attrs.get('uuid')
             if _uid is not None:
                 _constructed_node.uuid = _uid
-            # for k, v in meta.items():
-            #     setattr(_constructed_node, k, v)
             _constructed_node.parent = parent_node
         else:
             _constructed_node = self.projectModel.append_node(parent_node, **_attrs)
+        # determine the icon name base on the typeUri
+        self.update_solution_type_uri_node(_constructed_node)
         # _constructed_node.parent = parent_node
         for x in anytree.iterators.PostOrderIter(_constructed_node):
             _io_cls = None if x.fileExtend is None else AppYamlFileIO

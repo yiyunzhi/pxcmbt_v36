@@ -40,7 +40,7 @@ from mbt.application.project import (ProjectTreeNode,
 from mbt.gui.base import MBTViewManager, MBTContentContainer
 from mbt.gui.widgets import ZWizardPage, ProfileEditPanel, ChoiceEditPanel
 from mbt.application.utils import WxMenuBuilder
-from mbt.application.define import EnumAppSignal, DF_PY_OBJ_FMT
+from mbt.application.define import EnumAppSignal, DF_PY_OBJ_FMT,EVT_APP_TOP_MENU
 from mbt.application.define_path import PROJECT_PATH
 from .class_pane_proj_expl_view import ProjectExplorerView, TreeView
 from .define import EnumProjectExplorerContextMenuIDs
@@ -80,10 +80,14 @@ class ProjectExplorerManager(MBTViewManager):
     def create_view(self, **kwargs):
         if self._view is not None:
             return self._view
+        _app=wx.App.GetInstance()
         _cc = ProjectExplorerContentContainer()
         _image_names = _cc.projectCNImporter.get_required_icon_names()
+        # add solution icon into image list
+        _mbt_slt_mgr = _app.mbtSolutionManager
+        for k, v in _mbt_slt_mgr.solutions.items():
+            _image_names.append(v.iconInfo[1])
         self.post_content_container(_cc)
-        # todo: add solution icon into image list
         _view = ProjectExplorerView(**kwargs, manager=self, image_names=_image_names)
         self.post_view(_view)
         # _view.PushEventHandler(self) could be useful if emit event to other object
@@ -93,19 +97,20 @@ class ProjectExplorerManager(MBTViewManager):
         self.view.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_proj_item_select_changed)
         self.view.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_proj_item_activate)
         self.view.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_proj_item_get_tooltip)
-        self.view.treeView.Bind(wx.EVT_MENU, self.on_menu)
+        self.view.Bind(EVT_APP_TOP_MENU, self.on_top_menu)
+        self.view.treeView.Bind(wx.EVT_MENU, self.on_context_menu)
         self.view.Bind(wx.EVT_TOOL, self.on_tool)
         # self.view.Bind(wx.EVT_CLOSE, self.on_close)
-        self.undoStack.Submit(_TstCmd())
+        # self.undoStack.Submit(_TstCmd())
         return self._view
 
     def set_project_tree(self, model: TreeModel, expand_all=True):
         self.view.treeView.set_model(model)
-        # todo: select the root item.
         if model is not None:
             self.view.enable_tools(True)
         if expand_all:
             self.view.treeView.ExpandAll()
+        self.view.select_node(model.root)
 
     def expand_node(self, node, recursive=True):
         self._view.treeView.expand_node(node, recursive)
@@ -150,7 +155,6 @@ class ProjectExplorerManager(MBTViewManager):
         # todo: show process dialog while loading content
         # assume the project name same as the dir name
         if self._contentContainer.open_project(_path):
-            # todo: label and description of node must be updated from content.
             self.set_project_tree(self._contentContainer.project.projectTreeModel)
             # loading content
             # self._loading_project_node_content(_app)
@@ -246,36 +250,34 @@ class ProjectExplorerManager(MBTViewManager):
                 _wz_options = dict()
                 _wz_options['title'] = 'New%sNode' % _name
                 _wz_options['profile_content'] = {'name': 'New%s' % _name, 'description': 'description of %s' % _name}
-                _has_choice = False
-                _choice_update = lambda x: x
+                _solution_choice = False
+
                 if role == EnumProjectItemRole.BEHAVIOUR.value:
-                    _has_choice = True
+                    _solution_choice = True
                     _app_ctx = self.root.appContext
                     _slt_mgr = _app_ctx.get_property('mbtSolutionManager')
-                    _bmps = [x.get_icon() for x in _slt_mgr.solutions.values() if x.isValid]
                     _slts = {x.name: (x.uuid, x.type_) for x in _slt_mgr.solutions.values() if x.isValid}
-                    _choice_update = lambda x: _slts[x]
                     _slt_descs = {v.name: v.description for v in _slt_mgr.solutions.values() if v.isValid}
+                    _bmps = {x.name: x.iconInfo[1] for x in _slt_mgr.solutions.values() if x.isValid}
                     _wz_options['choice_content'] = {'choices': list(_slts.keys()),
-                                                     'bmps': _bmps,
+                                                     'bmps': list(_bmps.values()),
                                                      'descriptions': _slt_descs}
                     _wz_options['choice_title'] = 'Select Solution'
                     _wz_options['choice_description'] = 'Select a solution from given list.'
                     _wz_options['choice_label'] = 'Solution:'
                 _ret, _res = self._run_wizard_for_new_or_edit_node(**_wz_options)
                 if _ret:
-                    if _has_choice:
-                        _slt_uid, _slt_typ = _choice_update(_res['selected'])
-                        _res.update({'typeUri': 'type://solution?name={}?uid={}'.format(_slt_typ, _slt_uid)})
+                    if _solution_choice:
+                        _slt_uid, _slt_typ = _slts[_res['selected']]
+                        _res['icon'] = _bmps[_res['selected']]
+                        _res.update({'typeUri': ProjectTreeNode.generate_type_uri('solution', name=_slt_typ, uid=_slt_uid)})
                         _res.pop('selected')
                     _res['profile'] = ProjectNodeProfile(**_res['profile'])
-                    _res['role']=role
-                    # todo: assigned icon
-                    _res['icon']='role'
+                    _res['role'] = role
                     _meta = _res
-                _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode' % _name)
-                _ret = self.undoStack.Submit(_cmd)
-                assert _ret, 'command not be executed successfully.'
+                    _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode' % _name)
+                    _ret = self.undoStack.Submit(_cmd)
+                    assert _ret, 'command not be executed successfully.'
         except Exception as e:
             FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not add node.since:%s') % e,
                                             icon=wx.ICON_ERROR)
@@ -363,7 +365,10 @@ class ProjectExplorerManager(MBTViewManager):
     # --------------------------------------------------------------
     # event handling
     # --------------------------------------------------------------
-    def on_menu(self, evt: wx.ContextMenuEvent):
+    def on_top_menu(self, evt: wx.MenuEvent):
+        self.on_context_menu(evt)
+
+    def on_context_menu(self, evt: wx.MenuEvent):
         _id = evt.GetId()
         _item = self._view.treeView.GetSelection()
         if not _item.IsOk():

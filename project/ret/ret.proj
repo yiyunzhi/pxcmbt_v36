@@ -8,28 +8,33 @@ project:
         name: Prototypes
         description: no description
       role: 0-1-0
-      uuid: ed7d7e13
+      typeUri: type://file
+      uuid: ff098159
     - children:
       - profile: !Profile
-          name: dwfw2
+          name: NewBehaviour
           description: description of Behaviour
         role: 0-1-1-0
-        uuid: 9b314b3d
+        typeUri: type:solution?name=fn&uid=c976859c-956d-4075-8ff4-c9f6600b91ac
+        uuid: 5f02e69d
       - profile: !Profile
-          name: dwfw2Copy
+          name: NewBehaviour
           description: description of Behaviour
         role: 0-1-1-0
-        uuid: ce91a7d3
+        typeUri: type:solution?name=stc&uid=12aab13d-bbae-4092-9ace-fb4c996293fd
+        uuid: af2630a4
       profile: !Profile
         name: Behaviours
         description: no description
       role: 0-1-1
-      uuid: 6fed6512
+      typeUri: type://file
+      uuid: 5163f856
     profile: !Profile
       name: Model
       description: no description
     role: 0-1
-    uuid: fe1ca5e3
+    typeUri: type://file
+    uuid: a1549ced
   - children:
     - children:
       - children:
@@ -37,56 +42,67 @@ project:
             name: setting
             description: no description
           role: 0-2-0-0-0
-          uuid: be3371ed
+          typeUri: type://file
+          uuid: c811a996
         - profile: !Profile
             name: result
             description: no description
           role: 0-2-0-0-1
-          uuid: ae0a1455
+          typeUri: type://file
+          uuid: cd54d6ae
         profile: !Profile
           name: defaultTestCase
           description: no description
         role: 0-2-0-0
-        uuid: c76b48fd
+        typeUri: type://file
+        uuid: a2155e73
       profile: !Profile
         name: TestCases
         description: no description
       role: 0-2-0
-      uuid: 9c768b39
+      typeUri: type://file
+      uuid: 3582b3ba
     - children:
       - profile: !Profile
           name: newEnv
           description: no description
         role: 0-2-1-0
-        uuid: d0724298
+        typeUri: type://file
+        uuid: 3384a1f3
       profile: !Profile
         name: TestEnvs
         description: no description
       role: 0-2-1
-      uuid: 90256f14
+      typeUri: type://file
+      uuid: 8c2e8865
     - profile: !Profile
         name: TestExecutor
         description: no description
       role: 0-2-2
-      uuid: 265165f8
+      typeUri: type://file
+      uuid: cdb96b39
     - children:
       - profile: !Profile
           name: newReqRepo
           description: no description
         role: 0-2-3-0
-        uuid: b49a5aca
+        typeUri: type://file
+        uuid: 3fdbaa16
       profile: !Profile
         name: Req.Manager
         description: no description
       role: 0-2-3
-      uuid: 2d114cff
+      typeUri: type://file
+      uuid: 1457d6cd
     profile: !Profile
       name: Tester
       description: no description
     role: 0-2
-    uuid: 16b4a709
+    typeUri: type://file
+    uuid: 2088853b
   profile: !Profile
     name: Project
     description: no description
   role: '0'
-  uuid: fa55e84c
+  typeUri: type://file
+  uuid: d88c4439

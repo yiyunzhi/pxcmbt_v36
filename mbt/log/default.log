@@ -5121,3 +5121,17 @@ AttributeError: 'NoneType' object has no attribute 'startswith'
 
 2023-07-19 21:42:06,457- application.art_provider- ERROR: MBTArtProvider error: providing prototype:wxART_MENU_C at size (16, 16) failed.
 
+2023-07-25 09:13:33,436- application.art_provider- ERROR: MBTArtProvider error: providing Functions v1.0.1:wxART_MENU_C at size (-1, -1) failed.
+
+2023-07-25 09:13:33,438- application.art_provider- ERROR: MBTArtProvider error: providing StateChart v1.0.1:wxART_MENU_C at size (-1, -1) failed.
+
+2023-07-25 09:16:04,103- application.art_provider- ERROR: MBTArtProvider error: providing Functions v1.0.1:wxART_MENU_C at size (16, 16) failed.
+
+2023-07-25 09:16:04,104- application.art_provider- ERROR: MBTArtProvider error: providing StateChart v1.0.1:wxART_MENU_C at size (16, 16) failed.
+
+2023-07-25 09:25:16,273- application.art_provider- ERROR: MBTArtProvider error: providing solution.slt_stc:wxART_MENU_C at size (-1, -1) failed.
+
+2023-07-25 09:27:52,407- application.art_provider- ERROR: MBTArtProvider error: providing solution.slt_stc:wxART_MENU_C at size (-1, -1) failed.
+
+2023-08-01 21:15:53,726- application.art_provider- ERROR: MBTArtProvider error: providing pi.global:wxART_OTHER_C at size (16, 16) failed.
+

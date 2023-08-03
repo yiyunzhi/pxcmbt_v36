@@ -1,4 +1,5 @@
 import anytree
+import wx
 
 
 class TreeModel(object):
@@ -273,7 +274,7 @@ class TreeModelModuleNode(TreeModelDictNode):
 class TreeModelAnyTreeNode(TreeModelNode, anytree.NodeMixin):
     def __init__(self, **kwargs):
         TreeModelNode.__init__(self)
-        self.icon = kwargs.get('icon', 'artNormalFileIcon')
+        self.icon = kwargs.get('icon', wx.ART_NORMAL_FILE)
         self.label = kwargs.get('label', '')
         self.highlighted = False
         if 'parent' in kwargs:
@@ -301,4 +302,4 @@ class TreeModelAnyTreeNode(TreeModelNode, anytree.NodeMixin):
                 return '%sH' % self.icon
             else:
                 return self.icon
-        return 'artNormalFileIcon'
+        return wx.ART_NORMAL_FILE

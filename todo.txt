@@ -1,2 +1,7 @@
 #todo: view nav in toolbar and menubar, back to last view, or forward
 # todo: for RPC, the macro define of testrack or SUT could be in TestView imported(ext: .mcd)
+# todo: plugin has icon, prefs,i18n, minVersion....
+# todo: preference
+        startup: load module...
+        enable splashscreen
+

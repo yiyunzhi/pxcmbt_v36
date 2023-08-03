@@ -5,6 +5,7 @@ from anytree.exporter import DictExporter
 from anytree.importer import DictImporter
 from framework.application.base import Serializable, TreeModelAnyTreeNode, TreeModel, NodeContent
 from framework.application.utils_helper import util_remove_folder, util_get_uuid_string
+from framework.application.urlobject import URLObject
 from framework.application.io.class_yaml_file_io import AppYamlFileIO
 from framework.application.define_path import ROOT
 from mbt.application.define_path import PROJECT_PATH
@@ -34,6 +35,8 @@ class ProjectNodeProfile(NodeContent):
 
 
 class ProjectTreeNode(TreeModelAnyTreeNode):
+    TYPE_URI_SCHEME = 'type'
+
     def __init__(self, **kwargs):
         TreeModelAnyTreeNode.__init__(self, **kwargs)
         _flag = kwargs.get('flag', EnumProjectItemFlag.FLAG_DEFAULT)
@@ -42,7 +45,7 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
         self.flag = 0
         self._realize_flag(_flag)
         self.icon = kwargs.get('icon', self.icon)
-        self.typeUri = kwargs.get('type_uri', 'type://file')
+        self.typeUri = kwargs.get('typeUri', 'type://file')
         # typeUri define see below
         # uri: type://solution?name=stc?uid=7dwdwxsswfa232swd23
         # uri: type://addon?
@@ -64,6 +67,7 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
                 'role': self.role,
                 'flag': self.flag,
                 'icon': self.icon,
+                'typeUri': self.typeUri,
                 'contextMenu': self.contextMenu,
                 'fileAttr': self.fileAttr,
                 'fileExtend': self.fileExtend,
@@ -82,12 +86,22 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
     def description(self):
         return self.profile.get('description')
 
+    @staticmethod
+    def generate_type_uri(uri_path: str, **queries):
+        _uri = URLObject()
+        _uri = _uri.with_scheme(ProjectTreeNode.TYPE_URI_SCHEME)
+        _uri = _uri.with_path(uri_path)
+        _uri = _uri.add_query_params(**queries)
+        return str(_uri)
+
     def update(self, **kwargs):
         if 'flag' in kwargs:
             self.flag = 0
             self._realize_flag(kwargs.get('flag'))
         if 'icon' in kwargs:
             self.icon = kwargs.get('icon')
+        if 'typeUri' in kwargs:
+            self.typeUri = kwargs.get('typeUri')
         if 'contextMenu' in kwargs:
             self.contextMenu = kwargs.get('contextMenu')
         if 'fileAttr' in kwargs:
@@ -236,7 +250,7 @@ class Project:
     def do_save_project_node(self):
         _file_io = AppYamlFileIO(self.projectPath, self.name + PROJECT_FILE_EXTEND)
         # export exclusive the attribute contextMenu
-        _exporter = DictExporter(attriter=lambda attr: [(k, v) for k, v in attr if k in ['uuid', 'role', 'profile']],
+        _exporter = DictExporter(attriter=lambda attr: [(k, v) for k, v in attr if k in ['uuid', 'role', 'profile','typeUri']],
                                  childiter=lambda children: [child for child in children if
                                                              child.role not in self._noSavableRole])
         _d = {'meta': self.meta,

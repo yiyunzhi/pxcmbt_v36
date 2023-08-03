@@ -102,8 +102,7 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
 
         self.CreateStatusBar()
         self.GetStatusBar().SetStatusText("Ready")
-        self.create_acc_table()
-        self._bind_event()
+        #self._bind_event()
         # self.config_editor_map()
         self.Fit()
         self.SetSize((720, 640))
@@ -178,16 +177,8 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
     def refresh(self):
         self._auiMgr.Update()
 
-    def create_acc_table(self):
-        # set the acceleratorTable
-        _id_ctrl_s = wx.NewId()
-        # self.Bind(wx.EVT_MENU, self.on_ctrl_s_pressed, id=_id_ctrl_s)
-        _accel_tbl = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, wx.WXK_CONTROL_S, _id_ctrl_s)
-        ])
-        self.SetAcceleratorTable(_accel_tbl)
-
     def _bind_event(self):
+        pass
         # bind general event
         # self.Bind(wx.EVT_HELP, self.on_help)
         # self.Bind(wx.EVT_TIMER, self.on_size_time_up)
@@ -214,18 +205,18 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
         # self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_proj_item_context_menu, self._panelProjectMgr.treeView)
         # self.Bind(wx.EVT_IDLE, self.on_idle)
         # bind event update UI, multi allowed
-        pub.subscribe(self.on_ext_sig_topic_project, 'project')
-        pub.subscribe(self.on_ext_sig_topic_os, 'os')
-        pub.subscribe(self.on_ext_sig_topic_console, 'console')
-        pub.subscribe(self.on_ext_sig_close_node_editor, EnumAppMsg.sigViewCloseNodeEditor)
-        pub.subscribe(self.on_ext_sig_project_node_profile_changed, EnumAppMsg.sigProjectNodeProfileChanged)
-        pub.subscribe(self.on_ext_sig_put_msg_in_console, EnumAppMsg.sigPutMsgInConsole)
+        # pub.subscribe(self.on_ext_sig_topic_project, 'project')
+        # pub.subscribe(self.on_ext_sig_topic_os, 'os')
+        # pub.subscribe(self.on_ext_sig_topic_console, 'console')
+        # pub.subscribe(self.on_ext_sig_close_node_editor, EnumAppMsg.sigViewCloseNodeEditor)
+        # pub.subscribe(self.on_ext_sig_project_node_profile_changed, EnumAppMsg.sigProjectNodeProfileChanged)
+        # pub.subscribe(self.on_ext_sig_put_msg_in_console, EnumAppMsg.sigPutMsgInConsole)
         # pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps.value)
         # pub.subscribe(self.on_ext_sig_lib_removed, EnumAppSignals.sigV2VLibRemoved.value)
 
     def on_help(self, evt):
-        _help_ctrl = appCtx.get_property('helpController')
-        _help_ctrl.DisplayContents()
+        _app=wx.App.GetInstance()
+        _app.helpController.DisplayContents()
 
     def update_title_with_project_name(self, name):
         self.SetTitle(self.title + ' [CurrentProject: %s]' % name)

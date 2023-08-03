@@ -1,0 +1,36 @@
+#typeCode:
+#    NONE = 0
+#    INTEGER = 1
+#    REAL_NUMBER = 2
+#    STRING = 4
+#    NULL_STRING = 8
+#    DATETIME = 16
+#    INFINITY = 32
+#    NAN = 64
+#    BOOL = 128
+#    DICTIONARY = 256
+#    LIST = 512
+#    IP_ADDRESS = 1024
+#    BYTES = 2048
+#for the tree node:
+#    - children:
+#      - name: K1A0
+#        typeCode: 1
+#        value: 19
+#      - name: K1A2
+#        typeCode: 2
+#        value: 24.22
+#    name: K1A
+#    typeCode: 0
+#    value: null
+children:
+  - name: startup
+    typeCode: 0
+    value: null
+    children:
+      - name: showSplash
+        typeCode: 128
+        value: true
+name: ''
+typeCode: 0
+value: null

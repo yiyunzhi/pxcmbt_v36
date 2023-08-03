@@ -42,9 +42,9 @@ class MBTSolutionsManager:
         self.solutions = dict()
 
     def add_solution(self, solution: MBTSolution):
-        _k = '%s.%s' % (solution.solutionDef.namespace, solution.solutionDef.type)
+        _k = solution.key
         if _k in self.solutions:
-            raise SolutionRegisterException(_('SOLUTION_ALREADY_EXIST'))
+            raise SolutionRegisterException(_('Solution with key %s already exist.')%_k)
         self.solutions.update({_k: solution})
 
     def resolve_solutions(self, path):
@@ -58,8 +58,7 @@ class MBTSolutionsManager:
                 _slt = MBTSolution(module_path=p, module=mi[0], solution_def=mi[1])
                 self.add_solution(_slt)
         except Exception as e:
-            # todo: format str
-            raise SolutionAssertException(_('FMT_UNKNOWN_SOLUTION_AT '))
+            raise SolutionAssertException(_('can not resolve solution.') + '\n%s' % e)
 
     def get_solution_by_uuid(self, uuid):
         for k, v in self.solutions.items():

@@ -1,25 +1,28 @@
 import datetime, ctypes, builtins
 import os, sys, logging, logging.config
 import warnings
-import glob
+import glob, shutil
 import wx
 import wx.adv
 import wx.lib.mixins.inspection
 import wx.html as whtml
 from framework import setup_application_context
 from framework.resources import LOCALE_PATH as FRAMEWORK_LOCALE_PATH
-from framework.application.define import THIS_LANG_DOMAIN as FRAMEWORK_LANG_DOMAIN,_
+from framework.application.define import THIS_LANG_DOMAIN as FRAMEWORK_LANG_DOMAIN, _
 from framework.application.uri_handle import *
+from framework.gui.icon_repo.class_icon_repo import LocalIconRepoCategory
+from framework.application.confware import ZFileConfigBase
 from mbt import appCtx, setup_application_context as setup_mbt_app_ctx
-from mbt.application.define import APP_NAME, APP_VERSION, REQ_WX_VERSION_STRING, APP_VENDOR_NAME,SUPPORTED_LANG, THIS_LANG_DOMAIN
+from mbt.application.define import APP_NAME, APP_VERSION, REQ_WX_VERSION_STRING, APP_VENDOR_NAME, SUPPORTED_LANG, THIS_LANG_DOMAIN
 from mbt.application.log.class_logger import get_logger
 from mbt.application.mbt_solution_manager.solution_manager import MBTSolutionsManager
 # from application.class_content_iod_action import IOD_ACTION_EXT_MGR
 # from application.class_application_config import APP_CONFIG
 # from application.class_ipod_engine import IPOD_ENGINE_MGR
 # from application.class_yaml_tags import *
-from .resources import LOCALE_PATH, HELP_PATH
-from .application.define_path import MBT_ROOT_PATH,SOLUTIONS_PATH
+from .resources import LOCALE_PATH, HELP_PATH, CFG_TEMPLATE_PATH
+from .application.define_path import MBT_ROOT_PATH, SOLUTIONS_PATH
+from .application.confware import MBTConfigManager
 from .gui.art_provider.class_art_provider import MBTArtProvider
 from .gui_main_frame_mgr import AppMainFrameViewManager
 from .gui_splash import SplashScreen
@@ -55,7 +58,21 @@ def _init_logging():
     logging.config.fileConfig(os.path.join(_log_dir, 'logger.cfg'), disable_existing_loggers=False)
 
 
+class DummySplash:
+    def set_message(self, message):
+        pass
+
+
 class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
+    configLoc = None
+    systemConfig: wx.FileConfig = None
+    appConfigMgr: MBTConfigManager = MBTConfigManager()
+    uriHandleMgr = URI_HANDLE_MANAGER
+    rootView = None
+    locale = None
+    mbtSolutionManager = None
+    helpController = None
+
     def OnInit(self):
         # --------------------------------------------------------------
         # wx configuration
@@ -63,7 +80,7 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         if REQ_WX_VERSION_STRING != wx.VERSION_STRING:
             wx.MessageBox(caption=_("Warning"),
                           message=_("You're using version %s of wxPython, but this copy of the demo was written for version %s.\n"
-                                  "There may be some version incompatibilities...")
+                                    "There may be some version incompatibilities...")
                                   % (wx.VERSION_STRING, REQ_WX_VERSION_STRING))
 
         self.InitInspection()  # for the InspectionMixin base class
@@ -81,8 +98,13 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         sys.displayhook = _display_hook
 
         _current_dt = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-
+        self.configLoc = os.path.join(wx.StandardPaths.Get().GetUserConfigDir(), APP_NAME)
+        self.systemConfig = wx.FileConfig(APP_NAME, APP_VENDOR_NAME, os.path.join(self.configLoc, 'system.ini'))
+        self._init_app_config()
         # wx.SystemOptions.SetOption('msw.dark-mode', 2)
+        _appearance_cfg = self.appConfigMgr.get_config('appearance')
+        _i18n_cfg = self.appConfigMgr.get_config('i18n')
+        _show_splash = _appearance_cfg.read('/startup/showSplash', True)
 
         # Create and show the splash screen.  It will then create and
         # show the main frame when it is time to do so.  Normally when
@@ -92,8 +114,11 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # this case we have nothing else to do so we'll delay showing
         # the main frame until later (see ShowMain above) so the users
         # can see the SplashScreen effect.
-        _splash = SplashScreen()
-        wx.Yield()
+        if _show_splash:
+            _splash = SplashScreen()
+            wx.Yield()
+        else:
+            _splash = DummySplash()
         # --------------------------------------------------------------
         # logging
         # --------------------------------------------------------------
@@ -103,65 +128,48 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # components
         # --------------------------------------------------------------
         _splash.set_message('init components')
-        URI_HANDLE_MANAGER.register(CallExternalURIHandle(app_ctx=appCtx))
-        URI_HANDLE_MANAGER.register(PubsubURIHandle())
-        URI_HANDLE_MANAGER.register(AppCurrentViewExecOperationURIHandle())
-        appCtx.set_property('uriHandleMgr', URI_HANDLE_MANAGER)
+        self.uriHandleMgr.register(CallExternalURIHandle(app_ctx=appCtx))
+        self.uriHandleMgr.register(PubsubURIHandle())
+        self.uriHandleMgr.register(AppCurrentViewExecOperationURIHandle())
 
         # --------------------------------------------------------------
-        # AppConfig stuff is here
+        # Config stuff is here
         # --------------------------------------------------------------
-        _splash.set_message('Setup an application configuration file')
-        # the config file generally in C:\Users\xxx\AppData\Roaming\APP_NAME.ini stored.
-        # nix: \home\userid\appName
-        # this file store the version, last datetime, the recent file list and so on.
-        _sp = wx.StandardPaths.Get()
-        self.configLoc = _sp.GetUserConfigDir()
-        self.configLoc = os.path.join(self.configLoc, APP_NAME)
-        if not os.path.exists(self.configLoc):
-            os.mkdir(self.configLoc)
+        _splash.set_message('Setup application configuration')
 
-        self.appConfig = wx.FileConfig(appName=APP_NAME,
-                                       vendorName=APP_VENDOR_NAME,
-                                       localFilename=os.path.join(self.configLoc, "appConfig"))
-
-        if not self.appConfig.HasEntry(u'language'):
-            # on first run we default to English
-            self.appConfig.Write(key=u'language', value=u'en')
-        if not self.appConfig.HasEntry('appVersion'):
-            self.appConfig.Write(key=u'appVersion', value=APP_VERSION)
-        _last_date = self.appConfig.Read("lastStartAt")
+        if not self.systemConfig.Exists('appVersion'):
+            self.systemConfig.Write('appVersion', APP_VERSION)
+        _last_date = self.systemConfig.Read("/statistic/lastStartAt")
         if _last_date:
-            self.appConfig.Write("previousStartAt", _last_date)
+            self.systemConfig.Write("/statistic/previousStartAt", _last_date)
         else:
-            self.appConfig.Write("previousStartAt", _current_dt)
-        self.appConfig.Write("lastStartAt", _current_dt)
-        if not self.appConfig.HasEntry('recentProjectList'):
-            self.appConfig.Write("recentProjectList", '')
-        self.appConfig.Flush()
-        appCtx.set_property('appConfig', self.appConfig)
+            self.systemConfig.Write("/statistic/previousStartAt", _current_dt)
+        self.systemConfig.Write("/statistic/lastStartAt", _current_dt)
+        self.systemConfig.Flush()
+
+        _lang = _i18n_cfg.read('/language', 'en')
         # --------------------------------------------------------------
         # locale
         # --------------------------------------------------------------
         # pot->po->mo
         _splash.set_message('init i18n')
         # Controls the current interface language
-        self.locale = None
         wx.Locale.AddCatalogLookupPathPrefix(FRAMEWORK_LOCALE_PATH)
         wx.Locale.AddCatalogLookupPathPrefix(LOCALE_PATH)
-        self.updateLanguage(self.appConfig.Read("language"))
+        self.update_language(_lang)
         # debug code for I18N print(_('error'),_('NewProject'))
         # --------------------------------------------------------------
         # art provider
         # --------------------------------------------------------------
-        self.initArtProvider()
+        self._init_art_provider()
+        _mbt_art_provider = appCtx.get_property('artProvider')
         # --------------------------------------------------------------
         # help controller
         # --------------------------------------------------------------
         _splash.set_message('init help controller')
-        self.updateHelpContent()
+        self.update_help_content()
         # --------------------------------------------------------------
-        # add on
+        # addons
         # --------------------------------------------------------------
         _splash.set_message('load addons')
         # appCtx.set_property('addonsManager', AddonsManager(appCtx))
@@ -171,7 +179,16 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         _splash.set_message('loading solutions into context.')
         _mbt_solution_mgr = MBTSolutionsManager()
         _mbt_solution_mgr.resolve_solutions(SOLUTIONS_PATH)
-        appCtx.set_property('mbtSolutionManager', _mbt_solution_mgr)
+        # add local image into artProvider.
+        _solution_icon_files = dict()
+        for k, v in _mbt_solution_mgr.solutions.items():
+            _icon_path, _icon_name = v.iconInfo
+            if _icon_path is not None:
+                _solution_icon_files.update({_icon_name: _icon_path})
+        if _solution_icon_files:
+            _solution_icon_repo = LocalIconRepoCategory(name='solution', files=_solution_icon_files)
+            _mbt_art_provider.iconRepo.register(_solution_icon_repo)
+        self.mbtSolutionManager = _mbt_solution_mgr
         # --------------------------------------------------------------
         # setup application main frame
         # --------------------------------------------------------------
@@ -183,8 +200,8 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         setup_mbt_app_ctx(self)
         _splash.set_message('start main application.')
         _main_frm_mgr = AppMainFrameViewManager()
-        _main_frm=_main_frm_mgr.create_view()
-        appCtx.set_property('rootView',_main_frm)
+        _main_frm = _main_frm_mgr.create_view()
+        self.rootView = _main_frm
         # debug constructor and representer of yaml tag
         # for k,v in yaml.CFullLoader.yaml_constructors.items():
         #    print('yamlmeta->', k,v)
@@ -207,12 +224,38 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         del _splash
         return True
 
-    def initArtProvider(self):
+    def _init_art_provider(self):
         _mbt_art_provider = MBTArtProvider()
         wx.ArtProvider.Push(_mbt_art_provider)
         appCtx.set_property('artProvider', _mbt_art_provider)
 
-    def updateLanguage(self, lang: str = None):
+    def _init_app_config(self):
+        # the config file generally in C:\Users\xxx\AppData\Roaming\APP_NAME.ini stored.
+        # nix: \home\userid\appName
+        # those files store the version, last datetime, the recent file list and so on.
+        _app_ver = self.systemConfig.Read('appVersion')
+        if _app_ver != APP_VERSION:
+            # todo: merge config for version update
+            pass
+        if not os.path.exists(self.configLoc):
+            os.mkdir(self.configLoc)
+            shutil.copytree(CFG_TEMPLATE_PATH, self.configLoc, dirs_exist_ok=True)
+        # todo: if file not exist then copy it.
+        # in register node_cls could also be reassigned.
+        _i18n_cfg:ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='i18n', base_dir=self.configLoc, filename='i18n')
+        _appearance_cfg:ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='appearance', base_dir=self.configLoc, filename='appearance')
+        _shortcut_cfg:ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='shortcut', base_dir=self.configLoc, filename='shortcut')
+        if not os.path.exists(_i18n_cfg.wareIO.filename):
+            _src=os.path.join(CFG_TEMPLATE_PATH,os.path.basename(_i18n_cfg.configFilename))
+            shutil.copy(_src,os.path.dirname(_i18n_cfg.wareIO.filename))
+        if not os.path.exists(_appearance_cfg.wareIO.filename):
+            _src = os.path.join(CFG_TEMPLATE_PATH, os.path.basename(_appearance_cfg.configFilename))
+            shutil.copy(_src, os.path.dirname(_appearance_cfg.wareIO.filename))
+        if not os.path.exists(_shortcut_cfg.wareIO.filename):
+            _src = os.path.join(CFG_TEMPLATE_PATH, os.path.basename(_shortcut_cfg.configFilename))
+            shutil.copy(_src, os.path.dirname(_shortcut_cfg.wareIO.filename))
+
+    def update_language(self, lang: str = None):
         """
         Update the language to the requested one.
 
@@ -241,14 +284,14 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
             _lang_name = self.locale.GetSysName()
             self.locale.AddCatalog(FRAMEWORK_LANG_DOMAIN)
             self.locale.AddCatalog(THIS_LANG_DOMAIN)
-            self.appConfig.Write(key='language', value=_lang_name)
+            _pref_cfg = self.appConfigMgr.get_config('i18n')
+            _pref_cfg.write("/language", _lang_name)
+            _pref_cfg.flush()
         else:
             self.locale = None
             warnings.warn('localization setup failed, fall back to english.')
 
-        appCtx.set_property('locale', self.locale)
-
-    def updateHelpContent(self):
+    def update_help_content(self):
         _hlp_ctrl = whtml.HtmlHelpController()
         _list_of_files = list()
         for filename in glob.glob(os.path.join(HELP_PATH, '*/*.hhp'), recursive=False):
@@ -260,7 +303,7 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         #             _list_of_files[filename] = os.sep.join(os.path.join(HELP_PATH, filename))
         for x in _list_of_files:
             _hlp_ctrl.AddBook(x)
-        appCtx.set_property('helpController', _hlp_ctrl)
+        self.helpController = _hlp_ctrl
 
     def OnExit(self):
         # if gv.SESSION_APP:

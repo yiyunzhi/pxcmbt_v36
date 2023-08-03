@@ -164,7 +164,7 @@ BODY:
       contextMenu: *BASE_CONTEXT_MENUS
     '0-1-0': &0_1_0
       expand: false
-      icon: 'pi.cube'
+      icon: 'local.cubes'
       label: Prototypes
       flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN ]
       fileAttr: 1
@@ -184,7 +184,7 @@ BODY:
       contextMenu: *BASE_CONTEXT_MENUS
     '0-1-0-0': &0_1_0_0
       expand: false
-      icon:
+      icon: 'pi.cube'
       label: newPrototype
       flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_CAN_COPY,*F_CAN_EDIT_CONTENT,*F_REMOVABLE,*F_DESCRIBABLE ]
       fileAttr: 0

@@ -21,12 +21,13 @@ import os.path
 # ------------------------------------------------------------------------------
 import sys, wx, traceback, logging
 import wx.lib.agw.aui as aui
+import wx.lib.newevent as wxevt
 from framework.application.define import _
 from framework.gui.base.class_feedback_dialogs import FeedbackDialogs
 from mbt import appCtx
 from .application.class_application import MBTApplication
 from .application.project import Project
-from .application.define import (RECENT_MAX_LEN, APP_VERSION, APP_NAME, EnumAppSignal)
+from .application.define import (RECENT_MAX_LEN, APP_VERSION, APP_NAME, EnumAppSignal, T_EVT_APP_TOP_MENU)
 from .application.log.class_logger import get_logger
 from .gui.base import MBTViewManager, MBTContentContainer, MBTUniView
 from .gui.navigation.define import EnumMFMenuIDs
@@ -37,6 +38,7 @@ from .gui.base.class_pane_console_mgr import ConsoleManager
 from .gui.base.class_pane_prop_container_mgr import PropContainerManager
 from .gui.base.class_pane_welcome_mgr import WelcomeManager
 from .gui_main_frame import AppFrame
+from .gui.prefs import MBTPreferenceMgr, PreferenceDialog
 
 _log = get_logger('application')
 
@@ -56,14 +58,11 @@ class AppMainFrameViewManager(MBTViewManager):
         self._appPropContainerMgr = None
         self._appConsoleMgr = None
         self._welcomeMgr = None
+        self.accelTable = []
         self.editorFactory = None
         self.currentPane = None
         # bind app signal
         EnumAppSignal.sigSupportedOperationChanged.connect(self.on_app_sig_supported_op_changed)
-
-    @property
-    def appConfig(self):
-        return appCtx.get_property('appConfig')
 
     @property
     def appContext(self):
@@ -165,6 +164,7 @@ class AppMainFrameViewManager(MBTViewManager):
         # --------------------------------------------------------------
         _view.refresh()
         self._bind_event()
+        self._create_acc_table()
         _view.centerPane.SetFocus()
         _view.centerPane.SetSelectionToWindow(_welcome.view)
         wx.UpdateUIEvent.SetUpdateInterval(75)
@@ -198,6 +198,21 @@ class AppMainFrameViewManager(MBTViewManager):
         self.view.Bind(wx.EVT_UPDATE_UI, self.on_spec_id_ui_updated, id=EnumMFMenuIDs.VIEW_CLOSE_EDITOR)
         self.view.Bind(wx.EVT_UPDATE_UI, self.on_spec_id_ui_updated, id=EnumMFMenuIDs.VIEW_CLOSE_ALL_EDITOR)
 
+    def _create_acc_table(self):
+        # set the acceleratorTable
+        self.accelTable = [
+            # ('Save', wx.ACCEL_CTRL, ord('S'), wx.ID_SAVE),
+            # ('Copy', wx.ACCEL_CTRL, ord('C'), wx.ID_COPY),
+            # ('Cut', wx.ACCEL_CTRL, ord('X'), wx.ID_CUT),
+            # ('Paste', wx.ACCEL_CTRL, ord('V'), wx.ID_PASTE),
+            # ('About', wx.ACCEL_SHIFT, ord('A'), wx.ID_ABOUT),
+            # ('SelectAll', wx.ACCEL_CTRL, ord('A'), wx.ID_SELECTALL),
+            # ('Delete', wx.ACCEL_NORMAL, wx.WXK_DELETE, wx.ID_DELETE),
+            # ('Undo', wx.ACCEL_CTRL, wx.WXK_CONTROL_Z, wx.ID_UNDO),
+            # ('Redo', wx.ACCEL_CTRL, wx.WXK_CONTROL_Y, wx.ID_REDO),
+        ]
+        self.view.SetAcceleratorTable(wx.AcceleratorTable([x[1::] for x in self.accelTable]))
+
     def send_sop(self):
         EnumAppSignal.sigSupportedOperationChanged.send(self, op={wx.ID_COPY: False,
                                                                   wx.ID_CUT: False,
@@ -217,13 +232,15 @@ class AppMainFrameViewManager(MBTViewManager):
         return _parent if isinstance(_parent, parent_type) else None
 
     def get_recent_project_info(self):
-        self._fileHistory.Load(self.appConfig)
+        _app = wx.App.GetInstance()
+        self._fileHistory.Load(_app.systemConfig)
         return [self._fileHistory.GetHistoryFile(i) for i in range(self._fileHistory.GetCount())]
 
     def set_recent_project_info(self, name: str, path: str):
+        _app = wx.App.GetInstance()
         self._fileHistory.AddFileToHistory(path)
-        self._fileHistory.Save(self.appConfig)
-        self.appConfig.Flush()
+        self._fileHistory.Save(_app.systemConfig)
+        _app.systemConfig.Flush()
 
     def set_menubar_menu_state(self, menu_id, state=True):
         if menu_id is None:
@@ -374,7 +391,18 @@ class AppMainFrameViewManager(MBTViewManager):
                 _redo_cmd = self.currentPane.manager.undoStack.GetCurrentCommand()
                 if FeedbackDialogs.show_yes_no_dialog(_('Redo'), _('are you sure REDO %s') % _redo_cmd.GetName()):
                     self.currentPane.manager.undoStack.Redo()
+        elif _id == EnumMFMenuIDs.TOOL_PREFERENCE.value:
+            _mgr: MBTPreferenceMgr = MBTPreferenceMgr()
+            # send global event: AppPreferenceAboutToShow
+            EnumAppSignal.sigAppPreferenceAboutToShow.send(_mgr)
+            _dlg = PreferenceDialog(_mgr, parent=self.view)
+            _dlg.SetSize(wx.Size(640, 640))
+            _dlg.Center()
+            _dlg.ShowModal()
         else:
+            if self.currentPane is not None:
+                _hd: wx.EvtHandler = self.currentPane.GetEventHandler()
+                _hd.ProcessEvent(T_EVT_APP_TOP_MENU(_id))
             # consider the situation of view toggle menu ids
             _mgrs = self.find_all(self, lambda x: x.viewAllowToggleWithMenu)
             for x in _mgrs:
@@ -384,6 +412,25 @@ class AppMainFrameViewManager(MBTViewManager):
                 if _act.GetId() == _id:
                     x.toggle_view(evt.IsChecked())
         evt.Skip()
+
+    def on_preference_changed(self, evt: wxevt.NewCommandEvent):
+        _attrs = ['container', 'name', 'items']
+        _check = all([hasattr(evt, x) for x in _attrs])
+        if not _check:
+            return
+        _app = wx.App.GetInstance()
+        _container = getattr(evt, 'container')
+        _name = getattr(evt, 'name')
+        _items = getattr(evt, 'items')
+        _more_op_required = list()
+        if _container is _app.appConfigMgr:
+            # todo: more if statement for preference changing
+            if _name == 'i18n':
+                if '/language' in _items:
+                    _more_op_required.append(_('language setting requires app a restart.'))
+        if _more_op_required:
+            wx.CallLater(300, FeedbackDialogs.show_msg_dialog, _('Info'), '\n'.join(_more_op_required))
+        EnumAppSignal.sigAppPreferenceApplied.send(self, container=_container, name=_name, items=_items)
 
     def on_center_pane_pg_changed(self, evt):
         _log.debug('-->on_center_pane_pg_changed')

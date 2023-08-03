@@ -42,6 +42,10 @@ class IconRepo:
     def __init__(self):
         self._categories = dict()
 
+    @property
+    def categories(self)->dict:
+        return self._categories
+
     def register(self, item: IconRepoCategory):
         if item.name in self._categories:
             raise IconRepoException('IconRepoCategory %s already exist' % item.name)
@@ -90,6 +94,7 @@ class LocalIconRepoCategory(IconRepoCategory):
             _bmp = _img.ConvertToScaledBitmap(wx.Size(_w, _h))
         else:
             _bmp = wx.Bitmap(_path, wx.BITMAP_TYPE_PNG)
+            _bmp.Rescale(_bmp,wx.Size(_w,_h))
         self._cache.update({_cache_key: _bmp})
         return wx.Bitmap(_bmp)
 

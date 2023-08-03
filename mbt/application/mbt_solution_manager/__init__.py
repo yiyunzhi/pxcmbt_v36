@@ -19,3 +19,5 @@
 #
 #
 # ------------------------------------------------------------------------------
+from .solution import MBTSolution
+from .solution_manager import MBTSolutionsManager

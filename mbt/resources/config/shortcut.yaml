@@ -1,0 +1,82 @@
+#typeCode:
+#    NONE = 0
+#    INTEGER = 1
+#    REAL_NUMBER = 2
+#    STRING = 4
+#    NULL_STRING = 8
+#    DATETIME = 16
+#    INFINITY = 32
+#    NAN = 64
+#    BOOL = 128
+#    DICTIONARY = 256
+#    LIST = 512
+#    IP_ADDRESS = 1024
+#    BYTES = 2048
+#for the tree node:
+#    - children:
+#      - name: K1A0
+#        typeCode: 1
+#        value: 19
+#      - name: K1A2
+#        typeCode: 2
+#        value: 24.22
+#    name: K1A
+#    typeCode: 0
+#    value: null
+
+children:
+  # id open
+  - name: "5000"
+    typeCode: 4
+    value: CTRL+O
+  # id save
+  - name: "5003"
+    typeCode: 4
+    value: CTRL+S
+  # id save as
+  - name: "5004"
+    typeCode: 4
+    value: F12
+  # id exit
+  - name: "5006"
+    typeCode: 4
+    value: ALT+F4
+  # id undo
+  - name: "5007"
+    typeCode: 4
+    value: CTRL+Z
+  # id redo
+  - name: "5008"
+    typeCode: 4
+    value: CTRL+Y
+  # id help
+  - name: "5009"
+    typeCode: 4
+    value: F1
+  # id help
+  - name: "5014"
+    typeCode: 4
+    value: SHIFT+A
+  # id cut
+  - name: "5031"
+    typeCode: 4
+    value: CTRL+X
+  # id copy
+  - name: "5032"
+    typeCode: 4
+    value: CTRL+C
+  # id paste
+  - name: "5033"
+    typeCode: 4
+    value: CTRL+V
+  # id sel all
+  - name: "5037"
+    typeCode: 4
+    value: CTRL+A
+  # id delete
+  - name: "5038"
+    typeCode: 4
+    value: DEL
+name: ''
+typeCode: 0
+value: null
