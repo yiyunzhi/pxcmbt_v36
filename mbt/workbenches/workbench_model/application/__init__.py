@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+
+# ------------------------------------------------------------------------------
+#                                                                            --
+#                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
+#                                                                            --
+# ------------------------------------------------------------------------------
+# Project       : 
+# Sourcefile(s) : __init__.py.py
+# ------------------------------------------------------------------------------
+#
+# File          : __init__.py.py
+#
+# Author(s)     : Gaofeng Zhang
+#
+# Status        : in work
+#
+# Description   : siehe unten
+#
+#
+# ------------------------------------------------------------------------------
+from .define import WB_MODEL_UID
+from .model_content_provider import (ModelContentProviderException,
+                                     ModelContentProvider,
+                                     ModelContentUpdateContract,
+                                     ModelContentInsertContract,
+                                     ModelContentDeleteContract,
+                                     ModelContentQueryContract)

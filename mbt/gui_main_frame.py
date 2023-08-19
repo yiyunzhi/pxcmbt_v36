@@ -1,4 +1,4 @@
-import subprocess, logging, copy
+import subprocess, logging, copy, typing
 import sys, os, traceback
 import anytree.iterators
 import wx
@@ -7,53 +7,21 @@ import wx.lib.agw.aui as aui
 import wx.lib.sized_controls as wxsc
 from wx.lib.agw import pybusyinfo as pbi
 from pubsub import pub
-from framework.application.utils_helper import util_is_dir_exist
-from framework.application.io.class_base import AppFileIO
 from framework.application.define import _
 from framework.application.define_path import ROOT
-from mbt import appCtx
+from framework.gui.widgets import OLVSelectorPanel
 from .gui.base import MBTUniView
 from .application.define import (
     EnumAppMsg,
-
     EnumEditorFlag,
-
     APP_NAME,
     APP_VERSION,
     EnumConsoleItemFlag,
     RECENT_MAX_LEN)
-from .gui.navigation.define import EnumMFMenuIDs
 from .application.define_path import PROJECT_PATH, MBT_RESOURCES_PATH
 from .application.log.class_logger import get_logger
-# from .application.class_application_config import APP_CONFIG
-from .gui.widgets import NewProjectDialog
 
-# from .application.class_ipod_engine import IPOD_ENGINE_MGR
-# from .application.class_config_importer import MenuNodeDef
-# from gui.utils.util_icon_repo import UtilIconRepo16x16
-# from gui.core.assets_images import *
-
-# from gui.core.class_base import MBTAuiToolbarContentPaneMixin, MakeMenuMixin
-# from gui.editor.editor_base import BaseEditor, ProjectNodeEditor
-# from gui.widgets.dialog_new_project import NewProjectDialog
-# from gui.widgets.dialog_new_model import NewModelDialog
-# from gui.requirements_mgr.dialog_new_repo_item import NewRepoDialog
-# from gui.ipod.dialog_new_feature_impl import NewFeatureImplDialog
-# from gui.widgets.panel_project_manager import ProjectManagerPanel
-# from gui.widgets.panel_props_container import PropContainerPanel, ProjectItemPropsContentPanel
-# from gui.widgets.panel_console import ConsolePanel
-# from gui.widgets.dialog_content_panel import ContentPanelDialog
-# from gui.widgets.panel_general_name_desc import GeneralInfoEditorPanel
-# from gui.widgets.panel_os_stat_result import OSStatInfoPanel
-# from gui.widgets.panel_welcome import WelcomePanel
-# from .frame_lib import LibraryFrame
-
-# from gui.ipod.panel_ipod_library_editor import IPODLibraryEditorPanel
-# from gui.flow.panel_flow_editor import FlowEditorPanel
-# from gui.tc.dialog_create_tc_wiz import CreateTCItemDialog
-# from gui.define_event_editor.panel_event_define_editor import EventDefineEditorPanel
-
-_log = get_logger('application')
+_log = get_logger('application.view')
 
 
 class MakeMenuMixin:
@@ -78,7 +46,9 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
         # set frame icon
         self.SetIcon(self._logoIcon)
         self._cnbStyle = aui.AUI_NB_DEFAULT_STYLE | aui.AUI_NB_TAB_EXTERNAL_MOVE | wx.NO_BORDER
+        self._cnbImgList = wx.ImageList()
         self._cnb: aui.AuiNotebook = self._create_center_pane()
+        self._cnb.SetImageList(self._cnbImgList)
 
         self._paneTbs = dict()
         self._editorMap = dict()
@@ -89,7 +59,6 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
         #     MinimizeButton(True).MaximizeButton(True).Floatable(False)
 
         # Attributes
-        self._toolbar = None
         self._propsPaneCaptionFmt = "%s Properties"
         self._currentPropPane = None
         self._textCount = 1
@@ -101,14 +70,16 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
         self._vetoTree = self._veto_text = False
 
         self.CreateStatusBar()
-        self.GetStatusBar().SetStatusText("Ready")
-        #self._bind_event()
-        # self.config_editor_map()
+        self.GetStatusBar().SetStatusText(_("Ready"))
         self.Fit()
         self.SetSize((720, 640))
         self.Center()
         # self._consolePane.write('App started.')
         wx.CallAfter(self.SendSizeEvent)
+
+    @property
+    def icon(self):
+        return self._logoIcon
 
     @MBTUniView.title.setter
     def title(self, val: str):
@@ -123,27 +94,58 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
         _client_size = self.GetClientSize()
         _cnb = aui.AuiNotebook(self, -1, wx.Point(_client_size.x, _client_size.y),
                                wx.Size(430, 200), agwStyle=self._cnbStyle)
-        _cnb.SetArtProvider(aui.AuiSimpleTabArt())
+        # todo: maybe in preference.appearance settable
+        _arts = [aui.AuiDefaultTabArt, aui.AuiSimpleTabArt, aui.VC71TabArt, aui.FF2TabArt,
+                 aui.VC8TabArt, aui.ChromeTabArt]
+        _art = _arts[0]()
+        _cnb.SetArtProvider(_art)
         self._auiMgr.AddPane(_cnb, aui.AuiPaneInfo().Name("_center_").CenterPane().PaneBorder(False))
         self._auiMgr.Update()
 
         return _cnb
 
-    def add_toolbar(self, tb: MBTUniView):
-        if self._toolbar is not None:
+    def add_toolbar(self, tb: typing.Union[MBTUniView, aui.AuiToolBar]):
+        _name = tb.manager.uid
+        _caption = tb.manager.viewTitle
+        _exist = self._auiMgr.GetPaneByName(_name)
+        if _exist.IsOk():
             return
-        self._toolbar = tb
-        self._auiMgr.AddPane(tb, aui.AuiPaneInfo().Name(tb.manager.uid).Caption("App Tools").
+        self._auiMgr.AddPane(tb, aui.AuiPaneInfo().Name(_name).Caption(_caption).
                              ToolbarPane().Top().Layer(1).Position(0))
         self._auiMgr.Update()
+
+    def remove_toolbar(self, name: str):
+        _exist = self._auiMgr.GetPaneByName(name)
+        if _exist is None:
+            return
+        self._auiMgr.ClosePane(_exist)
 
     def add_pane(self, pane: wx.Window, pane_info: aui.AuiPaneInfo, refresh=True):
         self._auiMgr.AddPane(pane, pane_info)
         if refresh:
             self.refresh()
 
+    def get_current_center_pane(self) -> wx.Window:
+        return self._cnb.GetCurrentPage()
+
     def add_pane_to_center(self, pane: wx.Window, **kwargs):
+        # if 'image' in kwargs:
+        #     _image=kwargs.pop('image')
+        #     _index=self._cnbImgList.Add(_image)
+
         self._cnb.AddPage(pane, **kwargs)
+
+    def remove_pane_from_center(self, pane: wx.Window, destroy=False):
+        _idx = self._cnb.GetPageIndex(pane)
+        if _idx == -1:
+            return
+        if not destroy:
+            self._cnb.RemovePage(_idx)
+        else:
+            self._cnb.DeletePage(_idx)
+
+    def has_pane_in_center(self, pane: wx.Window):
+        return self._cnb.GetPageIndex(pane) != -1
 
     def minimal_pane_by_name(self, pane_name: str):
         _pane_info = self._auiMgr.GetPaneByName(pane_name)
@@ -174,54 +176,41 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
     def set_status_bar_text(self, text: str):
         self.GetStatusBar().SetStatusText(text)
 
+    def show_olv_selector_dialog(self, choices: list, multi=False):
+        _sc = wxsc.SizedDialog(self, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        _sc.SetTitle(_('Selecting'))
+        _pane = _sc.GetContentsPane()
+        _pane.SetSizerType("vertical")
+        _style = OLVSelectorPanel.OLV_SEL_STYLE_DEFAULT
+        if multi:
+            _style |= OLVSelectorPanel.OLV_SEL_STYLE_SEL_MULTI
+        _panel = OLVSelectorPanel(_pane, style=_style)
+        _panel.render_form(choices)
+        _panel.SetSizerProps(expand=True, proportion=1)
+        _sc.SetButtonSizer(_sc.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL))
+        _sc.Center()
+        _ret = _sc.ShowModal()
+        if _ret == wx.ID_OK:
+            _ret = _panel.get_selection()
+        else:
+            _ret = None
+        _sc.Destroy()
+        return _ret
+
     def refresh(self):
         self._auiMgr.Update()
 
     def _bind_event(self):
         pass
-        # bind general event
-        # self.Bind(wx.EVT_HELP, self.on_help)
-        # self.Bind(wx.EVT_TIMER, self.on_size_time_up)
-        # self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase_background)
-        # self.Bind(wx.EVT_SIZE, self.on_size)
-        # self.Bind(wx.EVT_CLOSE, self.on_window_closed)
-        # self.Bind(wx.EVT_CHILD_FOCUS, self.on_child_focused)
-        # self.Bind(aui.EVT_AUI_PANE_ACTIVATED, self.on_aui_pane_activated)
-        # self.Bind(aui.EVT_AUI_PANE_BUTTON, self.on_aui_pane_button)
-        # self.Bind(aui.EVT_AUI_PANE_CLOSED, self.on_aui_pane_closed)
-        # self.Bind(aui.EVT_AUI_PANE_CLOSE, self.on_aui_pane_close)
-        # self.Bind(wx.EVT_KILL_FOCUS, self.on_child_kill_focused)
-        # bind menu event
-        # self.Bind(wx.EVT_MENU, self.on_menu)
-        # self.Bind(wx.EVT_MENU, self.on_menu_save_clicked, id=wx.ID_SAVE)
-        # self.Bind(wx.EVT_MENU, self.on_menu_open_clicked, id=wx.ID_OPEN)
-        # self.Bind(wx.EVT_MENU, self.on_menu_save_as_clicked, id=wx.ID_SAVEAS)
-        # self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
-        # self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
-        # bind project mgr event
-        # self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_proj_item_select_changed, self._panelProjectMgr.treeView)
-        # self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_proj_item_activate, self._panelProjectMgr.treeView)
-        # self.Bind(wx.EVT_TREE_ITEM_GETTOOLTIP, self.on_proj_item_get_tooltip, self._panelProjectMgr.treeView)
-        # self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_proj_item_context_menu, self._panelProjectMgr.treeView)
-        # self.Bind(wx.EVT_IDLE, self.on_idle)
-        # bind event update UI, multi allowed
-        # pub.subscribe(self.on_ext_sig_topic_project, 'project')
-        # pub.subscribe(self.on_ext_sig_topic_os, 'os')
-        # pub.subscribe(self.on_ext_sig_topic_console, 'console')
-        # pub.subscribe(self.on_ext_sig_close_node_editor, EnumAppMsg.sigViewCloseNodeEditor)
-        # pub.subscribe(self.on_ext_sig_project_node_profile_changed, EnumAppMsg.sigProjectNodeProfileChanged)
-        # pub.subscribe(self.on_ext_sig_put_msg_in_console, EnumAppMsg.sigPutMsgInConsole)
-        # pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps.value)
-        # pub.subscribe(self.on_ext_sig_lib_removed, EnumAppSignals.sigV2VLibRemoved.value)
 
     def on_help(self, evt):
-        _app=wx.App.GetInstance()
+        _app = wx.App.GetInstance()
         _app.helpController.DisplayContents()
 
     def update_title_with_project_name(self, name):
         self.SetTitle(self.title + ' [CurrentProject: %s]' % name)
 
-    # -------------------------------------------------------------------------------------
+    # ----------------------------------------todo: below code could be removed---------------------------------------------
     def on_menu_v_open_proj_in_explr(self, evt):
         _project = self.get_project()
         if _project is not None:

@@ -143,30 +143,32 @@ class Cloneable:
 
 class ChangeDetectable:
     def __init__(self):
-        self._cm_last_dump = None
-        self._cm_dump_bytes = b''
+        self._cmLastDumpBytes = b''
 
-    def _inspect_dump_obj(self, obj):
+    @staticmethod
+    def inspect_dump_obj(obj: object, bytes_: bytes):
         if isinstance(obj, dict):
             for k, v in obj.items():
                 if isinstance(v, ChangeDetectable):
-                    self._cm_dump_bytes += v.dump_object()
+                    bytes_ += v.dump()
                 else:
-                    self._inspect_dump_obj(v)
+                    bytes_ += ChangeDetectable.inspect_dump_obj(v, bytes_)
         elif isinstance(obj, (set, tuple, list)):
             for x in obj:
                 if isinstance(x, ChangeDetectable):
-                    self._cm_dump_bytes += x.dump_object()
+                    bytes_ += x.dump()
                 else:
-                    self._inspect_dump_obj(x)
+                    bytes_ += ChangeDetectable.inspect_dump_obj(x, bytes_)
         elif isinstance(obj, Serializable):
-            self._inspect_dump_obj(obj.serializer)
+            bytes_ += ChangeDetectable.inspect_dump_obj(obj.serializer, bytes_)
         elif isinstance(obj, ChangeDetectable):
-            self._cm_dump_bytes += obj.dump_object()
+            bytes_ += obj.dump()
         else:
-            self._cm_dump_bytes += dumps(obj)
+            bytes_ += dumps(obj)
+        return bytes_
 
-    def do_dump(self, obj):
+    @staticmethod
+    def dump_object(obj: object, bytes_: bytes = b''):
         _trace = {}
         try:
             if isinstance(obj, Serializable):
@@ -177,11 +179,7 @@ class ChangeDetectable:
                 _inspect = copy.deepcopy(obj.__dict__)
                 _inspect.pop('_cm_last_dump')
                 _inspect.pop('_cm_dump_bytes')
-            self._cm_dump_bytes = b''
-            self._inspect_dump_obj(_inspect)
-            _bytes = self._cm_dump_bytes
-            self._cm_dump_bytes = None
-            return _bytes
+            return ChangeDetectable.inspect_dump_obj(_inspect, bytes_)
         except (pickle.PicklingError, TypeError) as e:
             _failing_children = []
             _trace = {
@@ -191,18 +189,18 @@ class ChangeDetectable:
             }
             raise UserWarning('dump failed:\n%s' % _trace)
 
-    def dump_object(self):
-        return self.do_dump(self)
+    def dump(self, obj=None):
+        return self.dump_object(obj if obj is not None else self)
 
     def mark_change_state(self):
-        self._cm_last_dump = self.dump_object()
+        self._cmLastDumpBytes = self.dump()
 
     def is_changed(self, dump_to_compare=None):
         if dump_to_compare is None:
-            _prev_dump = self._cm_last_dump
+            _prev_dump = self._cmLastDumpBytes
         else:
             _prev_dump = dump_to_compare
-        _cur_dump = self.dump_object()
+        _cur_dump = self.dump()
         return (_prev_dump is not None) and (_prev_dump != _cur_dump)
 
     @staticmethod
@@ -213,11 +211,13 @@ class ChangeDetectable:
         except Exception as e:
             return False
 
-    def get_last_dump(self):
-        return self._cm_last_dump
+    @property
+    def lastDumpyBytes(self):
+        return self._cmLastDumpBytes
 
-    def set_last_dump(self, dump_data):
-        self._cm_last_dump = dump_data
+    @lastDumpyBytes.setter
+    def lastDumpyBytes(self, val: bytes):
+        self._cmLastDumpBytes = val
 
 
 class AttrObj:
@@ -265,10 +265,10 @@ class IContentContainer:
     def uid(self):
         return hex(id(self))
 
-    def set(self, content: Content):
+    def set(self, content: typing.Union[Content, typing.Any]):
         pass
 
-    def get(self) -> Content:
+    def get(self) -> typing.Union[Content, typing.Any]:
         pass
 
     def serialize(self, *args, **kwargs):
@@ -325,6 +325,12 @@ class ContentableMinxin:
 
     def get_content(self, *args, **kwargs):
         raise NotImplementedError
+
+
+class BasicProfile:
+    def __init__(self, name:str, description:str):
+        self.name = name
+        self.description = description
 
 
 class NodeContent(Serializable):

@@ -1,4 +1,4 @@
-import os, yaml
+import os, yaml, itertools
 from framework.application.base.base import YAMLObject
 from .class_base import AppFileIO
 
@@ -8,13 +8,8 @@ NODE_CONTENT_DUMPER = YAMLObject.dumper
 
 class AppYamlFileIO(AppFileIO):
 
-    def __init__(self, file_path, file_name, extend='.yaml'):
-        AppFileIO.__init__(self)
-        self.extend = extend
-        self.data = None
-        self.filePath = file_path
-        self.fileName = file_name
-        self.error = ''
+    def __init__(self, **kwargs):
+        AppFileIO.__init__(self, **kwargs)
 
     def read(self, loader=NODE_CONTENT_LOADER):
         self.error = ''
@@ -34,21 +29,7 @@ class AppYamlFileIO(AppFileIO):
         _file_full_path = self.get_full_path()
         with open(_file_full_path, "w") as f:
             yaml.dump(data, f, Dumper=dumper)
-
-    def get_full_path(self):
-        if '.' in self.fileName:
-            _file_name = self.fileName
-        else:
-            _file_name = self.fileName + self.extend
-        return os.path.join(self.filePath, _file_name)
-
-    def is_file_exist(self):
-        _full_path = self.get_full_path()
-        return os.path.exists(_full_path)
-
-    def get_section(self, section_name):
-        if self.data is not None and section_name in self.data:
-            return self.data[section_name]
+        return True
 
 
 class AppYamlStreamer:

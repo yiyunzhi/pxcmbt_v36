@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-import os, enum, wx
+import os, enum, wx, sys
 
 APP_CONSOLE_TIME_WX_FMT = '%m/%d %H:%M:%S.%l'
 APP_CONSOLE_TIME_PY_FMT = '%m/%d %H:%M:%S.%f'
@@ -29,6 +29,10 @@ SIZE_UNITS = {1000: ['KB', 'MB', 'GB'],
               1024: ['KiB', 'MiB', 'GiB']}
 MB_ATTACH_LABEL_REGEX = r'^@(.*)@$'
 
+if sys.platform == 'win32':
+    ILLEGAL_DIR_CHARS = "[<>:/\\|?*\"]|[\0-\31]"
+else:
+    ILLEGAL_DIR_CHARS = "[<>:/\\|?*\"]|[\0-\31]"
 
 _ = wx.GetTranslation
 # language domain

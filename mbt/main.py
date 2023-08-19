@@ -10,16 +10,14 @@ from framework import setup_application_context
 from framework.resources import LOCALE_PATH as FRAMEWORK_LOCALE_PATH
 from framework.application.define import THIS_LANG_DOMAIN as FRAMEWORK_LANG_DOMAIN, _
 from framework.application.uri_handle import *
+from framework.application.base import GenericTypeFactory
 from framework.gui.icon_repo.class_icon_repo import LocalIconRepoCategory
 from framework.application.confware import ZFileConfigBase
 from mbt import appCtx, setup_application_context as setup_mbt_app_ctx
+from mbt.application.class_application import MBTApplication
 from mbt.application.define import APP_NAME, APP_VERSION, REQ_WX_VERSION_STRING, APP_VENDOR_NAME, SUPPORTED_LANG, THIS_LANG_DOMAIN
 from mbt.application.log.class_logger import get_logger
 from mbt.application.mbt_solution_manager.solution_manager import MBTSolutionsManager
-# from application.class_content_iod_action import IOD_ACTION_EXT_MGR
-# from application.class_application_config import APP_CONFIG
-# from application.class_ipod_engine import IPOD_ENGINE_MGR
-# from application.class_yaml_tags import *
 from .resources import LOCALE_PATH, HELP_PATH, CFG_TEMPLATE_PATH
 from .application.define_path import MBT_ROOT_PATH, SOLUTIONS_PATH
 from .application.confware import MBTConfigManager
@@ -63,16 +61,7 @@ class DummySplash:
         pass
 
 
-class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
-    configLoc = None
-    systemConfig: wx.FileConfig = None
-    appConfigMgr: MBTConfigManager = MBTConfigManager()
-    uriHandleMgr = URI_HANDLE_MANAGER
-    rootView = None
-    locale = None
-    mbtSolutionManager = None
-    helpController = None
-
+class App(wx.App, wx.lib.mixins.inspection.InspectionMixin, MBTApplication):
     def OnInit(self):
         # --------------------------------------------------------------
         # wx configuration
@@ -167,6 +156,10 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # help controller
         # --------------------------------------------------------------
         _splash.set_message('init help controller')
+        # make a simpleHelpProvider for contextHelp on given control.
+        # just pop up a text windows.
+        _hlp_provider = wx.SimpleHelpProvider()
+        wx.HelpProvider.Set(_hlp_provider)
         self.update_help_content()
         # --------------------------------------------------------------
         # addons
@@ -196,6 +189,7 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # load session application
         # gv.SESSION_APP = SessionApplication()
         # session_log_bootstrap()
+        # setup app ctx, there could the editor registered into factory
         setup_application_context(self)
         setup_mbt_app_ctx(self)
         _splash.set_message('start main application.')
@@ -242,12 +236,14 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
             shutil.copytree(CFG_TEMPLATE_PATH, self.configLoc, dirs_exist_ok=True)
         # todo: if file not exist then copy it.
         # in register node_cls could also be reassigned.
-        _i18n_cfg:ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='i18n', base_dir=self.configLoc, filename='i18n')
-        _appearance_cfg:ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='appearance', base_dir=self.configLoc, filename='appearance')
-        _shortcut_cfg:ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='shortcut', base_dir=self.configLoc, filename='shortcut')
+        _i18n_cfg: ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='i18n', base_dir=self.configLoc, filename='i18n')
+        _appearance_cfg: ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='appearance', base_dir=self.configLoc,
+                                                                           filename='appearance')
+        _shortcut_cfg: ZFileConfigBase = self.appConfigMgr.register_with(node_cls=ZFileConfigBase, name='shortcut', base_dir=self.configLoc,
+                                                                         filename='shortcut')
         if not os.path.exists(_i18n_cfg.wareIO.filename):
-            _src=os.path.join(CFG_TEMPLATE_PATH,os.path.basename(_i18n_cfg.configFilename))
-            shutil.copy(_src,os.path.dirname(_i18n_cfg.wareIO.filename))
+            _src = os.path.join(CFG_TEMPLATE_PATH, os.path.basename(_i18n_cfg.configFilename))
+            shutil.copy(_src, os.path.dirname(_i18n_cfg.wareIO.filename))
         if not os.path.exists(_appearance_cfg.wareIO.filename):
             _src = os.path.join(CFG_TEMPLATE_PATH, os.path.basename(_appearance_cfg.configFilename))
             shutil.copy(_src, os.path.dirname(_appearance_cfg.wareIO.filename))

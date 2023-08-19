@@ -1,0 +1,104 @@
+flags:
+  F_REPARENT: &F_REPARENT 0x0001
+  F_REMOVABLE: &F_REMOVABLE 0x0002
+  F_ACCEPT_CHILDREN: &F_ACCEPT_CHILDREN 0x0004
+  F_DESCRIBABLE: &F_DESCRIBABLE 0x0008
+  F_LABEL_READONLY: &F_LABEL_READONLY 0x0010
+  F_SHOW_TOOLTIP: &F_SHOW_TOOLTIP 0x0020
+  F_SAVABLE: &F_SAVABLE 0x0040
+  F_ORDERABLE: &F_ORDERABLE 0x0080
+  F_CAN_COPY: &F_CAN_COPY 0x0100
+  F_CAN_CUT: &F_CAN_CUT 0x0200
+  F_CAN_PASTE: &F_CAN_PASTE 0x0400
+  F_CAN_EDIT_CONTENT: &F_CAN_EDIT_CONTENT 0x0800
+isWorkbench: yes
+baseRole: '0-1'
+uuid: wb_model_v1
+elements:
+  '0-1': &0_1
+    expand: false
+    icon: 'local.cube'
+    label: Model
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY ]
+    role: '0-1'
+    description: 'models container, multiple prototypes could be created.'
+    contextMenu:
+      - children:
+          - children: [ ]
+            handler:
+              name: '>projectAddNode.prototype'
+              kwargs: { role: 0-1-0_0-1-0-0 }
+            helpString: add prototype node
+            icon: 'pi.cube'
+            kind: 0
+            text: Prototype
+          - children: [ ]
+            handler:
+              name: '>projectAddNode.behaviour'
+              kwargs: { role: 0-1-1_0-1-1-0 }
+            helpString: help
+            icon: 'local.behaviour'
+            kind: 0
+            text: Behaviour
+        handler: null
+        helpString: help
+        icon: 'pi.file-plus'
+        kind: 0
+        text: New
+  '0-1-0': &0_1_0
+    expand: false
+    icon: 'local.cubes'
+    label: Prototypes
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN ]
+    role: '0-1-0'
+    description: 'Prototypes node contains more prototype'
+  '0-1-1': &0_1_1
+    expand: false
+    icon: 'local.behaviour'
+    label: Behaviours
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN ]
+    role: '0-1-1'
+    description: 'Behaviours node contains more behaviour node'
+  '0-1-0-0': &0_1_0_0
+    expand: false
+    icon: 'pi.cube'
+    label: newPrototype
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_CAN_COPY,*F_REMOVABLE,*F_DESCRIBABLE,*F_ORDERABLE ]
+    role: '0-1-0-0'
+    description: 'Prototype node'
+  '0-1-0-0-0': &0_1_0_0_0
+    expand: false
+    icon: 'pi.cube'
+    label: sketch
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_CAN_EDIT_CONTENT ]
+    fileAttr: 0
+    fileExtend: '.obj'
+    fileName: '.uuid'
+    role: '0-1-0-0-0'
+    description: 'Prototype node'
+  '0-1-1-0': &0_1_1_0
+    expand: false
+    icon:
+    label: newBehaviour
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_CAN_COPY,*F_CAN_EDIT_CONTENT,*F_REMOVABLE,*F_DESCRIBABLE ,*F_ORDERABLE ]
+    fileAttr: 0
+    fileExtend: '.obj'
+    fileName: '.uuid'
+    role: '0-1-1-0'
+    description: 'Behaviour node'
+constructors:
+  new_project:
+    children:
+      - children: [ ]
+        <<: *0_1_0
+      - children: [ ]
+        <<: *0_1_1
+    <<: *0_1
+  new_child_node_of_0-1-0_0-1-0-0:
+    children:
+      children: [ ]
+      <<: *0_1_0_0_0
+    <<: *0_1_0_0
+  new_child_node_of_0-1-1_0-1-1-0:
+    children: [ ]
+    <<: *0_1_1_0

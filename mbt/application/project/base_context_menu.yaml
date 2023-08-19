@@ -1,0 +1,50 @@
+#  - children:
+#    - children: [ ]
+#      handler:
+#        name: '>xxx'
+#        kwargs: { }
+#      helpString: add prototype node
+#      icon: 'pi.cube'
+#      kind: 0
+#      text: xxx
+#  handler: null
+#  helpString: help
+#  icon: 'pi.file-plus'
+#  kind: 0
+#  text: New
+#- children: [ ]
+#  kind: -1
+- children: [ ]
+  wxId: "&wx.ID_COPY"
+  helpString: copy item
+  icon: 'pi.copy-simple'
+  kind: 0
+  text: Copy
+- children: [ ]
+  wxId: "&wx.ID_PASTE"
+  helpString: paste item
+  icon: wxART_PASTE
+  kind: 0
+  text: Paste
+- children: [ ]
+  wxId: "&wx.ID_DELETE"
+  helpString: delete item
+  icon: wxART_DELETE
+  kind: 0
+  text: Delete
+- children: [ ]
+  kind: -1
+- children: [ ]
+  helpString: open item and edit node content
+  wxId: 7100
+  icon: 'pi.pen'
+  kind: 0
+  text: Open
+- children: [ ]
+  helpString: rename item
+  wxId: 7110
+  icon: 'pi.tag-simple'
+  kind: 0
+  text: Rename
+- children: [ ]
+  kind: -1

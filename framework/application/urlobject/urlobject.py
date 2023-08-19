@@ -5,8 +5,8 @@ from .ports import DEFAULT_PORTS
 from .query_string import QueryString
 from .six import text_type, u
 
-class URLObject(text_type):
 
+class URLObject(text_type):
     """
     A URL.
 
@@ -563,16 +563,21 @@ class URLObject(text_type):
             return other.with_scheme(self.scheme)
         elif other.path:
             return other.with_scheme(self.scheme).with_netloc(self.netloc) \
-                    .with_path(self.path.relative(other.path))
+                .with_path(self.path.relative(other.path))
         elif other.query:
             return other.with_scheme(self.scheme).with_netloc(self.netloc) \
-                    .with_path(self.path)
+                .with_path(self.path)
         elif other.fragment:
             return other.with_scheme(self.scheme).with_netloc(self.netloc) \
-                    .with_path(self.path).with_query(self.query)
+                .with_path(self.path).with_query(self.query)
         # Empty string just removes fragment; it's treated as a path meaning
         # 'the current location'.
         return self.without_fragment()
+
+    @staticmethod
+    def register_scheme(scheme):
+        for method in filter(lambda s: s.startswith('uses_'), dir(urlparse)):
+            getattr(urlparse, method).append(scheme)
 
     def __replace(self, **replace):
         """Replace a field in the ``urlparse.SplitResult`` for this URL."""

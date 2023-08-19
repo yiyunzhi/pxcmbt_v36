@@ -19,8 +19,4 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .panel_ex_hyperlink import ExHyperLinkWidget
-from .panel_header import HeaderPanel
-from .dialog_new_project import NewProjectDialog
 from .panel_utils import ProfileEditPanel,ChoiceEditPanel
-from .panel_wizard_page import ZWizardPage

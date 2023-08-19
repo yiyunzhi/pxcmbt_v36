@@ -22,12 +22,13 @@
 import ast, functools, json, decimal, gettext, pathlib
 import datetime
 import wx
-import os, sys, platform, math, uuid, bitstring, glob
+import os, sys, platform, math, uuid, bitstring, glob, re
 from collections import defaultdict
 from itertools import tee
 import psutil
-from .define import APP_CONSOLE_TIME_WX_FMT, SIZE_UNITS, APP_TIME_PY_FMT
+from .define import APP_CONSOLE_TIME_WX_FMT, SIZE_UNITS, APP_TIME_PY_FMT, ILLEGAL_DIR_CHARS
 from .python.class_evaluator import DEFAULT_EXPRESSION_EVALUATOR
+from .urlobject import URLObject
 
 RGET_RSET_DELIMITER = "."
 
@@ -459,3 +460,24 @@ def util_get_custom_data_from_clipboard(clipboard: wx.Clipboard, format_: wx.Dat
         if _success:
             _ob = _data.GetData()
             return _ob.tobytes() if isinstance(_ob, memoryview) else _ob
+
+
+def util_is_bit_set(val: int, mask: int):
+    return val & mask
+
+
+def util_is_bit_n_set(val: int, n: int):
+    return val & (1 << n)
+
+
+def util_generate_uri(schema: str, uri_netloc: str, uri_path: str, to_string=True, **queries):
+    _uri = URLObject()
+    _uri = _uri.with_scheme(schema)
+    _uri = _uri.with_netloc(uri_netloc)
+    _uri = _uri.with_path(uri_path)
+    _uri = _uri.add_query_params(**queries)
+    return str(_uri) if to_string else _uri
+
+
+def util_is_string_valid_for_dir(s: str):
+    return len(re.findall(ILLEGAL_DIR_CHARS, s)) == 0

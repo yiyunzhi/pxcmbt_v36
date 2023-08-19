@@ -44,9 +44,9 @@ class PreferenceDialog(wx.Dialog):
         self.leftPanel = wx.Panel(self.splitter, wx.ID_ANY)
         self.rightPanel = wx.Panel(self.splitter, wx.ID_ANY)
         self.prevPageBtn = wx.BitmapButton(self.rightPanel, wx.ID_ANY, wx.ArtProvider.GetBitmap('pi.arrow-square-left', size=_top_tool_icon_size),
-                                           size=_top_tool_icon_size,style=wx.NO_BORDER)
+                                           size=_top_tool_icon_size, style=wx.NO_BORDER)
         self.nextPageBtn = wx.BitmapButton(self.rightPanel, wx.ID_ANY, wx.ArtProvider.GetBitmap('pi.arrow-square-right', size=_top_tool_icon_size),
-                                           size=_top_tool_icon_size,style=wx.NO_BORDER)
+                                           size=_top_tool_icon_size, style=wx.NO_BORDER)
         self.leftSizer = wx.BoxSizer(wx.VERTICAL)
         self.rightSizer = wx.BoxSizer(wx.VERTICAL)
         self.rightTopSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -54,6 +54,7 @@ class PreferenceDialog(wx.Dialog):
         self.rightPanel.SetSizer(self.rightSizer)
 
         self.leftSearchCtrl = wx.SearchCtrl(self.leftPanel, wx.ID_ANY)
+        self.leftSearchCtrl.ShowCancelButton(True)
 
         self.treeImageList = wx.ImageList(22, 22)
         self.prefsTree = TreeView(parent=self.leftPanel,
@@ -61,6 +62,7 @@ class PreferenceDialog(wx.Dialog):
                                   image_list=self.treeImageList)
         self.prefsTree.SetBackgroundColour(wx.Colour('#fafafa'))
         self.prefsTree.set_model(self.prefsMgr.model)
+
         self.prefsTree.ExpandAll()
 
         self.contentTitle = wx.StaticText(self.rightPanel, wx.ID_ANY, _('Preference'))
@@ -84,8 +86,9 @@ class PreferenceDialog(wx.Dialog):
         self.nextPageBtn.Bind(wx.EVT_BUTTON, self.on_nxt_btn_clicked)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.okBtn.Bind(wx.EVT_BUTTON, self.on_ok_btn_clicked)
+        self.leftSearchCtrl.Bind(wx.EVT_SEARCH, self.on_search)
+        self.leftSearchCtrl.Bind(wx.EVT_SEARCH_CANCEL, self.on_search_canceled)
         # todo: in tree the text of changed item should be highlighted.
-        # todo: search
         # layout
         self.leftSizer.Add(self.leftSearchCtrl, 0, wx.EXPAND | wx.BOTTOM, 8)
         self.leftSizer.Add(self.prefsTree, 1, wx.EXPAND)
@@ -253,6 +256,7 @@ class PreferenceDialog(wx.Dialog):
         _item = evt.GetItem()
         _node = self.prefsTree.item_to_node(_item)
         self.navigate_page_to(_node.uuid)
+        self.on_search_canceled(None)
 
     def on_apply_clicked(self, evt: wx.CommandEvent):
         """
@@ -275,6 +279,30 @@ class PreferenceDialog(wx.Dialog):
 
         """
         self.applyBtn.Enable(state)
+
+    def on_search(self, evt: wx.CommandEvent):
+        _search_string: str = evt.GetString()
+        if _search_string.strip():
+            self.on_search_canceled(None)
+            _nodes = self.prefsMgr.model.search_nodes(key='label', value=lambda x: _search_string.lower() in x.lower())
+            if _nodes:
+                for x in _nodes:
+                    _item = self.prefsTree.node_to_item(x)
+                    setattr(x, '_flag', (101,self.prefsTree.GetItemTextColour(_item)))
+                    self.prefsTree.SetItemBold(_item)
+                    self.prefsTree.SetItemTextColour(_item,wx.Colour('#4682b4'))
+                self.prefsTree.EnsureVisible(self.prefsTree.node_to_item(_nodes[0]))
+
+    def on_search_canceled(self, evt: wx.CommandEvent):
+        # todo: select before selected.
+        _nodes = self.prefsMgr.model.search_nodes(key='_flag', value=lambda x: x[0] == 101)
+        for x in _nodes:
+            _c,_col=getattr(x,'_flag')
+            setattr(x, '_flag', (100,))
+            _item = self.prefsTree.node_to_item(x)
+            self.prefsTree.SetItemBold(_item, False)
+            self.prefsTree.SetItemTextColour(_item, _col)
+        self.leftSearchCtrl.Clear()
 
     def on_close(self, evt: wx.CommandEvent):
         evt.Skip()

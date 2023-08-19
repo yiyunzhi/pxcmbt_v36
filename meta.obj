@@ -1,0 +1,16 @@
+children:
+- dirPath: ''
+  extension: .obj
+  name: meta
+  permission: RW
+  reversion: 0
+- dirPath: ''
+  extension: .obj
+  name: main
+  permission: RW
+  reversion: 1
+dirPath: .
+extension: ''
+name: 26bd9a08
+permission: RW
+reversion: 0

@@ -48,15 +48,17 @@ class ZViewContentContainer(IContentContainer):
             return
         self._prevContent = self._streamer.stream_dump(obj.serializer)
 
-    def reset_to_default(self):
+    def reset_to_default(self,*args,**kwargs):
         self._content = self.defaultContent
         self.set_init_content_to_stream(self._content)
 
-    def set(self, content: Serializable):
-        self._content = content
-        self.set_init_content_to_stream(content)
+    def set(self, *args, **kwargs):
+        _content = kwargs.get('content')
+        if _content is not None:
+            self._content = _content
+            self.set_init_content_to_stream(_content)
 
-    def get(self):
+    def get(self, *args, **kwargs):
         return self._content
 
     def push_error(self, error):
@@ -86,7 +88,15 @@ class ZViewContentContainer(IContentContainer):
         # todo: transformer should be type of IContentTransformer
         raise NotImplementedError
 
+    def check_content_changed(self, *args, **kwargs):
+        if self._streamer is None:
+            return False
+        return self._prevContent != self._streamer.stream_dump(self._content.serializer)
+
     def has_changed(self):
         if self._content is None:
             return False
-        return self._prevContent != self._streamer.stream_dump(self._content.serializer)
+        return self.check_content_changed()
+
+    def change_apply(self, *args, **kwargs):
+        pass

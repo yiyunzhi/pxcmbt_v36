@@ -23,9 +23,9 @@ import os, wx
 from textwrap import dedent
 from wx.lib.scrolledpanel import ScrolledPanel
 from framework.application.define import _
+from framework.gui.widgets import ExHyperLinkWidget, HeaderPanel
 from mbt.application.define import APP_NAME, APP_VERSION
 from mbt.gui.navigation.define import EnumMFMenuIDs
-from mbt.gui.widgets import ExHyperLinkWidget, HeaderPanel
 from .class_base import MBTUniView
 
 

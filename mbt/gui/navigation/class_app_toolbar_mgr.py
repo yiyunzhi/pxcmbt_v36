@@ -21,13 +21,14 @@
 # ------------------------------------------------------------------------------
 import wx
 import wx.lib.agw.aui as aui
-from mbt.gui.base import MBTViewManager, MBTContentContainer
+from mbt.application.base import MBTViewManager, MBTContentContainer
 from .class_app_toolbar_view import AppToolbarView
 
 
 class AppToolbarViewManager(MBTViewManager):
     def __init__(self, **kwargs):
         MBTViewManager.__init__(self, **kwargs)
+        self._viewTitle = 'AppBaseToolbar'
 
     @property
     def iconSize(self) -> wx.Size:

@@ -1,0 +1,55 @@
+flags:
+  F_REPARENT: &F_REPARENT 0x0001
+  F_REMOVABLE: &F_REMOVABLE 0x0002
+  F_ACCEPT_CHILDREN: &F_ACCEPT_CHILDREN 0x0004
+  F_DESCRIBABLE: &F_DESCRIBABLE 0x0008
+  F_LABEL_READONLY: &F_LABEL_READONLY 0x0010
+  F_SHOW_TOOLTIP: &F_SHOW_TOOLTIP 0x0020
+  F_SAVABLE: &F_SAVABLE 0x0040
+  F_ORDERABLE: &F_ORDERABLE 0x0080
+  F_CAN_COPY: &F_CAN_COPY 0x0100
+  F_CAN_CUT: &F_CAN_CUT 0x0200
+  F_CAN_PASTE: &F_CAN_PASTE 0x0400
+  F_CAN_EDIT_CONTENT: &F_CAN_EDIT_CONTENT 0x0800
+isWorkbench: yes
+baseRole: '0-3'
+uuid: wb_reqrepo_v1
+elements:
+  '0-3': &0_3
+    expand: false
+    icon: 'pi.receipt'
+    label: Req.Manager
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY ]
+    role: '0-3'
+    description: ''
+    contextMenu:
+      - children:
+          - children: [ ]
+            handler:
+              name: '>projectAddNode.reqRepo'
+              kwargs: { role: 0-2-3_0-2-3-0 }
+            helpString: help
+            icon: 'pi.receipt'
+            kind: 0
+            text: Req.Repo
+        handler: null
+        helpString: help
+        icon: 'pi.file-plus'
+        kind: 0
+        text: New
+  '0-3-0': &0_3_0
+    expand: false
+    icon: 'pi.list-bullets'
+    label: newReqRepo
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_DESCRIBABLE,*F_CAN_COPY,*F_ORDERABLE,*F_REMOVABLE,*F_CAN_EDIT_CONTENT ]
+    role: '0-3-0'
+    description: ''
+constructors:
+  new_project:
+    children:
+      - children: [ ]
+        <<: *0_3_0
+    <<: *0_3
+  new_child_node_of_0-3_0-3-0:
+    children: [ ]
+    <<: *0_3_0

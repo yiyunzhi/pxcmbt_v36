@@ -1,0 +1,12 @@
+ObjectListView
+2182:
+boolean value not included
+-?            value or self._CalcNonNullValue(subItemIndex)
+->            if value is None:
+                value = self._CalcNonNullValue(subItemIndex)
+3755:
+boolean value not included
+-?if not converter and not value:
+            return ""
+->if not converter and value is None:
+            return ""

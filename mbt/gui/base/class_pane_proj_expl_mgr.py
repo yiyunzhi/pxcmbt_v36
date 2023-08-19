@@ -25,23 +25,29 @@ import json
 import os.path
 import wx.lib.newevent as wxevt
 from framework.application.define import _
-from framework.application.io import AppYamlFileIO
 from framework.application.utils_helper import (util_set_custom_data_to_clipboard,
                                                 util_get_custom_data_from_clipboard,
-                                                util_get_uuid_string)
+                                                util_get_uuid_string, util_is_dir_exist,
+                                                util_generate_uri)
 from framework.gui.base.class_feedback_dialogs import FeedbackDialogs
 from framework.gui.utils import gui_util_get_simple_text_header
+from framework.gui.widgets import ZWizardPage
 from framework.application.base import TreeModel
 from mbt.application.project import (ProjectTreeNode,
                                      EnumProjectItemFlag,
                                      DF_PROJECT_NODE_FMT,
                                      EnumProjectItemRole,
-                                     ProjectNodeProfile)
-from mbt.gui.base import MBTViewManager, MBTContentContainer
-from mbt.gui.widgets import ZWizardPage, ProfileEditPanel, ChoiceEditPanel
+                                     ProjectNodeProfile, EnumNodeSorter,
+                                     SORTER_MAP,
+                                     ProjectNodePropContainer,
+                                     ProjectContentProvider, Project
+                                     )
+from mbt.application.workbench_base import MBTProjectOrientedWorkbench
 from mbt.application.utils import WxMenuBuilder
-from mbt.application.define import EnumAppSignal, DF_PY_OBJ_FMT,EVT_APP_TOP_MENU
+from mbt.application.define import EnumAppSignal, DF_PY_OBJ_FMT, EVT_APP_TOP_MENU
 from mbt.application.define_path import PROJECT_PATH
+from mbt.application.base import MBTViewManager, MBTContentContainer
+from mbt.gui.widgets import ProfileEditPanel, ChoiceEditPanel
 from .class_pane_proj_expl_view import ProjectExplorerView, TreeView
 from .define import EnumProjectExplorerContextMenuIDs
 from .class_pane_proj_expl_cc import ProjectExplorerContentContainer, CommandAppendNode, CommandRemoveNode
@@ -64,25 +70,45 @@ class ProjectExplorerManager(MBTViewManager):
     _T_PROJECT_CREATED, EVT_PROJECT_CREATED = wxevt.NewCommandEvent()
     _T_PROJECT_OPENED, EVT_PROJECT_OPENED = wxevt.NewCommandEvent()
     _T_PROJECT_SAVED, EVT_PROJECT_SAVED = wxevt.NewCommandEvent()
+    _T_PROJECT_CLOSED, EVT_PROJECT_CLOSED = wxevt.NewCommandEvent()
     _T_NODE_ADDED, EVT_NODE_ADDED = wxevt.NewCommandEvent()
+    _T_NODE_EDIT_REQUIRED, EVT_NODE_EDIT_REQUIRED = wxevt.NewCommandEvent()
     _T_NODE_DELETED, EVT_NODE_DELETED = wxevt.NewCommandEvent()
+    _T_NODE_HIGHLIGHT_EDITOR, EVT_NODE_HIGHLIGHT_EDITOR = wxevt.NewCommandEvent()
     _T_NODE_PROPERTY_CHANGED, EVT_NODE_PROPERTY_CHANGED = wxevt.NewCommandEvent()
 
+    # todo: EVT_NODE_PROPERTY_CHANGED not finished
     def __init__(self, **kwargs):
         MBTViewManager.__init__(self, **kwargs)
         self.menuBuilder = None
+        self._propContainer = ProjectNodePropContainer()
+        self._contentProvider = None
         # bind event
+
+    @property
+    def view(self) -> ProjectExplorerView:
+        return self._view
 
     @property
     def iconSize(self) -> wx.Size:
         return wx.Size(16, 16)
 
-    def create_view(self, **kwargs):
+    def get_prop_container(self):
+        return self._propContainer
+
+    def create_view(self, **kwargs) -> ProjectExplorerView:
         if self._view is not None:
             return self._view
-        _app=wx.App.GetInstance()
+        _app = wx.App.GetInstance()
         _cc = ProjectExplorerContentContainer()
-        _image_names = _cc.projectCNImporter.get_required_icon_names()
+        # collection all icons which used in projectExplorer
+        _image_names = set()
+        for k, v in self.root.get_workbenches().items():
+            if v.projectNodeConstructor is None:
+                continue
+            [_image_names.add(x) for x in v.projectNodeConstructor.get_required_icon_names()]
+        [_image_names.add(x) for x in Project.nodeConstructor.get_required_icon_names()]
+        _image_names = list(_image_names)
         # add solution icon into image list
         _mbt_slt_mgr = _app.mbtSolutionManager
         for k, v in _mbt_slt_mgr.solutions.items():
@@ -104,13 +130,33 @@ class ProjectExplorerManager(MBTViewManager):
         # self.undoStack.Submit(_TstCmd())
         return self._view
 
+    def register_to_content_resolver(self):
+        """
+        method make this contentcontainer as ProjectContentProvider registered into global content resolver.
+        Returns: None
+        """
+
+        _app = wx.App.GetInstance()
+        self._contentProvider = ProjectContentProvider(self.contentContainer)
+        _app.baseContentResolver.register(self._contentProvider, override=True)
+
+    def unregister_from_content_resolver(self):
+        """
+        method unregister previous registered provider from global content resolver.
+        Returns: None
+        """
+        _app = wx.App.GetInstance()
+        _app.baseContentResolver.unregister(ProjectContentProvider.AUTHORITY)
+        self._contentProvider = None
+
     def set_project_tree(self, model: TreeModel, expand_all=True):
         self.view.treeView.set_model(model)
         if model is not None:
             self.view.enable_tools(True)
         if expand_all:
             self.view.treeView.ExpandAll()
-        self.view.select_node(model.root)
+        self.view.SetFocus()
+        wx.CallAfter(self.view.select_node, model.root)
 
     def expand_node(self, node, recursive=True):
         self._view.treeView.expand_node(node, recursive)
@@ -140,6 +186,10 @@ class ProjectExplorerManager(MBTViewManager):
         if self._contentContainer.project is None:
             return
         # todo: check if changed if not then return, otherwise pop yes or no msgbox prompt user option. finally close the project.
+        self.unregister_from_content_resolver()
+        self.emit_event(self._T_PROJECT_CLOSED,
+                        project_name=self._contentContainer.project.name,
+                        project_path=self._contentContainer.project.projectPath)
 
     def open_project(self, evt: wx.CommandEvent):
         _path = evt.GetClientData()
@@ -151,133 +201,99 @@ class ProjectExplorerManager(MBTViewManager):
         if not os.path.exists(_path):
             FeedbackDialogs.show_msg_dialog(_('Error'), _('Projects path <%s> is not exist.') % _path)
             return
+        if self._contentContainer.project is not None:
+            _name = self._contentContainer.project.name
+            # same name not need to be closed.
+            if _name == os.path.basename(_path):
+                FeedbackDialogs.show_msg_dialog(_('Info'), _('Projects %s is already opened.') % _name)
+                return
         self.close_project()
-        # todo: show process dialog while loading content
         # assume the project name same as the dir name
         if self._contentContainer.open_project(_path):
             self.set_project_tree(self._contentContainer.project.projectTreeModel)
             # loading content
-            # self._loading_project_node_content(_app)
-            # self._panelProjectMgr.treeView.set_model(_app.project.projectTreeModel)
-            # self._panelProjectMgr.treeView.expand_node(_app.project.projectTreeRoot, False)
-            # self._panelProjectMgr.treeView.RefreshItems()
-            # self._update_title_with_project_name(_app.project.name)
-            # _app.save_project_info_to_recent(_app.project.name, _app.project.projectPath)
-            # _full_path = os.path.join(_app.project.projectPath, _app.project.name + '.proj')
-            # self._save_to_file_history(_full_path)
-            # gv.MAIN_APP = _app
-            # if _app.project.mainPerspective is not None:
-            #     self._auiMgr.LoadPerspective(_app.project.mainPerspective)
+            _nodes_need_prepare_content = self._contentContainer.project.nodesHasContent
+            with FeedbackDialogs.show_progress_dialog(_('Loading'), '', len(_nodes_need_prepare_content), self.root.view) as pd:
+                _failed_list = []
+                self._contentContainer.project.clear_work_file_dirs()
+                for idx, x in enumerate(_nodes_need_prepare_content):
+                    pd.Update(idx, 'load node %s' % x.label)
+                    _ret = self._contentContainer.prepare_node_content(x)
+                    if not _ret:
+                        _failed_list.append(x.label)
+                # todo: load mainPerspective
+                # if _app.project.mainPerspective is not None:
+                #     self._auiMgr.LoadPerspective(_app.project.mainPerspective)
+                pd.Destroy()
+            self.register_to_content_resolver()
             self.emit_event(self._T_PROJECT_OPENED, project=self._contentContainer.project)
+            if _failed_list:
+                FeedbackDialogs.show_msg_dialog(_('Warning'), 'follow node content load failed.%s' % ('\n'.join(_failed_list)))
         else:
-            wx.MessageBox('can not open the project.\n%s' % self._contentContainer.pop_error())
+            FeedbackDialogs.show_msg_dialog(_('Error'), 'can not open the project.\n%s' % self._contentContainer.pop_error())
 
     def create_project(self):
         self.close_project()
-        _proj_name, _project_path = self.view.show_create_new_project_dialog()
-        if _proj_name is not None and _project_path is not None:
-            _ret = self._contentContainer.create_new_project(_proj_name, _project_path)
+        # get optional workbenches
+        _wb_choices = self.root.get_workbench_choices(filter_=lambda k: isinstance(k[1], MBTProjectOrientedWorkbench))
+        # show dialog for gathering the form to creating project
+        _ret, _proj_name, _project_path = self.view.show_create_new_project_dialog(_wb_choices)
+        if not _ret:
+            return
+        _workbenches = [x.uid for x in _wb_choices if x.selected]
+
+        if not _proj_name.strip():
+            FeedbackDialogs.show_msg_dialog(_('Failed'), _('Project name is empty.'), icon=wx.ICON_ERROR)
+            return
+        _project_full_path = os.path.join(_project_path, _proj_name)
+        _exist = util_is_dir_exist(_project_full_path)
+        if _exist:
+            FeedbackDialogs.show_msg_dialog(_('Failed'), _('Project path <%s> is not empty') % _project_full_path, icon=wx.ICON_ERROR)
+            return
+        if not _workbenches:
+            FeedbackDialogs.show_msg_dialog(_('Failed'), _('Empty workbenches is not allowed.'), icon=wx.ICON_ERROR)
+            return
+
+        with FeedbackDialogs.show_progress_dialog(_('Create Project'), '', parent=self.root.view) as pd:
+            pd.Update(5, _('start creating project'))
+            _ret = self._contentContainer.create_new_project(_proj_name, _project_path, _workbenches)
+            pd.Update(100, _('workbenches and project initialized'))
             if not _ret:
-                wx.MessageBox('Can not create the project %s, at %s.\nError:%s' % (
+                FeedbackDialogs.show_msg_dialog(_('Error'), 'Can not create the project %s, at %s.\nError:%s' % (
                     _proj_name, _project_path, self._contentContainer.pop_error()))
-                self._contentContainer.delete_project(_proj_name, _project_path)
-            else:
-                self.set_project_tree(self._contentContainer.project.projectTreeModel)
-                self._contentContainer.set_default_node_content()
-                self.expand_node(self._contentContainer.projectRoot, False)
-                self.emit_event(self._T_PROJECT_CREATED, project=self._contentContainer.project)
+                self._contentContainer.delete_project_dir(_proj_name, _project_path)
+                return
+        self.set_project_tree(self._contentContainer.project.projectTreeModel)
+        self.expand_node(self._contentContainer.projectRoot, False)
+        self.register_to_content_resolver()
+        self.emit_event(self._T_PROJECT_CREATED, project=self._contentContainer.project)
 
     def _create_new_file(self):
-        wx.MessageBox(' fail to create file, see you next version', 'Fail')
-
-    def _run_wizard_for_new_or_edit_node(self, **options) -> (bool, dict):
-        _title = options.get('title', _('NewNode'))
-        _profile_title = options.get('profile_title', _('Profile'))
-        _profile_desc = options.get('profile_description', _('Here input the node profile information.'))
-        _profile_content = options.get('profile_content', dict())
-        _profile_content_validator = options.get('profile_content_validator')
-        _choice_label = options.get('choice_label', 'SelectOne:')
-        _choice_content = options.get('choice_content')
-        _choice_validator = options.get('choice_validator')
-        _choice_title = options.get('choice_title', _('Select'))
-        _choice_desc = options.get('choice_description', _('Here select an option from given options.'))
-        _bmp_id = options.get('bmp_id', 'pi.list-plus')
-        _bmp = wx.ArtProvider.GetBitmap(_bmp_id, wx.ART_OTHER, wx.Size(64, 64))
-        _wz = wx.adv.Wizard(self.view, wx.ID_ANY, _title, _bmp, style=wx.DEFAULT_DIALOG_STYLE)
-        _wz.SetBitmapPlacement(wx.adv.WIZARD_VALIGN_CENTRE)
-        _wz.SetBitmapBackgroundColour('#ddd')
-        _wz.SetPageSize(wx.Size(360, -1))
-
-        _page1 = ZWizardPage(_wz)
-        _page1.add_widget('header', gui_util_get_simple_text_header(_page1, _profile_title, _profile_desc), (0, 0))
-        _profile_panel = ProfileEditPanel(_page1)
-        _profile_panel.set_content(_profile_content, _profile_content_validator)
-        _page1.add_widget('profile', _profile_panel, (1, 0))
-        if _choice_content is not None:
-            _page2 = ZWizardPage(_wz)
-            _page2.add_widget('header', gui_util_get_simple_text_header(_page2, _choice_title, _choice_desc), (0, 0))
-            _choice_panel = ChoiceEditPanel(_page2, label=_choice_label, use_bitmap=True)
-            _choice_panel.set_content(_choice_content, _choice_validator)
-            _page2.add_widget('choice', _choice_panel, (1, 0))
-            _page1.nextPage = _page2
-            _page2.previousPage = _page1
-        else:
-            _page2 = None
-
-        _wz.GetPageAreaSizer().Add(_page1, 1, wx.EXPAND)
-        if _wz.RunWizard(_page1):
-            _ret = dict()
-            _ret.update({'profile': _page1.get_widget('profile').get_content()})
-            if _page2 is not None:
-                _ret.update(_page2.get_widget('choice').get_content())
-            _wz.Destroy()
-            return True, _ret
-        else:
-            _wz.Destroy()
-            return False, None
+        FeedbackDialogs.show_msg_dialog('Fail', 'todo: create supported node type file....')
 
     def save_project(self):
-        pass
+        if self._contentContainer.project is None:
+            return
+        with FeedbackDialogs.show_progress_dialog(_('Processing...'), _('Save Project'), parent=self.root.view) as pd:
+            # todo: collection all unsaved nodes, then update it?
+            pd.Update(90, 'Compose project data')
+            self._contentContainer.project.do_save_project_data()
+            self._contentContainer.project.do_save_project_content()
+            pd.Destroy()
 
-    def add_node(self, role: EnumProjectItemRole):
+    def add_node(self, role: str):
         try:
             _cc: ProjectExplorerContentContainer = self._contentContainer
-            _describable = _cc.check_flag_of_role_config(role, EnumProjectItemFlag.DESCRIBABLE)
             _parent = _cc.find_parent_node_by_child_role(role)
-            _meta = dict()
-            _name = EnumProjectItemRole(role).name.capitalize()
-            if _describable:
-                _wz_options = dict()
-                _wz_options['title'] = 'New%sNode' % _name
-                _wz_options['profile_content'] = {'name': 'New%s' % _name, 'description': 'description of %s' % _name}
-                _solution_choice = False
-
-                if role == EnumProjectItemRole.BEHAVIOUR.value:
-                    _solution_choice = True
-                    _app_ctx = self.root.appContext
-                    _slt_mgr = _app_ctx.get_property('mbtSolutionManager')
-                    _slts = {x.name: (x.uuid, x.type_) for x in _slt_mgr.solutions.values() if x.isValid}
-                    _slt_descs = {v.name: v.description for v in _slt_mgr.solutions.values() if v.isValid}
-                    _bmps = {x.name: x.iconInfo[1] for x in _slt_mgr.solutions.values() if x.isValid}
-                    _wz_options['choice_content'] = {'choices': list(_slts.keys()),
-                                                     'bmps': list(_bmps.values()),
-                                                     'descriptions': _slt_descs}
-                    _wz_options['choice_title'] = 'Select Solution'
-                    _wz_options['choice_description'] = 'Select a solution from given list.'
-                    _wz_options['choice_label'] = 'Solution:'
-                _ret, _res = self._run_wizard_for_new_or_edit_node(**_wz_options)
-                if _ret:
-                    if _solution_choice:
-                        _slt_uid, _slt_typ = _slts[_res['selected']]
-                        _res['icon'] = _bmps[_res['selected']]
-                        _res.update({'typeUri': ProjectTreeNode.generate_type_uri('solution', name=_slt_typ, uid=_slt_uid)})
-                        _res.pop('selected')
-                    _res['profile'] = ProjectNodeProfile(**_res['profile'])
-                    _res['role'] = role
-                    _meta = _res
-                    _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode' % _name)
-                    _ret = self.undoStack.Submit(_cmd)
-                    assert _ret, 'command not be executed successfully.'
+            _wb: MBTProjectOrientedWorkbench = _cc.get_current_workbench(_parent.workbenchUid)
+            _role_name = _wb.get_role_name(role).capitalize()
+            _ret,_meta = _wb.prepare_add_node(_parent.uuid, role)
+            if _ret and not _meta:
+                raise ValueError('empty meta data from workbench %s received.' % _wb.name)
+            if _ret:
+                _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode' % _role_name)
+                _ret = self.undoStack.Submit(_cmd)
+                assert _ret, 'command not be executed successfully.'
         except Exception as e:
             FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not add node.since:%s') % e,
                                             icon=wx.ICON_ERROR)
@@ -336,9 +352,11 @@ class ProjectExplorerManager(MBTViewManager):
             self.log.error('can not execute delete node, since:\n%s' % e)
 
     def open_node(self, node: ProjectTreeNode):
-        print('open_node node', node)
+        if node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT):
+            self.emit_event(self._T_NODE_EDIT_REQUIRED, node=node)
 
     def rename_node(self, node: ProjectTreeNode):
+        # todo: emit event
         print('rename_node node', node)
 
     def do_sop(self, sop_id, **kwargs):
@@ -361,6 +379,14 @@ class ProjectExplorerManager(MBTViewManager):
             self.cut_node(_node)
         elif sop_id == wx.ID_PASTE:
             self.paste_on_node(_node)
+
+    def focus_on_node_with_uid(self, uid):
+        if self._contentContainer.project is None:
+            return
+        _node = self._contentContainer.find_node_by_uid(uid)
+        if _node is None:
+            return
+        self.view.select_node(_node, True, evt_propagation=False, focus=False)
 
     # --------------------------------------------------------------
     # event handling
@@ -406,7 +432,9 @@ class ProjectExplorerManager(MBTViewManager):
         _view = self.view.treeView
         _view.SelectItem(_item)
         _node: ProjectTreeNode = _view.item_to_node(_item)
-        _cm_cfg = copy.deepcopy(self._contentContainer.get_project_node_cm_config(_node.role))
+        _cm_cfg: list = copy.deepcopy(Project.baseContextMenuCfg)
+        _node_cm_cfg = copy.deepcopy(self._contentContainer.get_project_node_cm_config(_node.role))
+        _cm_cfg.extend(_node_cm_cfg)
         if not _cm_cfg:
             return
         _ctx = {'wx': wx, 'this': _node}
@@ -420,8 +448,18 @@ class ProjectExplorerManager(MBTViewManager):
         _item = evt.GetItem()
         _view: TreeView = self.view.treeView
         _node: ProjectTreeNode = _view.item_to_node(_item)
-        self.view.enable_tools(_node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT), self.view.tbIdLinkEditor)
-        # self.view.enable_tools(_node.has_flag(EnumProjectItemFlag.ORDERABLE),self.view.tbIdLinkEditor)
+        _link_editor_cond = _node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT) and self.root.is_node_editor_exist(_node)
+        self.view.enable_tools(_link_editor_cond, self.view.tbIdLinkEditor)
+        if _node.children:
+            if all([x.has_flag(EnumProjectItemFlag.ORDERABLE) for x in _node.children]):
+                self.view.enable_tools(True, self.view.tbIdSort)
+                _sort_c, _flag = SORTER_MAP.get(_node.sorter)
+                self.view.update_sort_tool_icon(_flag)
+            else:
+                self.view.enable_tools(False, self.view.tbIdSort)
+        else:
+            self.view.enable_tools(False, self.view.tbIdSort)
+        self._propContainer.set_node(_node)
         EnumAppSignal.sigSupportedOperationChanged.send(self, op=self.get_node_sop(_node))
         _evt = self._T_NODE_SELECTED(self.view.GetId(), node=_node)
         wx.PostEvent(self.view, _evt)
@@ -431,20 +469,12 @@ class ProjectExplorerManager(MBTViewManager):
         _item = evt.GetItem()
         _view: TreeView = self.view.treeView
         _node: ProjectTreeNode = _view.item_to_node(_item)
-        # todo: let root open node content editor. if has children collapse or expand it.
+        # let root open node content editor. if has children collapse or expand it.
         if _node.children:
             _view.Toggle(_item)
             return
-        # _view = self.view.treeView
-        # _node = _view.item_to_node(_item)
-        # if _node.children:
-        #     if _view.IsExpanded(_item):
-        #         _view.Collapse(_item)
-        #     else:
-        #         _view.Expand(_item)
-        # if _node.fileAttr == EnumProjectNodeFileAttr.FOLDER:
-        #     return
-        # self.proj_edit_node(_node)
+        if _node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT):
+            self.emit_event(self._T_NODE_EDIT_REQUIRED, node=_node)
 
     def on_proj_item_get_tooltip(self, evt: wx.TreeEvent):
         _item = evt.GetItem()
@@ -460,8 +490,15 @@ class ProjectExplorerManager(MBTViewManager):
         elif _id == self.view.tbIdCollapseAll:
             self.view.treeView.CollapseAll()
         elif _id == self.view.tbIdLinkEditor:
-            # todo: must some node selected, get the node uid, find editor with this uid, then activate editor
-            pass
+            self.emit_event(self._T_NODE_HIGHLIGHT_EDITOR, node=self.view.get_current_selected())
         elif _id == self.view.tbIdSort:
-            # todo: sort and change icon
-            pass
+            if self._contentContainer.project is None: return
+            # all its children could be sortable, currently sort the item only base on the label
+            _node = self.view.get_current_selected()
+            if _node.sorter == EnumNodeSorter.SORTER_LABEL_ASC:
+                _node.update(sorter=EnumNodeSorter.SORTER_LABEL_DSC.value)
+            elif _node.sorter == EnumNodeSorter.SORTER_LABEL_DSC:
+                _node.update(sorter=EnumNodeSorter.SORTER_LABEL_ASC.value)
+            _flag = self._contentContainer.project.projectTreeModel.sort(_node)
+            self.view.refresh_tree()
+            self.view.update_sort_tool_icon(_flag)

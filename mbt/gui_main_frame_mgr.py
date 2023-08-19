@@ -20,17 +20,22 @@ import os.path
 #
 # ------------------------------------------------------------------------------
 import sys, wx, traceback, logging
+import typing, addict
 import wx.lib.agw.aui as aui
 import wx.lib.newevent as wxevt
+import wx.lib.sized_controls as wxsc
 from framework.application.define import _
-from framework.gui.base.class_feedback_dialogs import FeedbackDialogs
+from framework.gui.base import FeedbackDialogs, EnumZViewFlag
+from framework.application.utils_helper import util_is_bit_set
 from mbt import appCtx
-from .application.class_application import MBTApplication
-from .application.project import Project
+from .application.class_application import MBTApplicationContentContainer
+from .application.project import Project, ProjectNodePropContainer, ProjectNodeHasher, ProjectTreeNode, ProjectNodeChoiceItem
 from .application.define import (RECENT_MAX_LEN, APP_VERSION, APP_NAME, EnumAppSignal, T_EVT_APP_TOP_MENU)
 from .application.log.class_logger import get_logger
-from .gui.base import MBTViewManager, MBTContentContainer, MBTUniView
-from .gui.navigation.define import EnumMFMenuIDs
+from .application.workbench_base import WorkbenchChoiceItem, EnumMBTWorkbenchFlag, MBTBaseWorkbench
+from .application.base import MBTContentContainer,MBTViewManager
+from .gui.base import (MBTUniView, EnumBuiltinMBTViewUserAttribute)
+from .gui.navigation.define import EnumMFMenuIDs, MENU_CALLER_COMMAND_MAP
 from .gui.navigation.class_app_menubar_mgr import AppMenubarViewManager
 from .gui.navigation.class_app_toolbar_mgr import AppToolbarViewManager
 from .gui.base.class_pane_proj_expl_mgr import ProjectExplorerManager
@@ -59,10 +64,13 @@ class AppMainFrameViewManager(MBTViewManager):
         self._appConsoleMgr = None
         self._welcomeMgr = None
         self.accelTable = []
-        self.editorFactory = None
         self.currentPane = None
         # bind app signal
         EnumAppSignal.sigSupportedOperationChanged.connect(self.on_app_sig_supported_op_changed)
+
+    @property
+    def view(self) -> AppFrame:
+        return self._view
 
     @property
     def appContext(self):
@@ -93,13 +101,13 @@ class AppMainFrameViewManager(MBTViewManager):
         _dlg.ShowModal()
         _dlg.Destroy()
 
-    def create_view(self, **kwargs):
+    def create_view(self, **kwargs) -> AppFrame:
         if self._view is not None:
             return self._view
         _view = AppFrame()
         self.post_view(_view)
         # _view.PushEventHandler(self) not necessary currently
-        _cc = MBTApplication(appCtx)
+        _cc = MBTApplicationContentContainer(appCtx)
         self.post_content_container(_cc)
         # --------------------------------------------------------------
         # create and append application toolbar
@@ -188,6 +196,8 @@ class AppMainFrameViewManager(MBTViewManager):
         self.view.Bind(self._appProjectExplMgr.EVT_PROJECT_CREATED, self.on_project_created)
         self.view.Bind(self._appProjectExplMgr.EVT_PROJECT_OPENED, self.on_project_opened)
         self.view.Bind(self._appProjectExplMgr.EVT_NODE_DELETED, self.on_project_node_deleted)
+        self.view.Bind(self._appProjectExplMgr.EVT_NODE_EDIT_REQUIRED, self.on_project_node_edit_required)
+        self.view.Bind(self._appProjectExplMgr.EVT_NODE_HIGHLIGHT_EDITOR, self.on_project_node_editor_highlighted_required)
         self.view.Bind(wx.EVT_UPDATE_UI, self.on_spec_id_ui_updated, id=wx.ID_UNDO)
         self.view.Bind(wx.EVT_UPDATE_UI, self.on_spec_id_ui_updated, id=wx.ID_REDO)
         self.view.Bind(wx.EVT_UPDATE_UI, self.on_spec_id_ui_updated, id=wx.ID_SAVE)
@@ -199,7 +209,7 @@ class AppMainFrameViewManager(MBTViewManager):
         self.view.Bind(wx.EVT_UPDATE_UI, self.on_spec_id_ui_updated, id=EnumMFMenuIDs.VIEW_CLOSE_ALL_EDITOR)
 
     def _create_acc_table(self):
-        # set the acceleratorTable
+        # set the acceleratorTable is not necessary, since it already in navigator defined.
         self.accelTable = [
             # ('Save', wx.ACCEL_CTRL, ord('S'), wx.ID_SAVE),
             # ('Copy', wx.ACCEL_CTRL, ord('C'), wx.ID_COPY),
@@ -220,7 +230,12 @@ class AppMainFrameViewManager(MBTViewManager):
                                                                   wx.ID_DELETE: False})
 
     def load_default_perspective(self):
+        # todo: move into app???
         pass
+
+    @staticmethod
+    def format_node_editor_page_tooltip(node: ProjectTreeNode):
+        return 'path: %s\ndescription: %s' % (node.get_path_string(), node.description)
 
     @staticmethod
     def find_window_parent_by_type(win: wx.Window, parent_type: type):
@@ -230,6 +245,9 @@ class AppMainFrameViewManager(MBTViewManager):
                 break
             _parent = _parent.GetParent()
         return _parent if isinstance(_parent, parent_type) else None
+
+    def is_node_editor_exist(self, node: ProjectTreeNode) -> typing.Union[None, MBTViewManager]:
+        return self.find(self, lambda x: x.uid == node.uuid)
 
     def get_recent_project_info(self):
         _app = wx.App.GetInstance()
@@ -269,6 +287,45 @@ class AppMainFrameViewManager(MBTViewManager):
         _i2.Enable(False)
         undo_stack.SetEditMenu(None)
 
+    def set_status_text(self, text, **kwargs):
+        self.view.set_status_bar_text(text)
+
+    def choose_project_node(self, filter_: callable, default_uids: list = [], multi=False) -> typing.List[ProjectNodeChoiceItem]:
+        _lst = list()
+        _root = self._appProjectExplMgr.contentContainer.project.projectTreeModel.root
+        _filter_nodes = self.find_all(_root, filter_)
+        if not default_uids and _filter_nodes:
+            default_uids = [_filter_nodes[0].uuid]
+        for x in _filter_nodes:
+            _o = ProjectNodeChoiceItem(x)
+            _o.selected = x.uuid in default_uids
+            _lst.append(_o)
+        return self._view.show_olv_selector_dialog(_lst, multi)
+
+    def get_project_node(self, filter_: callable):
+        if self._appProjectExplMgr.contentContainer.project is None:
+            return
+        _root = self._appProjectExplMgr.contentContainer.project.projectTreeModel.root
+        return self.find_all(_root, filter_)
+
+    def get_workbench_choices(self, filter_: callable = None) -> list:
+        _wb_choices = []
+        for k, v in self.get_workbenches(filter_).items():
+            _i = WorkbenchChoiceItem(v)
+            _has_optional_flag = v.has_flag(EnumMBTWorkbenchFlag.OPTIONAL)
+            _i.selected = not _has_optional_flag
+            _i.allowEdited = _has_optional_flag
+            _wb_choices.append(_i)
+        return _wb_choices
+
+    def get_workbenches(self, filter_: callable = None) -> dict:
+        _app = wx.App.GetInstance()
+        _all = _app.workbenchRegistry.all
+        if filter_ is None:
+            return _app.workbenchRegistry.all
+        else:
+            return dict(filter(filter_, _all.items()))
+
     # --------------------------------------------------------------
     # event handling
     # --------------------------------------------------------------
@@ -278,9 +335,15 @@ class AppMainFrameViewManager(MBTViewManager):
         if self.currentPane is None:
             _can_undo = self.undoStack.CanUndo()
             _can_redo = self.undoStack.CanRedo()
+            _can_save = False
         else:
             _can_undo = self.currentPane.manager.undoStack.CanUndo()
             _can_redo = self.currentPane.manager.undoStack.CanRedo()
+            _cc = self.currentPane.manager.contentContainer
+            if _cc is None:
+                _can_save = False
+            else:
+                _can_save = _cc.has_changed()
         self._inUpdateUI = True
         _id = evt.GetId()
         _evt_obj = evt.GetEventObject()
@@ -300,35 +363,87 @@ class AppMainFrameViewManager(MBTViewManager):
                     _toolbar_update_required |= True
             if _toolbar_update_required:
                 self._appToolbarMgr.view.Refresh()
-        if _id in [wx.ID_SAVE,
-                   wx.ID_SAVEAS,
+        if _id in [wx.ID_SAVEAS,
                    EnumMFMenuIDs.SAVE_ALL,
                    EnumMFMenuIDs.VIEW_SHOW_PROJ_PROPS,
                    EnumMFMenuIDs.VIEW_SHOW_PROJ_IN_EXPLORER,
                    EnumMFMenuIDs.VIEW_CLOSE_EDITOR,
                    EnumMFMenuIDs.VIEW_CLOSE_ALL_EDITOR]:
             evt.Enable(self._appProjectExplMgr.contentContainer.project is not None)
+        if _id in [wx.ID_SAVE]:
+            evt.Enable(_can_save or False)
         self._inUpdateUI = False
 
     def on_project_node_deleted(self, evt: wx.CommandEvent):
         _uid = evt.uid
-        print('on_project_node_deleted->', _uid)
+        # todo: close or destroy editor if opened. check content is changed
+        self.log.debug('todo: on_project_node_deleted->%s' % _uid)
+
+    def on_project_node_editor_highlighted_required(self, evt: wxevt.NewCommandEvent):
+        _node = evt.node
+        _exist: MBTViewManager = self.is_node_editor_exist(_node)
+        if _exist:
+            self._view.centerPane.SetSelectionToWindow(_exist.view)
+
+    def on_project_node_edit_required(self, evt: wxevt.NewCommandEvent):
+        self.log.debug('on_project_node_edit_required->%s:%s' % (evt.node, evt.node.stereotypeUri))
+        _node = evt.node
+        _exist: MBTViewManager = self.is_node_editor_exist(_node)
+        if _exist:
+            # check if visible
+            if self._view.has_pane_in_center(_exist.view):
+                # if visible just select it.
+                self._view.centerPane.SetSelectionToWindow(_exist.view)
+            else:
+                # if not visible just add it into center pane.
+                self._view.add_pane_to_center(_exist.view, caption=_node.label,
+                                              select=True,
+                                              bitmap=wx.ArtProvider.GetBitmap(_node.icon, size=wx.Size(16, 16)),
+                                              tooltip=self.format_node_editor_page_tooltip(_node))
+        else:
+            _app = wx.App.GetInstance()
+            _node_wb_uid = _node.workbenchUid
+            _hash = ProjectNodeHasher.hash_node(_node, use_workbench=_node_wb_uid is not None)
+            _wb: MBTBaseWorkbench = _app.workbenchRegistry.get(_node_wb_uid)
+            if _wb is None:
+                FeedbackDialogs.show_msg_dialog(_('Error'), 'No Workbench from registry for this node type find.')
+                return
+
+            if _wb.has_flag(EnumMBTWorkbenchFlag.HAS_EDITOR):
+                _editor_mgr = _wb.editorFactory.create_instance(_hash, parent=self, uid=_node.uuid, view_title=_node.get_path_string())
+            else:
+                _editor_mgr = None
+            if _editor_mgr is None:
+                FeedbackDialogs.show_msg_dialog(_('Error'), 'No Editor for this node type find.')
+                return
+            _view = _editor_mgr.create_view(parent=self._view.centerPane)
+            # editor content will be set by it own MBTViewManager.
+            # since manager don't know the file path of content file. should register this cc as consumer into
+            # app content provider, which with "project" identified.
+            # if this viewmanager destroyed, the content consumer should be unregistered.
+            self._view.add_pane_to_center(_view, caption=_node.label,
+                                          select=True,
+                                          bitmap=wx.ArtProvider.GetBitmap(_node.icon, size=wx.Size(16, 16)),
+                                          tooltip=self.format_node_editor_page_tooltip(_node))
 
     def on_project_node_selected(self, evt: wx.CommandEvent):
-        print('on_project_node_selected->', evt.node)
+        """
+        method handling the project node selected.
+        editor in center pane would not be activated, use tool LinkEditor in projExplView.
+        Args:
+            evt: wx.CommandEvent
+
+        Returns:
+
+        """
+        self.log.debug('on_project_node_selected->%s' % evt.node)
         _node = evt.node
         if _node is None:
             return
         _node_desc = _node.description
         _status_bar = self.view.set_status_bar_text(_node_desc)
-        # todo: show property
-        # _view = self.view.treeView
-        # if _item.IsOk():
-        #     _node = _view.item_to_node(_item)
-        #     self.GetStatusBar().SetStatusText(_node.description)
-        #     _prop_panel = ProjectItemPropsContentPanel(self._propContainerPane)
-        #     _prop_panel.set_item(_node)
-        #     self._propContainerPane.set_content(_prop_panel)
+        _prop_container = self._appProjectExplMgr.get_prop_container()
+        self._appPropContainerMgr.set_content(_prop_container)
 
     def on_app_sig_supported_op_changed(self, sender, op: dict):
         for id_, state in op.items():
@@ -339,22 +454,22 @@ class AppMainFrameViewManager(MBTViewManager):
     def on_pane_activated(self, evt: aui.AuiManagerEvent):
         _pane = evt.GetPane()
         if _pane is self.view.centerPane:
-            # todo: check if currentPane is page of this notebook
-            pass
-        else:
-            if not isinstance(_pane, MBTUniView):
-                if self.currentPane is not None:
-                    self.uninstall_undo_stack(self.currentPane.manager.undoStack)
-                self.currentPane = None
-                return
-            elif _pane is not self.currentPane:
-                if self.currentPane is not None:
-                    self.uninstall_undo_stack(self.currentPane.manager.undoStack)
-                self.install_undo_stack(_pane.manager.undoStack)
-                self.currentPane = _pane
+            _pane = self._view.get_current_center_pane()
+            if isinstance(_pane, MBTUniView):
+                _view_mgr: MBTViewManager = _pane.manager
+                self._appProjectExplMgr.focus_on_node_with_uid(_view_mgr.uid)
+        if not isinstance(_pane, MBTUniView):
+            if self.currentPane is not None:
+                self.uninstall_undo_stack(self.currentPane.manager.undoStack)
+            self.currentPane = None
+            return
+        elif _pane is not self.currentPane:
+            if self.currentPane is not None:
+                self.uninstall_undo_stack(self.currentPane.manager.undoStack)
+            self.install_undo_stack(_pane.manager.undoStack)
+            self.currentPane = _pane
 
     def on_project_opened(self, event):
-        print('---------->on project opened:', event)
         _project: Project = event.project
         self._appConsoleMgr.write('project %s opened from %s' % (_project.name, _project.projectPath))
         self.view.update_title_with_project_name(_project.name)
@@ -411,6 +526,11 @@ class AppMainFrameViewManager(MBTViewManager):
                     continue
                 if _act.GetId() == _id:
                     x.toggle_view(evt.IsChecked())
+        # execute extend command caller uri
+        _handle_uri = MENU_CALLER_COMMAND_MAP.get(_id)
+        if _handle_uri:
+            _app = wx.App.GetInstance()
+            _app.uriHandleMgr.exec(_handle_uri)
         evt.Skip()
 
     def on_preference_changed(self, evt: wxevt.NewCommandEvent):
@@ -432,19 +552,35 @@ class AppMainFrameViewManager(MBTViewManager):
             wx.CallLater(300, FeedbackDialogs.show_msg_dialog, _('Info'), '\n'.join(_more_op_required))
         EnumAppSignal.sigAppPreferenceApplied.send(self, container=_container, name=_name, items=_items)
 
-    def on_center_pane_pg_changed(self, evt):
+    def on_center_pane_pg_changed(self, evt: aui.AuiNotebookEvent):
         _log.debug('-->on_center_pane_pg_changed')
-
-    def on_center_pane_pg_close(self, evt: aui.AuiNotebookEvent):
-        # todo: info projectExpl...
         _pg_idx = evt.GetSelection()
         if _pg_idx == -1:
             return
-        _pg = self.view.centerPane.GetPage(_pg_idx)
-        _pg.manager.toggle_view(False, self.view.centerPane)
-        evt.Veto()
+        _pg = self._view.centerPane.GetPage(_pg_idx)
+        if isinstance(_pg, MBTUniView):
+            _view_mgr: MBTViewManager = _pg.manager
+            self._appProjectExplMgr.focus_on_node_with_uid(_view_mgr.uid)
+
+    def on_center_pane_pg_close(self, evt: aui.AuiNotebookEvent):
+        _pg_idx = evt.GetSelection()
+        if _pg_idx == -1:
+            return
+        _pg = self._view.centerPane.GetPage(_pg_idx)
+        _view_mgr: MBTViewManager = _pg.manager
+        _view_flag = _view_mgr.get_user_attribute(EnumBuiltinMBTViewUserAttribute.VIEW_FLAG, 0)
+        _has_destroy_flag = util_is_bit_set(_view_flag, EnumZViewFlag.DESTROY_ON_CLOSE)
+        if _has_destroy_flag:
+            evt.Skip()
+        else:
+            if _view_mgr.viewAllowToggleWithMenu:
+                _view_mgr.toggle_view(False, self._view.centerPane)
+            else:
+                self._view.remove_pane_from_center(_view_mgr.view)
+            evt.Veto()
 
     def on_window_closed(self, evt):
         # self._process_unsaved()
-        self.view.PopEventHandler()
+        self._view.PopEventHandler()
+        self._appProjectExplMgr.save_project()
         evt.Skip()

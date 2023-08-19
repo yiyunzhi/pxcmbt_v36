@@ -19,11 +19,8 @@
 #
 #
 # ------------------------------------------------------------------------------
-from framework.application.urlobject import URLObject
+import re
 
-a = URLObject()
-a=a.with_scheme('type')
-a=a.with_path('solution')
-a=a.add_query_params(a=11,b='dd')
-
-print(a,a.scheme,a.path)
+ILLEGAL_NTFS_CHARS = "[<>:/\\|?*\"]|[\0-\31]"
+s='76'
+print(re.findall(ILLEGAL_NTFS_CHARS,s))

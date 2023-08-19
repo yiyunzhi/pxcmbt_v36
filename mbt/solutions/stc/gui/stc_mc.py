@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-from mbt.gui.base import MBTViewManager,MBTContentContainer
+from mbt.application.base import MBTViewManager,MBTContentContainer
 
 
 class STCEditorContentContainer(MBTContentContainer):

@@ -30,6 +30,11 @@ class EnumBaseColour:
     COLOR_HIGHLIGHT_TEXT = '#333'
 
 
+class EnumZViewFlag:
+    REPARENT = 1 << 0
+    DESTROY_ON_CLOSE = 1 << 1
+
+
 # Standard images for all the buttons we use in the dialog
 # ----------------------------------------------------------------------
 EI_CANCEL = PyEmbeddedImage(

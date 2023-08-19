@@ -43,3 +43,8 @@ class EnumAppSignal:
     sigSupportedOperationChanged = blinker.signal('sigSupportedOperationChanged')
     sigAppPreferenceAboutToShow = blinker.signal('sigAppPreferenceAboutToShow')
     sigAppPreferenceApplied = blinker.signal('sigAppPreferenceApplied')
+
+
+class EnumTEProtocol(enum.Enum):
+    PROTOCOL_URPC = 'urpc'
+    PROTOCOL_TCP = 'tcp'

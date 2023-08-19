@@ -25,6 +25,7 @@ PROJECT_FILE_EXTEND = '.proj'
 DF_PROJECT_NODE_FMT = wx.DataFormat("DFProjectNode")
 
 
+
 class EnumProjectItemFlag(enum.IntEnum):
     # Interactive parent change is allowed
     REPARENT = 1 << 0
@@ -51,6 +52,7 @@ class EnumProjectItemFlag(enum.IntEnum):
 
 class EnumProjectItemRole(enum.Enum):
     """
+    default application has three workbenches.
     root
         - Model
             - prototypes
@@ -59,7 +61,7 @@ class EnumProjectItemRole(enum.Enum):
             - behaviours
                 - b1
                 - b2
-        - Tester
+        - Test
             - testcases
                 - tc1 (while run show busy icon, disable node.)
                     - setting(constraint, env, steps mgr,req, profile...)
@@ -68,31 +70,47 @@ class EnumProjectItemRole(enum.Enum):
             - testEnv
                 - env1 (commDef,Macro...)
                 - env2
-            - testExecutor
-            - requirements manager
-                - req repo
+            - testRuns
+                - tr1
+        - requirements manager
+            - req repo
     """
     ROOT = '0'
     MODEL = '0-1'
     PROTOTYPES = '0-1-0'
     PROTOTYPE = '0-1-0-0'
+    PROTOTYPE_SKETCH = '0-1-0-0-0'
     BEHAVIOURS = '0-1-1'
     BEHAVIOUR = '0-1-1-0'
-    TESTER = '0-2'
+    TEST = '0-2'
     TESTCASES = '0-2-0'
     TESTCASE = '0-2-0-0'
     TESTCASE_SETTING = '0-2-0-0-0'
     TESTCASE_RESULT = '0-2-0-0-1'
     TEST_ENVS = '0-2-1'
     TEST_ENV = '0-2-1-0'
-    TEST_EXECUTOR = '0-2-2'
-    TEST_REQ_MGR = '0-2-3'
-    TEST_REQ_REPO = '0-2-3-0'
+    TEST_RUNS = '0-2-2'
+    TEST_RUN = '0-2-2-0'
+    REQ_MGR = '0-3'
+    REQ_REPO = '0-3-0'
 
 
-class EnumProjectNodeFileAttr:
-    FILE = 0
-    FOLDER = 1
-    LINK = 3
-    PY_OBJ = 5
-    DYNAMIC = 255
+BUILTIN_WORKBENCH_BASE_ROLES = [EnumProjectItemRole.MODEL.value, EnumProjectItemRole.TEST.value, EnumProjectItemRole.REQ_MGR.value]
+
+# class EnumProjectNodeFileAttr:
+#     FILE = 0
+#     FOLDER = 1
+#     LINK = 3
+#     PY_OBJ = 5
+#     DYNAMIC = 255
+
+
+SORTER_MAP = {
+    0: (lambda x: x.label, 'asc'),
+    1: (lambda x: x.label, 'dsc')
+}
+
+
+class EnumNodeSorter(enum.IntEnum):
+    SORTER_LABEL_ASC = 0
+    SORTER_LABEL_DSC = 1

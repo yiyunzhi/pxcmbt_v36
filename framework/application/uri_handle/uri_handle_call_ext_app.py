@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #                                                                            --
 #                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
@@ -19,7 +18,8 @@
 #
 #
 # ------------------------------------------------------------------------------
-import os
+import os, wx
+from framework.application.define import _
 from .uri_handle_manager import URIHandle
 
 
@@ -30,32 +30,34 @@ class CallExternalURIHandle(URIHandle):
     def __init__(self, uri_scheme='os', uri_path='startProgram', app_ctx=None):
         super().__init__(uri_scheme, uri_path, app_ctx)
         self._prog = None
+        self._evtHandler = wx.EvtHandler()
 
     def before_exec(self, *args):
-        if self.appCtx:
-            self.appCtx.set_app_busy_state(False)
+        pass
 
-    def after_exec(self, exit_code, exit_state):
-        self._prog.deleteLater()
+    def after_exec(self, event: wx.ProcessEvent):
+        if event.GetExitCode() != 0:
+            raise OSURIHandleExecException(_('execute failed.'))
+        self._prog.Destroy()
         self._prog = None
 
     def exec(self, *args, **kwargs):
         if self._prog is not None:
-            self._prog.deleteLater()
+            self._prog.Destroy()
             self._prog = None
-        self._prog = QtCore.QProcess()
-        self._prog.started.connect(self.before_exec)
-        # self._prog.finished.connect(self.on_exec_finish)
-        try:
-            _mode = kwargs.get('mode', 'prog')
-            # _app_ctx.set_app_busy(True)
-            if _mode == 'prog':
-                _args = kwargs.get('arguments', [])
-                self._prog.start(kwargs.get('program'), _args)
-            elif _mode == 'cmd':
-                _ret = os.system(kwargs.get('command'))
-        except Exception as e:
-            self.after_exec(-1, QtCore.QProcess.ExitStatus.CrashExit)
-            raise OSURIHandleExecException(e)
-        finally:
-            pass
+        self._prog = wx.Process(self._evtHandler)
+        self._evtHandler.Bind(wx.EVT_END_PROCESS, self.after_exec)
+        with wx.WindowDisabler():
+            _wait = wx.BusyInfo(_("Please wait, processing..."))
+            try:
+                # wx.Sleep(1)
+                _mode = kwargs.get('mode', 'prog')
+                if _mode == 'prog':
+                    _args = kwargs.get('arguments', wx.EXEC_ASYNC)
+                    wx.Execute(kwargs.get('program'), _args, self._prog)
+                elif _mode == 'cmd':
+                    _ret = os.system(kwargs.get('command'))
+            except Exception as e:
+                raise OSURIHandleExecException(e)
+            finally:
+                del _wait

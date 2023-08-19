@@ -19,12 +19,20 @@
 #
 #
 # ------------------------------------------------------------------------------
+from framework.application.class_application import Application
 from framework.application.class_application_context import IApplicationContext
-from framework.application.base import ZViewContentContainer, Serializable
+from framework.application.base import ZViewContentContainer, Serializable, GenericTypeFactory
 from .project import Project
+from .workbench_base import WorkbenchRegistry
 
 
-class MBTApplication(ZViewContentContainer):
+class MBTApplication(Application):
+    mbtSolutionManager = None
+    # create singleton workbenchRegistry
+    workbenchRegistry: WorkbenchRegistry = WorkbenchRegistry()
+
+
+class MBTApplicationContentContainer(ZViewContentContainer):
     def __init__(self, context: IApplicationContext, **kwargs):
         ZViewContentContainer.__init__(self, **kwargs)
         if context is not None:

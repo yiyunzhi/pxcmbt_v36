@@ -22,7 +22,7 @@ import wx
 # ------------------------------------------------------------------------------
 import wx
 import wx.lib.newevent as wxevt
-from mbt.gui.base import MBTViewManager, MBTContentContainer
+from mbt.application.base import MBTViewManager,MBTContentContainer
 from .class_app_menubar_view import AppMenubarView
 
 

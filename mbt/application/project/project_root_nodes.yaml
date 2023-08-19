@@ -1,0 +1,58 @@
+flags:
+  F_REPARENT: &F_REPARENT 0x0001
+  F_REMOVABLE: &F_REMOVABLE 0x0002
+  F_ACCEPT_CHILDREN: &F_ACCEPT_CHILDREN 0x0004
+  F_DESCRIBABLE: &F_DESCRIBABLE 0x0008
+  F_LABEL_READONLY: &F_LABEL_READONLY 0x0010
+  F_SHOW_TOOLTIP: &F_SHOW_TOOLTIP 0x0020
+  F_SAVABLE: &F_SAVABLE 0x0040
+  F_ORDERABLE: &F_ORDERABLE 0x0080
+  F_CAN_COPY: &F_CAN_COPY 0x0100
+  F_CAN_CUT: &F_CAN_CUT 0x0200
+  F_CAN_PASTE: &F_CAN_PASTE 0x0400
+  F_CAN_EDIT_CONTENT: &F_CAN_EDIT_CONTENT 0x0800
+baseRole: '0'
+elements:
+  '0': &0
+    uuid: __root__
+    expand: true
+    icon: wxART_FOLDER_OPEN
+    label: Project
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY ]
+    role: '0'
+    description: 'project root node'
+    contextMenu:
+      - children:
+          - children: [ ]
+            handler:
+              name: '>project.copy_project_path'
+              kwargs: { }
+            helpString: help
+            icon: 'pi.copy-simple'
+            kind: 0
+            text: Path
+          - children: [ ]
+            handler:
+              name: '>project.copy_project_name'
+              kwargs: { }
+            helpString: help
+            icon: 'pi.copy-simple'
+            kind: 0
+            text: FileName
+        handler: null
+        helpString: help
+        icon: 'pi.copy-simple'
+        kind: 0
+        text: CopyInfo
+      - children: [ ]
+        handler:
+          name: '>os.open_project_in_explorer'
+          kwargs: { }
+        helpString: help
+        icon: null
+        kind: 0
+        text: ShowInExplorer
+constructors:
+  new_project:
+    children: [ ]
+    <<: *0

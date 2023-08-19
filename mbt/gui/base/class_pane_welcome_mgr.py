@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import wx
 import wx.lib.agw.aui as aui
-from mbt.gui.base import MBTViewManager, MBTContentContainer
+from mbt.application.base import MBTViewManager, MBTContentContainer
 from .class_pane_welcome_view import WelcomeView
 
 

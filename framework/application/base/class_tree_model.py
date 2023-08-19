@@ -122,15 +122,22 @@ class TreeModel(object):
     def remove_node(self, node):
         """Removes node. If node is root, removes root's children, root is kept."""
         if node.parent:
-            node.parent.children.remove(node)
+            _l = list(node.parent.children)
+            _l.remove(node)
+            node.parent.children = tuple(_l)
         else:
             # node is root
             del node.children[:]
 
-    def sort_children(self, node):
+    def sort_children(self, node: "TreeModelNode", attr='label'):
         """Sorts children with 'natural sort' based on label."""
         if node.children:
-            sorted(node.children, key=lambda x: x.label)
+            node.children = sorted(node.children, key=lambda x: getattr(x, attr))
+
+    def sort_children_with(self, node: "TreeModelNode", filter_: callable, reverse=False):
+        """Sorts children with 'natural sort' based on label."""
+        if node.children:
+            node.children = sorted(node.children, key=filter_, reverse=reverse)
 
     def filtered(self, **kwargs):
         """Filters model based on parameters in kwargs
@@ -280,6 +287,9 @@ class TreeModelAnyTreeNode(TreeModelNode, anytree.NodeMixin):
         if 'parent' in kwargs:
             self.parent = kwargs.get('parent')
 
+    def get_path_string(self, attr='label'):
+        return self.separator.join([getattr(x, attr) for x in self.path])
+
     def append_children(self, child):
         child.parent = self
 
@@ -289,6 +299,9 @@ class TreeModelAnyTreeNode(TreeModelNode, anytree.NodeMixin):
         :param key: data dictionary key
         """
         if hasattr(self, key):
+            _attr = getattr(self, key)
+            if callable(value):
+                return value(_attr)
             return getattr(self, key) == value
         return False
 

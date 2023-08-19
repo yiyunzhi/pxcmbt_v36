@@ -23,7 +23,7 @@ import wx
 import wx.dataview as dv
 from framework.application.define import APP_CONSOLE_TIME_WX_FMT
 from framework.application.utils_helper import util_wx_date_time_now
-from mbt.gui.base import MBTViewManager, MBTContentContainer
+from mbt.application.base import MBTViewManager, MBTContentContainer
 from .class_pane_console_view import ConsoleView
 
 

@@ -51,5 +51,13 @@ class EnumMFMenuIDs(enum.IntEnum):
     WIN_TOGGLE_STATUSBAR = WIN_SAVE_PESP + 3
     WIN_TOGGLE_FULL_SCREEN = WIN_SAVE_PESP + 4
 
-    HELP_MENU_BASE=wx.ID_HIGHEST + 200
-    HELP_SYSML_NOTATION=HELP_MENU_BASE + 1
+    HELP_MENU_BASE = wx.ID_HIGHEST + 200
+    HELP_SYSML_NOTATION = HELP_MENU_BASE + 1
+
+
+MENU_CALLER_COMMAND_MAP = {
+    EnumMFMenuIDs.TOOL_EX_CALC: 'os:startProgram?program=calc.exe',
+    EnumMFMenuIDs.TOOL_EX_NOTEPAD: 'os:startProgram?program=notepad.exe',
+    EnumMFMenuIDs.TOOL_EX_SNIP_TOOL: 'os:startProgram?program=SnippingTool.exe',
+    EnumMFMenuIDs.TOOL_EX_CMD: 'os:startProgram?command=start cmd.exe /K&mode=cmd',
+}

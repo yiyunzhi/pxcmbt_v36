@@ -20,6 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import wx
+from contextlib import contextmanager
 
 
 class FeedbackDialogs:
@@ -46,3 +47,15 @@ class FeedbackDialogs:
             _path = _dlg.GetPath()
             _dlg.Destroy()
             return _path
+
+    @staticmethod
+    @contextmanager
+    def show_progress_dialog(title, message, maximum=100, parent=None, style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE):
+        _dlg = wx.GenericProgressDialog(title, message, maximum, parent, style)
+        try:
+            yield _dlg
+        finally:
+            _dlg.Destroy()
+            if parent is not None:
+                parent.Raise()
+                parent.SetFocus()

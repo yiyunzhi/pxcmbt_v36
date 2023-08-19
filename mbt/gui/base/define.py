@@ -23,3 +23,10 @@
 class EnumProjectExplorerContextMenuIDs:
     OPEN = 7100
     RENAME = 7110
+
+
+
+
+
+class EnumBuiltinMBTViewUserAttribute:
+    VIEW_FLAG = 'viewFlag'

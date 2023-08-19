@@ -5135,3 +5135,123 @@ AttributeError: 'NoneType' object has no attribute 'startswith'
 
 2023-08-01 21:15:53,726- application.art_provider- ERROR: MBTArtProvider error: providing pi.global:wxART_OTHER_C at size (16, 16) failed.
 
+2023-08-09 15:37:40,923- application.project- ERROR: can not create file for node Model.
+2023-08-09 15:37:40,925- application.project- ERROR: can not create file for node Prototypes.
+2023-08-09 15:37:40,926- application.project- ERROR: can not create file for node Behaviours.
+2023-08-09 15:37:40,927- application.project- ERROR: can not create file for node Tester.
+2023-08-09 15:37:40,927- application.project- ERROR: can not create file for node TestCases.
+2023-08-09 15:37:40,927- application.project- ERROR: can not create file for node defaultTestCase.
+2023-08-09 15:37:40,928- application.project- ERROR: can not create file for node setting.
+2023-08-09 15:37:40,928- application.project- ERROR: can not create file for node result.
+2023-08-09 15:37:40,929- application.project- ERROR: can not create file for node TestEnvs.
+2023-08-09 15:37:40,929- application.project- ERROR: can not create file for node newEnv.
+2023-08-09 15:37:40,930- application.project- ERROR: can not create file for node Req.Manager.
+2023-08-09 15:37:40,930- application.project- ERROR: can not create file for node newReqRepo.
+2023-08-09 15:38:32,719- application.project- ERROR: can not create file for node Model. 
+2023-08-09 15:38:32,720- application.project- ERROR: can not create file for node Prototypes. 
+2023-08-09 15:38:32,722- application.project- ERROR: can not create file for node Behaviours. 
+2023-08-09 15:38:32,722- application.project- ERROR: can not create file for node Tester. 
+2023-08-09 15:38:32,723- application.project- ERROR: can not create file for node TestCases. 
+2023-08-09 15:38:32,723- application.project- ERROR: can not create file for node defaultTestCase. 
+2023-08-09 15:38:32,724- application.project- ERROR: can not create file for node setting. 
+2023-08-09 15:38:32,724- application.project- ERROR: can not create file for node result. 
+2023-08-09 15:38:32,724- application.project- ERROR: can not create file for node TestEnvs. 
+2023-08-09 15:38:32,725- application.project- ERROR: can not create file for node newEnv. 
+2023-08-09 15:38:32,725- application.project- ERROR: can not create file for node Req.Manager. 
+2023-08-09 15:38:32,726- application.project- ERROR: can not create file for node newReqRepo. 
+2023-08-09 15:40:37,354- application.project- ERROR: can not create file for node setting. 
+2023-08-09 15:40:37,355- application.project- ERROR: can not create file for node result. 
+2023-08-09 15:40:37,356- application.project- ERROR: can not create file for node newEnv. 
+2023-08-09 15:40:37,356- application.project- ERROR: can not create file for node newReqRepo. 
+2023-08-09 15:41:43,092- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/setting. 
+2023-08-09 15:41:43,092- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/result. 
+2023-08-09 15:41:43,093- application.project- ERROR: can not create file for node /dw/Tester/TestEnvs/newEnv. 
+2023-08-09 15:41:43,094- application.project- ERROR: can not create file for node /dw/Tester/Req.Manager/newReqRepo. 
+2023-08-09 15:42:41,208- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/setting. since:
+2023-08-09 15:42:41,209- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/result. since:
+2023-08-09 15:42:41,209- application.project- ERROR: can not create file for node /dw/Tester/TestEnvs/newEnv. since:
+2023-08-09 15:42:41,210- application.project- ERROR: can not create file for node /dw/Tester/Req.Manager/newReqRepo. since:
+2023-08-09 15:49:54,133- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/setting. since:
+2023-08-09 15:49:54,135- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/result. since:
+2023-08-09 15:49:54,137- application.project- ERROR: can not create file for node /dw/Tester/TestEnvs/newEnv. since:
+2023-08-09 15:49:54,139- application.project- ERROR: can not create file for node /dw/Tester/Req.Manager/newReqRepo. since:
+2023-08-09 16:01:35,745- application.project- ERROR: can not create file for node /oo/Tester/TestCases/defaultTestCase/setting. since:
+2023-08-09 16:01:35,746- application.project- ERROR: can not create file for node /oo/Tester/TestCases/defaultTestCase/result. since:
+2023-08-09 16:01:35,748- application.project- ERROR: can not create file for node /oo/Tester/TestEnvs/newEnv. since:
+2023-08-09 16:01:35,749- application.project- ERROR: can not create file for node /oo/Tester/Req.Manager/newReqRepo. since:
+2023-08-09 16:03:49,232- application.project- ERROR: can not create file for node /r4/Tester/TestCases/defaultTestCase/setting. since:
+2023-08-09 16:03:49,233- application.project- ERROR: can not create file for node /r4/Tester/TestCases/defaultTestCase/result. since:
+2023-08-09 16:03:49,234- application.project- ERROR: can not create file for node /r4/Tester/TestEnvs/newEnv. since:
+2023-08-09 16:03:49,235- application.project- ERROR: can not create file for node /r4/Tester/Req.Manager/newReqRepo. since:
+2023-08-09 16:05:55,429- application.project- ERROR: can not create file for node /ww/Tester/TestCases/defaultTestCase/setting. since:
+2023-08-09 16:05:55,429- application.project- ERROR: can not create file for node /ww/Tester/TestCases/defaultTestCase/result. since:
+2023-08-09 16:05:55,430- application.project- ERROR: can not create file for node /ww/Tester/TestEnvs/newEnv. since:
+2023-08-09 16:05:55,431- application.project- ERROR: can not create file for node /ww/Tester/Req.Manager/newReqRepo. since:
+2023-08-09 16:09:49,104- application.project- ERROR: can not create file for node /tt/Tester/TestCases/defaultTestCase/setting. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:09:49,110- application.project- ERROR: can not create file for node /tt/Tester/TestCases/defaultTestCase/result. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:09:49,114- application.project- ERROR: can not create file for node /tt/Tester/TestEnvs/newEnv. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:09:49,119- application.project- ERROR: can not create file for node /tt/Tester/Req.Manager/newReqRepo. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:20:16,175- application.project- ERROR: can not create file for node /22/Tester/TestCases/defaultTestCase/setting. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:20:16,180- application.project- ERROR: can not create file for node /22/Tester/TestCases/defaultTestCase/result. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:20:16,185- application.project- ERROR: can not create file for node /22/Tester/TestEnvs/newEnv. since:"There is no item named 'meta.obj' in the archive"
+2023-08-09 16:20:16,191- application.project- ERROR: can not create file for node /22/Tester/Req.Manager/newReqRepo. since:"There is no item named 'meta.obj' in the archive"
+2023-08-10 10:30:11,158- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/setting. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4BC8>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4CD0>)
+2023-08-10 10:30:11,159- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/result. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4970>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4CE8>)
+2023-08-10 10:30:11,159- application.project- ERROR: can not create file for node /dw/Tester/TestEnvs/newEnv. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4C40>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4CB8>)
+2023-08-10 10:30:11,159- application.project- ERROR: can not create file for node /dw/Tester/Req.Manager/newReqRepo. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4C58>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x157A4C88>)
+2023-08-10 10:31:08,201- application.project- ERROR: can not create file for node /tr/Tester/TestCases/defaultTestCase/setting. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA33B8>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA3460>)
+2023-08-10 10:31:08,202- application.project- ERROR: can not create file for node /tr/Tester/TestCases/defaultTestCase/result. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA33D0>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA3478>)
+2023-08-10 10:31:08,203- application.project- ERROR: can not create file for node /tr/Tester/TestEnvs/newEnv. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA3388>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA3448>)
+2023-08-10 10:31:08,204- application.project- ERROR: can not create file for node /tr/Tester/Req.Manager/newReqRepo. since:Expecting 1 elements at maximum, but found 2. (<mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA33E8>, <mbt.application.project.class_file_resolver.ProjectWorkFileNode100 object at 0x14CA3418>)
+2023-08-10 10:33:11,823- application.project- ERROR: can not create file for node /rt/Tester/TestCases/defaultTestCase/setting. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:33:11,824- application.project- ERROR: can not create file for node /rt/Tester/TestCases/defaultTestCase/result. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:33:11,824- application.project- ERROR: can not create file for node /rt/Tester/TestEnvs/newEnv. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:33:11,825- application.project- ERROR: can not create file for node /rt/Tester/Req.Manager/newReqRepo. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:37:22,660- application.project- ERROR: can not create file for node /cw22/Tester/TestCases/defaultTestCase/setting. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:37:22,661- application.project- ERROR: can not create file for node /cw22/Tester/TestCases/defaultTestCase/result. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:37:22,661- application.project- ERROR: can not create file for node /cw22/Tester/TestEnvs/newEnv. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:37:22,662- application.project- ERROR: can not create file for node /cw22/Tester/Req.Manager/newReqRepo. since:node with uri (node:WorkFileNode?path=&name=meta&ext=.obj) already exist.
+2023-08-10 10:41:52,508- application.project- ERROR: can not create file for node /zzuu/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 10:41:52,529- application.project- ERROR: can not create file for node /zzuu/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 10:41:52,532- application.project- ERROR: can not create file for node /zzuu/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 10:41:52,534- application.project- ERROR: can not create file for node /zzuu/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 10:48:38,759- application.project- ERROR: can not create file for node /crr/Tester/TestCases/defaultTestCase/setting. since:'ProjectWorkFileNode100' object has no attribute 'file_path'
+2023-08-10 10:48:38,760- application.project- ERROR: can not create file for node /crr/Tester/TestCases/defaultTestCase/result. since:'ProjectWorkFileNode100' object has no attribute 'file_path'
+2023-08-10 10:48:38,761- application.project- ERROR: can not create file for node /crr/Tester/TestEnvs/newEnv. since:'ProjectWorkFileNode100' object has no attribute 'file_path'
+2023-08-10 10:48:38,761- application.project- ERROR: can not create file for node /crr/Tester/Req.Manager/newReqRepo. since:'ProjectWorkFileNode100' object has no attribute 'file_path'
+2023-08-10 10:49:08,459- application.project- ERROR: can not create file for node /crr/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 10:49:08,463- application.project- ERROR: can not create file for node /crr/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 10:49:08,466- application.project- ERROR: can not create file for node /crr/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 10:49:08,468- application.project- ERROR: can not create file for node /crr/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 10:51:29,739- application.project- ERROR: can not create file for node /crr/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 10:51:29,752- application.project- ERROR: can not create file for node /crr/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 10:51:29,765- application.project- ERROR: can not create file for node /crr/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 10:51:29,776- application.project- ERROR: can not create file for node /crr/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 11:10:35,465- application.project- ERROR: can not create file for node /rte/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 11:10:35,477- application.project- ERROR: can not create file for node /rte/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 11:10:35,488- application.project- ERROR: can not create file for node /rte/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 11:10:35,498- application.project- ERROR: can not create file for node /rte/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 11:13:21,401- application.project- ERROR: can not create file for node /aa/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 11:13:21,416- application.project- ERROR: can not create file for node /aa/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 11:13:21,428- application.project- ERROR: can not create file for node /aa/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 11:13:21,439- application.project- ERROR: can not create file for node /aa/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 11:13:59,399- application.project- ERROR: can not create file for node /bb/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 11:13:59,417- application.project- ERROR: can not create file for node /bb/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 11:13:59,430- application.project- ERROR: can not create file for node /bb/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 11:13:59,442- application.project- ERROR: can not create file for node /bb/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 11:15:42,836- application.project- ERROR: can not create file for node /aa/Tester/TestCases/defaultTestCase/setting. since:"There is no item named '' in the archive"
+2023-08-10 11:15:42,852- application.project- ERROR: can not create file for node /aa/Tester/TestCases/defaultTestCase/result. since:"There is no item named '' in the archive"
+2023-08-10 11:15:42,868- application.project- ERROR: can not create file for node /aa/Tester/TestEnvs/newEnv. since:"There is no item named '' in the archive"
+2023-08-10 11:15:42,885- application.project- ERROR: can not create file for node /aa/Tester/Req.Manager/newReqRepo. since:"There is no item named '' in the archive"
+2023-08-10 11:34:44,976- application.project- ERROR: can not create file for node /de/Tester/TestCases/defaultTestCase/setting. since:'ProjectWorkFileNode100' object has no attribute 'fileOSPath'
+2023-08-10 11:34:44,980- application.project- ERROR: can not create file for node /de/Tester/TestCases/defaultTestCase/result. since:'ProjectWorkFileNode100' object has no attribute 'fileOSPath'
+2023-08-10 11:34:44,982- application.project- ERROR: can not create file for node /de/Tester/TestEnvs/newEnv. since:'ProjectWorkFileNode100' object has no attribute 'fileOSPath'
+2023-08-10 11:34:44,985- application.project- ERROR: can not create file for node /de/Tester/Req.Manager/newReqRepo. since:'ProjectWorkFileNode100' object has no attribute 'fileOSPath'
+2023-08-10 11:35:55,547- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/setting. since:'ProjectWorkFileNode100' object has no attribute 'filePath'
+2023-08-10 11:35:55,556- application.project- ERROR: can not create file for node /dw/Tester/TestCases/defaultTestCase/result. since:'ProjectWorkFileNode100' object has no attribute 'filePath'
+2023-08-10 11:35:55,564- application.project- ERROR: can not create file for node /dw/Tester/TestEnvs/newEnv. since:'ProjectWorkFileNode100' object has no attribute 'filePath'
+2023-08-10 11:35:55,571- application.project- ERROR: can not create file for node /dw/Tester/Req.Manager/newReqRepo. since:'ProjectWorkFileNode100' object has no attribute 'filePath'
+2023-08-10 11:36:37,377- application.project- ERROR: can not create file for node /fw2/Tester/TestCases/defaultTestCase/setting. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\62aafded\\\\meta.obj' in the archive"
+2023-08-10 11:36:37,393- application.project- ERROR: can not create file for node /fw2/Tester/TestCases/defaultTestCase/result. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\50e859ee\\\\meta.obj' in the archive"
+2023-08-10 11:36:37,406- application.project- ERROR: can not create file for node /fw2/Tester/TestEnvs/newEnv. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\ea342a8a\\\\meta.obj' in the archive"
+2023-08-10 11:36:37,419- application.project- ERROR: can not create file for node /fw2/Tester/Req.Manager/newReqRepo. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\d3a94cde\\\\meta.obj' in the archive"

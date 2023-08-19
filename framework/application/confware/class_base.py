@@ -78,7 +78,7 @@ class ZConfigNode(anytree.NodeMixin):
     def set_value(self, value):
         if self.typeCode is not None:
             _cls = tpy.get_type_cls_by_type_code(tpy.Typecode(self.typeCode))
-            assert _cls(value).is_type(), ValueError('value type not matched.')
+            assert _cls(value).is_type(), ValueError('value type not matched. get <%s>'%type(value))
         self.value = value
 
 

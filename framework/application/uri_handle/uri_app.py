@@ -30,7 +30,7 @@ class AppURI:
     def __init__(self, uri_path, scheme='app', parent=None):
         self.parent = parent
         self._uri = URLObject(uri_path)
-        self._uri.with_scheme(scheme)
+        self._uri=self._uri.with_scheme(scheme)
 
     @property
     def uri(self):

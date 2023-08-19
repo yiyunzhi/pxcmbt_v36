@@ -37,7 +37,7 @@ class MBTApplicationContext(IApplicationContext):
         IApplicationContext.__init__(self, 'mbt')
         self.editorMapper = UidObjectMapper()
 
-    def setup(self, app: wx.App):
+    def setup(self, app):
         try:
             print('--->todo setup mbt context')
             #self.addonsManager.resolve_addons(ADDONS_PATH)

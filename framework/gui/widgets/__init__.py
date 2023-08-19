@@ -20,3 +20,8 @@
 #
 # ------------------------------------------------------------------------------
 from .frame_html_view import HTMLViewWindow
+from .olv_editors import *
+from .panel_olv_selector import OLVSelectorPanel
+from .panel_ex_hyperlink import ExHyperLinkWidget
+from .panel_header import HeaderPanel
+from .panel_wizard_page import ZWizardPage

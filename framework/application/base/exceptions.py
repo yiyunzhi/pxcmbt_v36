@@ -19,4 +19,4 @@
 #
 #
 # ------------------------------------------------------------------------------
-class ClassRegisterError(Exception): pass
+class FactoryRegisterError(Exception): pass

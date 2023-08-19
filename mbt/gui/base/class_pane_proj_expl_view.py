@@ -21,12 +21,11 @@
 # ------------------------------------------------------------------------------
 import wx, os
 import wx.lib.agw.aui as aui
-from framework.application.utils_helper import util_is_dir_exist
 from framework.application.define import _
-from framework.gui.base.class_tree_view import TreeView
+from framework.gui.base import TreeView, FeedbackDialogs
 from mbt.application.define_path import PROJECT_PATH
 from mbt.gui.base import MBTUniView
-from mbt.gui.widgets import NewProjectDialog
+from mbt.gui.dialogs import NewProjectDialog
 
 
 class ProjectExplorerView(wx.Panel, MBTUniView):
@@ -43,6 +42,8 @@ class ProjectExplorerView(wx.Panel, MBTUniView):
         self.tbIdCollapseAll = wx.NewIdRef()
         self.tbIdLinkEditor = wx.NewIdRef()
         self.tbIdSort = wx.NewIdRef()
+        self._ascSortIcon = wx.ArtProvider.GetBitmap('pi.sort-ascending', wx.ART_TOOLBAR, self.toolbarIconSize)
+        self._dscSortIcon = wx.ArtProvider.GetBitmap('pi.sort-descending', wx.ART_TOOLBAR, self.toolbarIconSize)
         self.toolbar = self._create_toolbar()
         # bind event
         # init
@@ -78,8 +79,7 @@ class ProjectExplorerView(wx.Panel, MBTUniView):
                           'collapse all')
         _tb.AddSimpleTool(self.tbIdLinkEditor, 'LinkEditor', wx.ArtProvider.GetBitmap('pi.arrows-left-right', wx.ART_TOOLBAR, self.toolbarIconSize),
                           'link the editor')
-        _tb.AddSimpleTool(self.tbIdSort, 'Sort', wx.ArtProvider.GetBitmap('pi.sort-ascending', wx.ART_TOOLBAR, self.toolbarIconSize),
-                          'sort in asc- or descending')
+        _tb.AddSimpleTool(self.tbIdSort, 'Sort', self._ascSortIcon, 'sort in asc- or descending')
         _tb.Realize()
         return _tb
 
@@ -93,26 +93,40 @@ class ProjectExplorerView(wx.Panel, MBTUniView):
             self.toolbar.EnableTool(tool_id, state)
         self.toolbar.Refresh()
 
-    def show_create_new_project_dialog(self):
-        _dlg = NewProjectDialog(PROJECT_PATH, self.GetTopLevelParent())
+    def update_sort_tool_icon(self, sort_flag='asc'):
+        if sort_flag == 'asc':
+            _bmp = self._ascSortIcon
+        else:
+            _bmp = self._dscSortIcon
+        self.toolbar.SetToolBitmap(self.tbIdSort, _bmp)
+
+    def show_create_new_project_dialog(self, workbench_choices: list):
+        _top = self.GetTopLevelParent()
+        _dlg = NewProjectDialog(PROJECT_PATH, workbench_choices, _top)
+        _dlg.SetIcon(_top.icon)
+        _dlg.Center()
         _ret = _dlg.ShowModal()
         if _ret == wx.ID_OK:
-            if _dlg.projNameTextEdit.IsEmpty():
-                _msg = wx.MessageBox(' fail to create project, since project name is empty', 'Fail')
-                return None, None
             _project_name = _dlg.projNameTextEdit.GetValue()
             _project_path = _dlg.projectPath
-            _project_full_path = os.path.join(_project_path, _project_name)
-            _exist = util_is_dir_exist(_project_full_path)
-            if _exist:
-                _msg = wx.MessageBox(' fail to create project, since project already exist', 'Fail')
-                return None, None
-            return _project_name, _project_path
+            return True, _project_name, _project_path
         else:
-            return None, None
+            return False, None, None
 
     def refresh_tree(self):
         self.treeView.RefreshItems()
 
-    def select_node(self, node, state=True):
+    def select_node(self, node, state=True, evt_propagation=True,focus=True):
+        if focus:
+            self.treeView.SetFocus()
+        if not evt_propagation:
+            self.treeView.SetEvtHandlerEnabled(False)
         self.treeView.select(node, state)
+        if not evt_propagation:
+            self.treeView.SetEvtHandlerEnabled(True)
+
+    def get_current_selected(self, node_or_item=True):
+        _sel = self.treeView.GetSelection()
+        if -1 == _sel:
+            return
+        return self.treeView.item_to_node(_sel) if node_or_item else _sel

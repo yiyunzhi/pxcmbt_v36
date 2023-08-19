@@ -1,0 +1,143 @@
+flags:
+  F_REPARENT: &F_REPARENT 0x0001
+  F_REMOVABLE: &F_REMOVABLE 0x0002
+  F_ACCEPT_CHILDREN: &F_ACCEPT_CHILDREN 0x0004
+  F_DESCRIBABLE: &F_DESCRIBABLE 0x0008
+  F_LABEL_READONLY: &F_LABEL_READONLY 0x0010
+  F_SHOW_TOOLTIP: &F_SHOW_TOOLTIP 0x0020
+  F_SAVABLE: &F_SAVABLE 0x0040
+  F_ORDERABLE: &F_ORDERABLE 0x0080
+  F_CAN_COPY: &F_CAN_COPY 0x0100
+  F_CAN_CUT: &F_CAN_CUT 0x0200
+  F_CAN_PASTE: &F_CAN_PASTE 0x0400
+  F_CAN_EDIT_CONTENT: &F_CAN_EDIT_CONTENT 0x0800
+isWorkbench: yes
+baseRole: '0-2'
+uuid: wb_test_v1
+elements:
+  '0-2': &0_2
+    expand: false
+    icon: 'local.gauge'
+    label: Tester
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY ]
+    role: '0-2'
+    description: ''
+    contextMenu:
+      - children:
+          - children: [ ]
+            handler:
+              name: '>projectAddNode.testCase'
+              kwargs: { role: 0-2-0_0-2-0-0 }
+            helpString: help
+            icon: 'pi.briefcase'
+            kind: 0
+            text: TestCase
+          - children: [ ]
+            handler:
+              name: '>projectAddNode.testEnv'
+              kwargs: { role: 0-2-1_0-2-1-0 }
+            helpString: help
+            icon: 'pi.faders'
+            kind: 0
+            text: TestEnv
+          - children: [ ]
+            handler:
+              name: '>projectAddNode.testRun'
+              kwargs: { role: 0-2-1_0-2-2-0 }
+            helpString: help
+            icon: 'local.executor_single'
+            kind: 0
+            text: TestRun
+        handler: null
+        helpString: help
+        icon: 'pi.file-plus'
+        kind: 0
+        text: New
+  '0-2-0': &0_2_0
+    expand: false
+    icon: 'pi.briefcase'
+    label: TestCases
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN,*F_CAN_PASTE ]
+    role: '0-2-0'
+    description: ''
+  '0-2-0-0': &0_2_0_0
+    expand: false
+    icon: 'local.stack'
+    label: defaultTestCase
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_REMOVABLE,*F_CAN_COPY,*F_ORDERABLE,*F_DESCRIBABLE ]
+    role: '0-2-0-0'
+    description: ''
+  '0-2-0-0-0': &0_2_0_0_0
+    expand: false
+    icon: 'pi.gear'
+    label: setting
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_CAN_EDIT_CONTENT ]
+    role: '0-2-0-0-0'
+    description: 'TestCaseSetting'
+  '0-2-0-0-1': &0_2_0_0_1
+    expand: false
+    icon: 'pi.file-text'
+    label: result
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_CAN_EDIT_CONTENT ]
+    role: '0-2-0-0-1'
+    description: 'TestCaseResult'
+  '0-2-1': &0_2_1
+    expand: false
+    icon: 'local.server'
+    label: TestEnvs
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_CAN_PASTE ]
+    role: '0-2-1'
+    description: 'Test environments'
+  '0-2-1-0': &0_2_1_0
+    expand: false
+    icon: 'pi.faders'
+    label: newEnv
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_REMOVABLE,*F_CAN_COPY,*F_ORDERABLE,*F_DESCRIBABLE,*F_CAN_EDIT_CONTENT ]
+    role: '0-2-1-0'
+    description: 'Test environment node'
+  '0-2-2': &0_2_2
+    expand: false
+    icon: 'local.executor'
+    label: TestRuns
+    flag: [ *F_SHOW_TOOLTIP,*F_LABEL_READONLY ]
+    fileAttr: 0
+    fileExtend: '.obj'
+    role: '0-2-2'
+    description: ''
+  '0-2-2-0': &0_2_2_0
+    expand: false
+    icon: 'local.executor_single'
+    label: TestRun
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_REMOVABLE,*F_CAN_COPY,*F_ORDERABLE,*F_DESCRIBABLE,*F_CAN_EDIT_CONTENT ]
+    role: '0-2-2-0'
+    description: ''
+constructors:
+  new_project:
+    children:
+      - children:
+          - children:
+              - children: [ ]
+                <<: *0_2_0_0_0
+              - children: [ ]
+                <<: *0_2_0_0_1
+            <<: *0_2_0_0
+        <<: *0_2_0
+      - children:
+          - children: [ ]
+            <<: *0_2_1_0
+        <<: *0_2_1
+      - children:
+          - children: [ ]
+            <<: *0_2_2_0
+        <<: *0_2_2
+    <<: *0_2
+  new_child_node_of_0-2-0_0-2-0-0:
+    children:
+      - children: [ ]
+        <<: *0_2_0_0_0
+      - children: [ ]
+        <<: *0_2_0_0_1
+    <<: *0_2_0_0
+  new_child_node_of_0-2-1_0-2-1-0:
+    children: [ ]
+    <<: *0_2_1_0

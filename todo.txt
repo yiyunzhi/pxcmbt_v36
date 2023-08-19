@@ -1,7 +1,47 @@
-#todo: view nav in toolbar and menubar, back to last view, or forward
+# todo: view nav in toolbar and menubar, back to last view, or forward
 # todo: for RPC, the macro define of testrack or SUT could be in TestView imported(ext: .mcd)
 # todo: plugin has icon, prefs,i18n, minVersion....
-# todo: preference
-        startup: load module...
-        enable splashscreen
 
+# todo: finish i18n text
+# todo: preference: setting show/hide [perference, help] on toolbar,
+
+
+# todo: solution and addon could also register the contentProvider.
+# todo: node should expose a content named "export" for external reference.(.Version,...)
+# todo: solution node??
+# todo: test env wb has tool [validate]
+# todo: test run wb has tool [start,stop]
+# projectRoot: # cm: add workbench,
+    - workbenchModel
+        - prototypes
+            - prototype1
+                - sketch(IPOD diagram)
+            - ...
+        - behaviours
+            - behaviour1
+            - behaviour2
+            - ...
+    - workbenchTest
+        - testEnvs
+            # testEnvs cm: base+import+export
+            - env1 (signalMap,TECom...)
+            - env2
+            - ...
+        - testCases
+            - TestCase1 (testOutlines, data constraint, wizard while create, must prototype bind)
+                - setting (testrun,general,reqRepo...)
+                - reports
+            - TestCase2
+            - ...
+        - testRuns
+            - tr0 (which env)
+            - tr1
+            - ...
+    - workbenchReqRepo
+        - reqRepos
+            - reqRepo1
+            - reqRepo2
+            - ...
+    # more workbench could be extended by pluginSystem
+    - workbenchProgrammer
+    - ...

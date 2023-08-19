@@ -19,13 +19,46 @@
 #
 #
 # ------------------------------------------------------------------------------
+from types import MethodType
 import os, wx
 import wx.lib.agw.shortcuteditor as se
 from framework.application.define import _
 from framework.gui.preference_page import BasePreferencePage
 from framework.gui.widgets import HTMLViewWindow
+from framework.gui.base import FeedbackDialogs
 from mbt.application.confware import MBTConfigManager
 from mbt.resources import HELP_PATH
+
+
+def _AcceptShortcut(self, shortcut, accelerator):
+    """
+    !!modified the original method of ListShortcut by creating new MethodType.!!
+    Returns ``True`` if the input `accelerator` is a valid shortcut, ``False`` otherwise.
+
+    :param `shortcut`: an instance of :class:`Shortcut`;
+    :param string `accelerator`: the new accelerator to check.
+
+    :note: Conflicting shortcuts are handled inside this method by presenting the user with
+     a conflict dialog. At this point the user can decide to reassign an existing shortcut
+     or to back away, in which case this method will return ``False``.
+    """
+
+    _sorted_accel = accelerator.lower().split('+')
+    _sorted_accel.sort()
+
+    _conflict = self.manager.CheckAccelerator(self.manager, shortcut, _sorted_accel)
+
+    if _conflict is None:
+        return True
+    _dlg = se.ConflictDialog(self.GetTopLevelParent(), _conflict)
+
+    if _dlg.ShowModal() == wx.ID_OK:
+        self.DisableShortcut(_conflict)
+        _dlg.Destroy()
+        return True
+
+    _dlg.Destroy()
+    return False
 
 
 class ShortcutPreferencePage(BasePreferencePage):
@@ -40,6 +73,7 @@ class ShortcutPreferencePage(BasePreferencePage):
         self.searchText = wx.TextCtrl(self, wx.ID_ANY, '')
         self.clearButton = wx.BitmapButton(self, wx.ID_CLEAR, wx.ArtProvider.GetBitmap('pi.x-square', size=wx.Size(22, 22)), style=wx.NO_BORDER)
         self.listShortcut = se.ListShortcut(self)
+        self.listShortcut.AcceptShortcut = MethodType(_AcceptShortcut, self.listShortcut)
         self.hiddenText = wx.TextCtrl(self, wx.ID_ANY, '', style=wx.BORDER_THEME)
         _w, _h, _d, _e = self.hiddenText.GetFullTextExtent('Ctrl+Shift+Alt+q+g+M', self.hiddenText.GetFont())
         self.hiddenText.SetMinSize((_w, _h + _d - _e + 1))
@@ -216,7 +250,7 @@ class ShortcutPreferencePage(BasePreferencePage):
                 accel = chr(accel)
 
             _shortcut = (modifier and ['%s+%s' % (modifier, accel)] or [accel])[0]
-            # todo: add help string
+            # todo: could add help string in accel_table.
             _shortcut_item = se.Shortcut(text, _shortcut, accelId=ids)
             _parent_shortcut.AppendItem(_shortcut_item)
 
@@ -235,7 +269,7 @@ class ShortcutPreferencePage(BasePreferencePage):
             while _child:
                 _child.ToAcceleratorItem(table)
                 table = _accel_item_set(_child, table)
-                _child, cookie = shortcut.GetNextChild(shortcut, _cookie)
+                _child, _cookie = shortcut.GetNextChild(shortcut, _cookie)
             return table
 
         _table = _accel_item_set(self.manager, table=[])
@@ -280,39 +314,36 @@ class ShortcutPreferencePage(BasePreferencePage):
         evt.Skip()
 
     def is_changed(self):
-        return any([x.accelerator.lower()!=x.originalAccelerator.lower() for x in self._changedBoard.values()])
+        return any([x.accelerator.lower() != x.originalAccelerator.lower() for x in self._changedBoard.values()])
 
     def set_content(self, content):
-        # self.content = content
-        # if content is not None:
-        #     self._render_form()
+        self.content = content
         _app = wx.App.GetInstance()
         _root_view = _app.rootView
         self.from_menu_bar(_root_view, False)
         self.from_accelerator_table(_root_view.manager.accelTable)
         self.listShortcut.MakeImageList()
         self.listShortcut.RecreateTree()
-
         self.set_column_widths()
 
     def apply_changes(self):
         if self.is_changed():
-            # for k, v in self._changedBoard.items():
-            #     self.content.write(k, v)
-            # _changed_cfg_nodes = [x.configPath for x in self.content.filter_config(lambda n: n.hasChanged and n.is_leaf)]
-            # self.content.flush()
+            _app = wx.App.GetInstance()
+            _root_view = _app.rootView
+            for k, v in self._changedBoard.items():
+                _id = v.menuItem.GetId()
+                self.content.write('/%s' % _id, v.accelerator)
+            _changed_cfg_nodes = [x.configPath for x in self.content.filter_config(lambda n: n.hasChanged and n.is_leaf)]
+            self.content.flush()
             self._changedBoard.clear()
-            # todo: flush base on the given changeBoard.
-            # todo: reset the menubar and accel
-            #self.to_menu_bar()
-            #self.to_accelerator_table()
-            # self.manager.
+            self.to_menu_bar(_root_view)
+            self.to_accelerator_table(_root_view)
             self.emit_event(self.T_EVT_PREFERENCE_APPLIED, container=MBTConfigManager(), name=self.content.name, items=_changed_cfg_nodes)
 
     def restore(self):
         self.on_restore_default(None)
-        self._changedBoard.clear()
         self.emit_event(self.T_EVT_PREFERENCE_CHANGED)
+        self._changedBoard.clear()
 
     def can_restore(self):
         return True

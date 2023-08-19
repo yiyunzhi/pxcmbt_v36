@@ -1,0 +1,5 @@
+# content provider
+x-->CURD-->ContentProvider->WBx->ProjectCC
+           | wb1         |
+           | wb2         |
+           | ...         |
