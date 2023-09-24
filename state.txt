@@ -1,3 +1,4 @@
+# projectExplr,COnsole,PropContainer activated, the undoStack of mainFrame will be activated.
 # content provider
 x-->CURD-->ContentProvider->WBx->ProjectCC
            | wb1         |

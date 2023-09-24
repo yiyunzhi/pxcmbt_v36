@@ -9,8 +9,6 @@
 # todo: solution and addon could also register the contentProvider.
 # todo: node should expose a content named "export" for external reference.(.Version,...)
 # todo: solution node??
-# todo: test env wb has tool [validate]
-# todo: test run wb has tool [start,stop]
 # projectRoot: # cm: add workbench,
     - workbenchModel
         - prototypes

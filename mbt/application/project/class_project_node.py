@@ -50,6 +50,7 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
     NODE_ST_ADDON = 'node/addon'
     NODE_ST_LINK = 'node/link'
     VALID_NODE_ST = [NODE_ST_NATIVE, NODE_ST_SOLUTION, NODE_ST_ADDON, NODE_ST_LINK, NODE_ST_WORKBENCH_ROOT]
+    MODIFIER_KEY_PROFILE = 'profile'
 
     # todo: maybe more ST like custom,,,?
     # what application expect, the workbenches are always shown in projectExplorer.
@@ -121,7 +122,7 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
         if self.is_root or self.role == EnumProjectItemRole.ROOT.value:
             return None
         if self.isWorkbenchRoot:
-            return self.uuid
+            return self
         else:
             for x in self.ancestors:
                 if x.isWorkbenchRoot:
@@ -190,6 +191,10 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
             self.profile.set('name', name)
             self.label = name
 
+    def modify_property(self, key: str, **kwargs):
+        if key == self.MODIFIER_KEY_PROFILE:
+            self.update_profile(**kwargs)
+
     def has_flag(self, flag):
         return (self.flag & flag) != 0
 
@@ -204,3 +209,20 @@ class ProjectTreeNode(TreeModelAnyTreeNode):
             return False
         _p_r = '-'.join([x for x in role.split('-')[0:-1]])
         return _p_r == self.role
+
+    @staticmethod
+    def auto_generate_name(parent_node: 'ProjectTreeNode', base_name: str = None):
+        if base_name is None:
+            base_name = 'new%sNode' % EnumProjectItemRole(parent_node.role).name.capitalize()
+        _idx = 0
+        _name = base_name
+        _siblings_name = [x.label for x in parent_node.children]
+        while _name in _siblings_name:
+            _idx += 1
+            _name = base_name + '%s' % _idx
+        return _name
+
+    @staticmethod
+    def is_node_name_exist(parent_node: 'ProjectTreeNode', name: str):
+        _siblings_name = [x.label for x in parent_node.children]
+        return name in _siblings_name

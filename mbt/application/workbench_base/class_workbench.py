@@ -38,7 +38,7 @@ class EnumMBTWorkbenchFlag:
 class MBTBaseWorkbenchViewManager(MBTViewManager):
     def __init__(self, **kwargs):
         MBTViewManager.__init__(self, **kwargs)
-        self.workbench=kwargs.get('workbench')
+        self.workbench = kwargs.get('workbench')
 
     def setup(self, *args, **kwargs):
         raise NotImplementedError
@@ -55,7 +55,7 @@ class MBTBaseWorkbench(BaseWorkbench):
             self.editorFactory = kwargs.get('editor_factory', GenericTypeFactory())
         else:
             self.editorFactory = None
-        self.viewManager = MBTBaseWorkbenchViewManager(uid=self.uid,workbench=self)
+        self.viewManager = MBTBaseWorkbenchViewManager(uid=self.uid, workbench=self)
 
     def setup(self, **kwargs):
         _parent = kwargs.get('view_manager_parent')
@@ -78,8 +78,8 @@ class MBTProjectOrientedWorkbench(MBTBaseWorkbench):
         MBTBaseWorkbench.__init__(self, **kwargs)
         self.baseRole = kwargs.get('base_role')
         self.add_flag(EnumMBTWorkbenchFlag.PROJECT_NODE_CONSTRUCTION)
-        self.projectNodeConstructor = MBTProjectNodeConstructorImporter(kwargs.get('construction_cfg_file'))
         # todo: maybe check projectNodeConstructor first.
+        self.projectNodeConstructor = MBTProjectNodeConstructorImporter(kwargs.get('construction_cfg_file'))
         self.rootNode: ProjectTreeNode = None
         self.project: Project = None
 
@@ -89,10 +89,6 @@ class MBTProjectOrientedWorkbench(MBTBaseWorkbench):
         if _node.role != self.baseRole:
             return False, _('unsupported node uid or baseRole.')
         self.rootNode = _node
-        if self.viewManager is not None:
-            if self.viewManager.parent != self.project.contentManager.manager:
-                self.viewManager.parent = self.project.contentManager.manager
-                self.viewManager.setup()
         return True, ''
 
     def teardown(self):
@@ -101,6 +97,10 @@ class MBTProjectOrientedWorkbench(MBTBaseWorkbench):
         if self.viewManager is not None:
             self.viewManager.teardown()
             self.viewManager.parent = None
+            del self.viewManager
+
+    def find_descendants_node_by_uid(self, uid: str) -> ProjectTreeNode:
+        return MBTViewManager.find(self.rootNode, lambda x: x.uuid == uid)
 
     def do_project_node_construction(self, construct_key: str) -> (bool, typing.Union[ProjectTreeNode, str]):
         """
@@ -118,7 +118,6 @@ class MBTProjectOrientedWorkbench(MBTBaseWorkbench):
         if self.projectNodeConstructor is None or not self.has_flag(EnumMBTWorkbenchFlag.PROJECT_NODE_CONSTRUCTION):
             return False, _('no constructor assigned.')
         if construct_key == MBTProjectNodeConstructorImporter.CONSTRUCTION_KEY_NEW_PROJECT:
-
             _data = self.projectNodeConstructor.data
             # n is the workbench root node
             _n = self.projectNodeConstructor.construct(construct_key)
@@ -130,36 +129,30 @@ class MBTProjectOrientedWorkbench(MBTBaseWorkbench):
                 _n.uuid = _data.get('uuid')
             return True, _n
         elif construct_key.startswith(MBTProjectNodeConstructorImporter.CONSTRUCTION_KEY_NEW_CHILD_NODE_OF):
-            # todo: implement this branches
-            pass
+            _n = self.projectNodeConstructor.construct(construct_key)
+            return True, _n
 
     def is_my_descendant(self, val: any, by_: str = 'uuid') -> bool:
         if not hasattr(self.rootNode, by_):
             return False
-        if by_=='role':
+        if by_ == 'role':
             return self.baseRole in val
         _descendant_attrs = [getattr(x, by_) for x in self.rootNode.descendants]
         return val in _descendant_attrs
 
-    def auto_generate_name_in(self, parent: ProjectTreeNode) -> str:
-        pass
-
-    def is_node_name_exist(self, parent: ProjectTreeNode):
-        pass
-
     def get_role_name(self, role) -> str:
         raise NotImplementedError
 
-    def prepare_add_node(self, parent_uid: str, child_role: str, **kwargs):
+    def add_project_node(self, parent: ProjectTreeNode, child_role: str, **kwargs):
         raise NotImplementedError
 
-    def prepare_remove_node(self, uid: str, **kwargs):
+    def remove_project_node(self, uid: str, **kwargs):
         raise NotImplementedError
 
-    def prepare_edit_node(self, uid: str, **kwargs):
+    def open_project_node(self, uid: str, **kwargs):
         raise NotImplementedError
 
-    def prepare_sort(self, uid: str, sort_type, **kwargs):
+    def modify_project_node_property(self, uid: str, modifier_key: str):
         raise NotImplementedError
 
     def do_content_insert(self, contract: ContentContract):

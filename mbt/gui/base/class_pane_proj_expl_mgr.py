@@ -20,6 +20,9 @@
 #
 # ------------------------------------------------------------------------------
 import copy, wx
+import logging
+import traceback
+
 import wx.adv
 import json
 import os.path
@@ -66,16 +69,16 @@ class _TstCmd(wx.Command):
 
 
 class ProjectExplorerManager(MBTViewManager):
-    _T_NODE_SELECTED, EVT_NODE_SELECTED = wxevt.NewCommandEvent()
-    _T_PROJECT_CREATED, EVT_PROJECT_CREATED = wxevt.NewCommandEvent()
-    _T_PROJECT_OPENED, EVT_PROJECT_OPENED = wxevt.NewCommandEvent()
-    _T_PROJECT_SAVED, EVT_PROJECT_SAVED = wxevt.NewCommandEvent()
-    _T_PROJECT_CLOSED, EVT_PROJECT_CLOSED = wxevt.NewCommandEvent()
-    _T_NODE_ADDED, EVT_NODE_ADDED = wxevt.NewCommandEvent()
-    _T_NODE_EDIT_REQUIRED, EVT_NODE_EDIT_REQUIRED = wxevt.NewCommandEvent()
-    _T_NODE_DELETED, EVT_NODE_DELETED = wxevt.NewCommandEvent()
-    _T_NODE_HIGHLIGHT_EDITOR, EVT_NODE_HIGHLIGHT_EDITOR = wxevt.NewCommandEvent()
-    _T_NODE_PROPERTY_CHANGED, EVT_NODE_PROPERTY_CHANGED = wxevt.NewCommandEvent()
+    T_EVT_NODE_SELECTED, EVT_NODE_SELECTED = wxevt.NewCommandEvent()
+    T_EVT_PROJECT_CREATED, EVT_PROJECT_CREATED = wxevt.NewCommandEvent()
+    T_EVT_PROJECT_OPENED, EVT_PROJECT_OPENED = wxevt.NewCommandEvent()
+    T_EVT_PROJECT_SAVED, EVT_PROJECT_SAVED = wxevt.NewCommandEvent()
+    T_EVT_PROJECT_CLOSED, EVT_PROJECT_CLOSED = wxevt.NewCommandEvent()
+    T_EVT_NODE_ADDED, EVT_NODE_ADDED = wxevt.NewCommandEvent()
+    T_EVT_NODE_EDIT_REQUIRED, EVT_NODE_EDIT_REQUIRED = wxevt.NewCommandEvent()
+    T_EVT_NODE_DELETED, EVT_NODE_DELETED = wxevt.NewCommandEvent()
+    T_EVT_NODE_HIGHLIGHT_EDITOR, EVT_NODE_HIGHLIGHT_EDITOR = wxevt.NewCommandEvent()
+    T_EVT_NODE_PROPERTY_CHANGED, EVT_NODE_PROPERTY_CHANGED = wxevt.NewCommandEvent()
 
     # todo: EVT_NODE_PROPERTY_CHANGED not finished
     def __init__(self, **kwargs):
@@ -178,7 +181,7 @@ class ProjectExplorerManager(MBTViewManager):
                 wx.ID_PASTE: node.has_flag(EnumProjectItemFlag.CAN_PASTE) and wx.TheClipboard.IsSupported(
                     DF_PROJECT_NODE_FMT),
                 wx.ID_DELETE: node.has_flag(EnumProjectItemFlag.REMOVABLE),
-                EnumProjectExplorerContextMenuIDs.RENAME: not node.has_flag(EnumProjectItemFlag.LABEL_READONLY),
+                EnumProjectExplorerContextMenuIDs.REPROFILE: not node.has_flag(EnumProjectItemFlag.LABEL_READONLY),
                 EnumProjectExplorerContextMenuIDs.OPEN: node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT),
                 }
 
@@ -187,7 +190,7 @@ class ProjectExplorerManager(MBTViewManager):
             return
         # todo: check if changed if not then return, otherwise pop yes or no msgbox prompt user option. finally close the project.
         self.unregister_from_content_resolver()
-        self.emit_event(self._T_PROJECT_CLOSED,
+        self.emit_event(self.T_EVT_PROJECT_CLOSED,
                         project_name=self._contentContainer.project.name,
                         project_path=self._contentContainer.project.projectPath)
 
@@ -226,7 +229,7 @@ class ProjectExplorerManager(MBTViewManager):
                 #     self._auiMgr.LoadPerspective(_app.project.mainPerspective)
                 pd.Destroy()
             self.register_to_content_resolver()
-            self.emit_event(self._T_PROJECT_OPENED, project=self._contentContainer.project)
+            self.emit_event(self.T_EVT_PROJECT_OPENED, project=self._contentContainer.project)
             if _failed_list:
                 FeedbackDialogs.show_msg_dialog(_('Warning'), 'follow node content load failed.%s' % ('\n'.join(_failed_list)))
         else:
@@ -266,7 +269,7 @@ class ProjectExplorerManager(MBTViewManager):
         self.set_project_tree(self._contentContainer.project.projectTreeModel)
         self.expand_node(self._contentContainer.projectRoot, False)
         self.register_to_content_resolver()
-        self.emit_event(self._T_PROJECT_CREATED, project=self._contentContainer.project)
+        self.emit_event(self.T_EVT_PROJECT_CREATED, project=self._contentContainer.project)
 
     def _create_new_file(self):
         FeedbackDialogs.show_msg_dialog('Fail', 'todo: create supported node type file....')
@@ -286,17 +289,17 @@ class ProjectExplorerManager(MBTViewManager):
             _cc: ProjectExplorerContentContainer = self._contentContainer
             _parent = _cc.find_parent_node_by_child_role(role)
             _wb: MBTProjectOrientedWorkbench = _cc.get_current_workbench(_parent.workbenchUid)
-            _role_name = _wb.get_role_name(role).capitalize()
-            _ret,_meta = _wb.prepare_add_node(_parent.uuid, role)
-            if _ret and not _meta:
-                raise ValueError('empty meta data from workbench %s received.' % _wb.name)
-            if _ret:
-                _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='New%sNode' % _role_name)
-                _ret = self.undoStack.Submit(_cmd)
-                assert _ret, 'command not be executed successfully.'
+            if _wb is not None:
+                _role_name = _wb.get_role_name(role).capitalize()
+                _wb.add_project_node(_parent, role)
+            else:
+                FeedbackDialogs.show_msg_dialog(_('todo'), _('for no workbench node should also add node possible'))
+                # self.view.refresh_tree()
+                # self.emit_event(self.T_EVT_NODE_ADDED, uid=_uid)
         except Exception as e:
-            FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not add node.since:%s') % e,
+            FeedbackDialogs.show_msg_dialog(_('Error'), _('Can not add node. since:%s') % e,
                                             icon=wx.ICON_ERROR)
+            self.print_traceback()
 
     def copy_node(self, node: ProjectTreeNode):
         try:
@@ -332,32 +335,52 @@ class ProjectExplorerManager(MBTViewManager):
                 FeedbackDialogs.show_msg_dialog(_('Error'),
                                                 _('Can not find the parent for the pasting node role %s.') % _role)
                 return
-            _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='PasteNode')
-            _ret = self.undoStack.Submit(_cmd)
-            assert _ret, 'command not be executed successfully.'
+            _wb: MBTProjectOrientedWorkbench = self._contentContainer.get_current_workbench(_parent.workbenchUid)
+            if _wb is not None:
+                _wb.add_project_node(_parent, _role, meta=_meta)
+            else:
+                _cmd = CommandAppendNode(self, _parent.uuid, _meta, name='PasteNode')
+                _ret = self.undoStack.Submit(_cmd)
+                assert _ret, 'command not be executed successfully.'
         except Exception as e:
             FeedbackDialogs.show_msg_dialog('Error', _('can not paste node.\n%s') % e,
                                             icon=wx.ICON_ERROR)
             self.log.error('can not execute paste node, since:\n%s' % e)
+            if self.log.getEffectiveLevel() == logging.DEBUG:
+                traceback.print_exc()
 
     def delete_node(self, node: ProjectTreeNode):
         try:
             _ret = FeedbackDialogs.show_yes_no_dialog(_('Delete'), _('Are you sure to delete?'))
             if _ret:
-                _cmd = CommandRemoveNode(self, node, name='DeleteNode')
-                _ret = self.undoStack.Submit(_cmd)
-                assert _ret, 'command not be executed successfully.'
+                _n_uid = node.uuid
+                _wb: MBTProjectOrientedWorkbench = self._contentContainer.get_current_workbench(node.workbenchUid)
+                if _wb is not None:
+                    _wb.remove_project_node(_n_uid)
+                else:
+                    _cmd = CommandRemoveNode(self, node, name='DeleteNode')
+                    _ret = self.undoStack.Submit(_cmd)
+                    assert _ret, 'command not be executed successfully.'
+                    self.view.refresh_tree()
+                    self.emit_event(self.T_EVT_NODE_DELETED, uid=_n_uid)
         except Exception as e:
             FeedbackDialogs.show_msg_dialog('Error', _('can not delete node.\n%s') % e, icon=wx.ICON_ERROR)
             self.log.error('can not execute delete node, since:\n%s' % e)
+            self.print_traceback()
 
     def open_node(self, node: ProjectTreeNode):
         if node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT):
-            self.emit_event(self._T_NODE_EDIT_REQUIRED, node=node)
+            self.emit_event(self.T_EVT_NODE_EDIT_REQUIRED, node=node)
 
-    def rename_node(self, node: ProjectTreeNode):
-        # todo: emit event
-        print('rename_node node', node)
+    def reprofile_node(self, node: ProjectTreeNode):
+        try:
+            _wb: MBTProjectOrientedWorkbench = self._contentContainer.get_current_workbench(node.workbenchUid)
+            if _wb is not None:
+                _wb.modify_project_node_property(node.uuid, ProjectTreeNode.MODIFIER_KEY_PROFILE)
+        except Exception as e:
+            FeedbackDialogs.show_msg_dialog('Error', _('Reprofile failed.\n%s') % e, icon=wx.ICON_ERROR)
+            self.log.error('can not execute reprofile node, since:\n%s' % e)
+            self.print_traceback()
 
     def do_sop(self, sop_id, **kwargs):
         """
@@ -410,8 +433,8 @@ class ProjectExplorerManager(MBTViewManager):
             self.delete_node(_node)
         elif _id == EnumProjectExplorerContextMenuIDs.OPEN:
             self.open_node(_node)
-        elif _id == EnumProjectExplorerContextMenuIDs.RENAME:
-            self.rename_node(_node)
+        elif _id == EnumProjectExplorerContextMenuIDs.REPROFILE:
+            self.reprofile_node(_node)
 
     def on_menu_builder_message_send_required(self, *args, **kwargs):
         _message = kwargs.get('message')
@@ -434,6 +457,9 @@ class ProjectExplorerManager(MBTViewManager):
         _node: ProjectTreeNode = _view.item_to_node(_item)
         _cm_cfg: list = copy.deepcopy(Project.baseContextMenuCfg)
         _node_cm_cfg = copy.deepcopy(self._contentContainer.get_project_node_cm_config(_node.role))
+        if _node_cm_cfg:
+            # add a separator
+            _cm_cfg.append({'kind': -1, 'children': []})
         _cm_cfg.extend(_node_cm_cfg)
         if not _cm_cfg:
             return
@@ -460,8 +486,9 @@ class ProjectExplorerManager(MBTViewManager):
         else:
             self.view.enable_tools(False, self.view.tbIdSort)
         self._propContainer.set_node(_node)
+        EnumAppSignal.sigProjectNodeSelectChanged.send(self, node=_node)
         EnumAppSignal.sigSupportedOperationChanged.send(self, op=self.get_node_sop(_node))
-        _evt = self._T_NODE_SELECTED(self.view.GetId(), node=_node)
+        _evt = self.T_EVT_NODE_SELECTED(self.view.GetId(), node=_node)
         wx.PostEvent(self.view, _evt)
         evt.Skip()
 
@@ -474,7 +501,7 @@ class ProjectExplorerManager(MBTViewManager):
             _view.Toggle(_item)
             return
         if _node.has_flag(EnumProjectItemFlag.CAN_EDIT_CONTENT):
-            self.emit_event(self._T_NODE_EDIT_REQUIRED, node=_node)
+            self.emit_event(self.T_EVT_NODE_EDIT_REQUIRED, node=_node)
 
     def on_proj_item_get_tooltip(self, evt: wx.TreeEvent):
         _item = evt.GetItem()
@@ -490,7 +517,7 @@ class ProjectExplorerManager(MBTViewManager):
         elif _id == self.view.tbIdCollapseAll:
             self.view.treeView.CollapseAll()
         elif _id == self.view.tbIdLinkEditor:
-            self.emit_event(self._T_NODE_HIGHLIGHT_EDITOR, node=self.view.get_current_selected())
+            self.emit_event(self.T_EVT_NODE_HIGHLIGHT_EDITOR, node=self.view.get_current_selected())
         elif _id == self.view.tbIdSort:
             if self._contentContainer.project is None: return
             # all its children could be sortable, currently sort the item only base on the label

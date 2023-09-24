@@ -41,10 +41,8 @@
   kind: 0
   text: Open
 - children: [ ]
-  helpString: rename item
+  helpString: reprofile item
   wxId: 7110
   icon: 'pi.tag-simple'
   kind: 0
-  text: Rename
-- children: [ ]
-  kind: -1
+  text: ReProfile

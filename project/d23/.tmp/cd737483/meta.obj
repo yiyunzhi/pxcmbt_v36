@@ -4,6 +4,16 @@ children:
   name: meta
   permission: RW
   reversion: 0
+- dirPath: ''
+  extension: .obj
+  name: general
+  permission: RW
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: properties
+  permission: RW
+  reversion: 1
 dirPath: .
 extension: ''
 name: cd737483

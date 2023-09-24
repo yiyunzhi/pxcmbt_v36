@@ -25,6 +25,10 @@ from .gui.class_app_toolbar_view import AppToolbarView, EnumModelWorkbenchMenuId
 
 
 class WBProcessToolbarViewManager(MBTViewManager):
+    """
+    this view destroyed if closed.
+    """
+
     def __init__(self, **kwargs):
         MBTViewManager.__init__(self, **kwargs)
         self._viewTitle = 'ModelWorkbenchProcessToolbar'
@@ -37,6 +41,7 @@ class WBProcessToolbarViewManager(MBTViewManager):
         if self._view is not None:
             return self._view
         _view = AppToolbarView(**kwargs, manager=self)
+        _view.SetName(self.uid)
         self.post_view(_view)
         _view.GetParent().add_toolbar(_view)
         return self._view
@@ -45,7 +50,7 @@ class WBProcessToolbarViewManager(MBTViewManager):
         self.set_state(EnumModelWorkbenchMenuIds.BUILD, False)
         self.set_state(EnumModelWorkbenchMenuIds.DEBUG, False)
 
-    def set_state(self, tool_id, state):
+    def set_state(self, tool_id, state=True):
         _view: AppToolbarView = self._view
         _tool_item = _view.FindTool(tool_id)
         if _tool_item is not None:
@@ -60,6 +65,9 @@ class WBProcessToolbarViewManager(MBTViewManager):
 
     def remove_view(self):
         if self._view is not None:
-            self._view.GetParent().remove_toolbar(self._view.GetName())
-            self._view.Destroy()
+            self._view.GetParent().remove_toolbar(self.uid)
+            # self._view.Destroy()
             self._view = None
+
+    def refresh_view(self):
+        self._view.Refresh()

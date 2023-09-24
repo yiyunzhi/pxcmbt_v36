@@ -22,7 +22,7 @@
 
 class EnumProjectExplorerContextMenuIDs:
     OPEN = 7100
-    RENAME = 7110
+    REPROFILE = 7110
 
 
 

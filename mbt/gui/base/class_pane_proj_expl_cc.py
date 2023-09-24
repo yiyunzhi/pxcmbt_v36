@@ -62,7 +62,7 @@ class CommandAppendNode(wx.Command):
 
     def Do(self):
         _node = self.managerCC.post_add_child_node_of(self.parentNode, self.nodeMeta['role'], self.nodeMeta)
-        self.manager.emit_event(self.manager._T_NODE_ADDED, uid=_node.uuid)
+        self.manager.emit_event(self.manager.T_EVT_NODE_ADDED, uid=_node.uuid)
         self.manager.view.refresh_tree()
         self.manager.view.select_node(_node)
         return True
@@ -96,7 +96,7 @@ class CommandRemoveNode(wx.Command):
     def Do(self):
         _uid = self.node.uuid
         _node = self.managerCC.post_delete_project_node(self.node)
-        self.manager.emit_event(self.manager._T_NODE_DELETED, uid=_uid)
+        self.manager.emit_event(self.manager.T_EVT_NODE_DELETED, uid=_uid)
         self.manager.view.refresh_tree()
         # self.manager.view.select_node(_node)
         return True
@@ -323,16 +323,18 @@ class ProjectExplorerContentContainer(MBTContentContainer):
             node.icon = _slt.iconInfo[1]
 
     def post_add_child_node_of(self, parent_node: ProjectTreeNode, child_role, meta: dict, ignore_attr: list = None, use_constructor=True):
-        _wb_uid = parent_node.workbenchUid
-        _wb = list(filter(lambda x: x.uid == _wb_uid, self.currentWorkbenches))
-        if not _wb: return None
-        _wb = _wb[0]
         _attrs = copy.deepcopy(meta)
         if ignore_attr is not None:
             [_attrs.pop(x) for x in ignore_attr]
         if use_constructor:
+            _wb_uid = parent_node.workbenchUid
+            _wb = list(filter(lambda x: x.uid == _wb_uid, self.currentWorkbenches))
             _ck = MBTProjectNodeConstructorImporter.CONSTRUCTION_KEY_NEW_CHILD_NODE_OF
-            _constructed_node: ProjectTreeNode = _wb.projectNodeConstructor.construct('%s_%s_%s' % (_ck, parent_node.role, child_role))
+            if _wb:
+                _ret,_constructed_node = _wb[0].do_project_node_construction('%s_%s_%s' % (_ck, parent_node.role, child_role))
+            else:
+                _constructed_node: ProjectTreeNode = Project.nodeConstructor.construct('%s_%s_%s' % (_ck, parent_node.role, child_role))
+
             if _constructed_node is None:
                 return None
             _constructed_node.update(**_attrs)
@@ -343,10 +345,6 @@ class ProjectExplorerContentContainer(MBTContentContainer):
             self.projectModel.sort(parent_node)
         else:
             _constructed_node = self.projectModel.append_node(parent_node, **_attrs)
-        # determine the icon name base on the stereotypeUri
-        # todo: no type uri more.
-        self.update_solution_type_uri_node(_constructed_node)
-        # _constructed_node.parent = parent_node
         for x in anytree.iterators.PostOrderIter(_constructed_node):
             self.project.create_project_node_file(x)
         self.project.do_save_project_data()

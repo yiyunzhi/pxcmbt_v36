@@ -32,8 +32,8 @@ from .application.class_application import MBTApplicationContentContainer
 from .application.project import Project, ProjectNodePropContainer, ProjectNodeHasher, ProjectTreeNode, ProjectNodeChoiceItem
 from .application.define import (RECENT_MAX_LEN, APP_VERSION, APP_NAME, EnumAppSignal, T_EVT_APP_TOP_MENU)
 from .application.log.class_logger import get_logger
-from .application.workbench_base import WorkbenchChoiceItem, EnumMBTWorkbenchFlag, MBTBaseWorkbench
-from .application.base import MBTContentContainer,MBTViewManager
+from .application.workbench_base import WorkbenchChoiceItem, EnumMBTWorkbenchFlag, MBTBaseWorkbench,MBTProjectOrientedWorkbench
+from .application.base import MBTContentContainer, MBTViewManager
 from .gui.base import (MBTUniView, EnumBuiltinMBTViewUserAttribute)
 from .gui.navigation.define import EnumMFMenuIDs, MENU_CALLER_COMMAND_MAP
 from .gui.navigation.class_app_menubar_mgr import AppMenubarViewManager
@@ -48,6 +48,18 @@ from .gui.prefs import MBTPreferenceMgr, PreferenceDialog
 _log = get_logger('application')
 
 
+class _TstCmd(wx.Command):
+    def __init__(self):
+        wx.Command.__init__(self, True, 'mainFrameTest')
+
+    def Do(self):
+        print('---->_TstCmd do()')
+        return True
+
+    def Undo(self):
+        return True
+
+
 class AppMainFrameViewManager(MBTViewManager):
     def __init__(self, **kwargs):
         MBTViewManager.__init__(self, **kwargs)
@@ -55,6 +67,8 @@ class AppMainFrameViewManager(MBTViewManager):
         self._inUpdateUI = False
         if _log.getEffectiveLevel() != logging.DEBUG:
             sys.excepthook = self.except_hook
+        else:
+            self.undoStack.Submit(_TstCmd())
         self._viewTitle = '%s v%s' % (APP_NAME, APP_VERSION)
         self._fileHistory = wx.FileHistory(RECENT_MAX_LEN)
         self._appMenubarMgr = None
@@ -65,6 +79,7 @@ class AppMainFrameViewManager(MBTViewManager):
         self._welcomeMgr = None
         self.accelTable = []
         self.currentPane = None
+        self.currentUndoStack = self.undoStack
         # bind app signal
         EnumAppSignal.sigSupportedOperationChanged.connect(self.on_app_sig_supported_op_changed)
 
@@ -276,6 +291,7 @@ class AppMainFrameViewManager(MBTViewManager):
         _menu: wx.Menu = self._appMenubarMgr.undoRedoMenu
         undo_stack.SetEditMenu(_menu)
         undo_stack.SetMenuStrings()
+        self.currentUndoStack = undo_stack
 
     def uninstall_undo_stack(self, undo_stack: wx.CommandProcessor):
         _menu: wx.Menu = self._appMenubarMgr.undoRedoMenu
@@ -286,6 +302,7 @@ class AppMainFrameViewManager(MBTViewManager):
         _i1.Enable(False)
         _i2.Enable(False)
         undo_stack.SetEditMenu(None)
+        self.currentUndoStack = self.undoStack
 
     def set_status_text(self, text, **kwargs):
         self.view.set_status_bar_text(text)
@@ -332,13 +349,13 @@ class AppMainFrameViewManager(MBTViewManager):
     def on_spec_id_ui_updated(self, evt: wx.UpdateUIEvent):
         # Recursive call protection
         if self._inUpdateUI: return
+        _can_undo = self.currentUndoStack.CanUndo()
+        _can_redo = self.currentUndoStack.CanRedo()
         if self.currentPane is None:
-            _can_undo = self.undoStack.CanUndo()
-            _can_redo = self.undoStack.CanRedo()
             _can_save = False
         else:
-            _can_undo = self.currentPane.manager.undoStack.CanUndo()
-            _can_redo = self.currentPane.manager.undoStack.CanRedo()
+            _can_undo = self.currentUndoStack.CanUndo()
+            _can_redo = self.currentUndoStack.CanRedo()
             _cc = self.currentPane.manager.contentContainer
             if _cc is None:
                 _can_save = False
@@ -403,20 +420,26 @@ class AppMainFrameViewManager(MBTViewManager):
         else:
             _app = wx.App.GetInstance()
             _node_wb_uid = _node.workbenchUid
-            _hash = ProjectNodeHasher.hash_node(_node, use_workbench=_node_wb_uid is not None)
-            _wb: MBTBaseWorkbench = _app.workbenchRegistry.get(_node_wb_uid)
-            if _wb is None:
-                FeedbackDialogs.show_msg_dialog(_('Error'), 'No Workbench from registry for this node type find.')
-                return
-
-            if _wb.has_flag(EnumMBTWorkbenchFlag.HAS_EDITOR):
-                _editor_mgr = _wb.editorFactory.create_instance(_hash, parent=self, uid=_node.uuid, view_title=_node.get_path_string())
+            if _node_wb_uid is not None:
+                _hash = ProjectNodeHasher.hash_node(_node, use_workbench=_node_wb_uid is not None)
+                _wb: MBTBaseWorkbench = _app.workbenchRegistry.get(_node_wb_uid)
+                if _wb is None:
+                    FeedbackDialogs.show_msg_dialog(_('Error'), 'No Workbench from registry for this node type find.')
+                    return
+                if isinstance(_wb,MBTProjectOrientedWorkbench):
+                    _editor_mgr = _wb.open_project_node(_node.uuid,hash=_hash)
+                else:
+                    if _wb.has_flag(EnumMBTWorkbenchFlag.HAS_EDITOR):
+                        _editor_mgr = _wb.editorFactory.create_instance(_hash, parent=self, uid=_node.uuid, view_title=_node.get_path_string())
+                    else:
+                        _editor_mgr = None
+                if _editor_mgr is None:
+                    FeedbackDialogs.show_msg_dialog(_('Error'), 'No Editor for this node type find.')
+                    return
+                _view = _editor_mgr.create_view(parent=self._view.centerPane)
             else:
-                _editor_mgr = None
-            if _editor_mgr is None:
                 FeedbackDialogs.show_msg_dialog(_('Error'), 'No Editor for this node type find.')
                 return
-            _view = _editor_mgr.create_view(parent=self._view.centerPane)
             # editor content will be set by it own MBTViewManager.
             # since manager don't know the file path of content file. should register this cc as consumer into
             # app content provider, which with "project" identified.
@@ -466,7 +489,10 @@ class AppMainFrameViewManager(MBTViewManager):
         elif _pane is not self.currentPane:
             if self.currentPane is not None:
                 self.uninstall_undo_stack(self.currentPane.manager.undoStack)
-            self.install_undo_stack(_pane.manager.undoStack)
+            if _pane not in [self._appProjectExplMgr.view, self._appConsoleMgr.view, self._appPropContainerMgr.view]:
+                self.install_undo_stack(_pane.manager.undoStack)
+            else:
+                self.install_undo_stack(self.undoStack)
             self.currentPane = _pane
 
     def on_project_opened(self, event):
@@ -498,14 +524,14 @@ class AppMainFrameViewManager(MBTViewManager):
             self._appProjectExplMgr.open_project(evt)
         elif _id == wx.ID_UNDO:
             if self.currentPane is not None:
-                _undo_cmd = self.currentPane.manager.undoStack.GetCurrentCommand()
+                _undo_cmd = self.currentUndoStack.GetCurrentCommand()
                 if FeedbackDialogs.show_yes_no_dialog(_('Undo'), _('are you sure UNDO %s') % _undo_cmd.GetName()):
-                    self.currentPane.manager.undoStack.Undo()
+                    self.currentUndoStack.Undo()
         elif _id == wx.ID_REDO:
             if self.currentPane is not None:
-                _redo_cmd = self.currentPane.manager.undoStack.GetCurrentCommand()
+                _redo_cmd = self.currentUndoStack.GetCurrentCommand()
                 if FeedbackDialogs.show_yes_no_dialog(_('Redo'), _('are you sure REDO %s') % _redo_cmd.GetName()):
-                    self.currentPane.manager.undoStack.Redo()
+                    self.currentUndoStack.Redo()
         elif _id == EnumMFMenuIDs.TOOL_PREFERENCE.value:
             _mgr: MBTPreferenceMgr = MBTPreferenceMgr()
             # send global event: AppPreferenceAboutToShow
@@ -517,7 +543,10 @@ class AppMainFrameViewManager(MBTViewManager):
         else:
             if self.currentPane is not None:
                 _hd: wx.EvtHandler = self.currentPane.GetEventHandler()
-                _hd.ProcessEvent(T_EVT_APP_TOP_MENU(_id))
+                _evt = T_EVT_APP_TOP_MENU(_id)
+                _evt.SetEventObject(evt.GetEventObject())
+                _evt.SetClientData(evt.GetClientData())
+                _hd.ProcessEvent(_evt)
             # consider the situation of view toggle menu ids
             _mgrs = self.find_all(self, lambda x: x.viewAllowToggleWithMenu)
             for x in _mgrs:

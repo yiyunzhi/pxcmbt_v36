@@ -40,6 +40,10 @@ class EnumAppMsg:
 
 class EnumAppSignal:
     # for menu, toolbar those with ID identified item, etc. can copy, can paste...
+    sigProjectNodeSelectChanged = blinker.signal('sigProjectNodeSelectChanged')
+    sigProjectNodeAdded = blinker.signal('sigProjectNodeAdded')
+    sigProjectNodeDeleted = blinker.signal('sigProjectNodeDeleted')
+    sigProjectNodeModified = blinker.signal('sigProjectNodeModified')
     sigSupportedOperationChanged = blinker.signal('sigSupportedOperationChanged')
     sigAppPreferenceAboutToShow = blinker.signal('sigAppPreferenceAboutToShow')
     sigAppPreferenceApplied = blinker.signal('sigAppPreferenceApplied')

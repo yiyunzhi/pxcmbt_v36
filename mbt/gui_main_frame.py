@@ -104,20 +104,22 @@ class AppFrame(wx.Frame, MakeMenuMixin, MBTUniView):
 
         return _cnb
 
-    def add_toolbar(self, tb: typing.Union[MBTUniView, aui.AuiToolBar]):
-        _name = tb.manager.uid
-        _caption = tb.manager.viewTitle
+    def add_toolbar(self, tb: aui.AuiToolBar, caption=None, destroy_on_close=True):
+        _name = tb.GetName()
         _exist = self._auiMgr.GetPaneByName(_name)
+        if caption is None:
+            caption = _name
         if _exist.IsOk():
             return
-        self._auiMgr.AddPane(tb, aui.AuiPaneInfo().Name(_name).Caption(_caption).
-                             ToolbarPane().Top().Layer(1).Position(0))
+        self._auiMgr.AddPane(tb, aui.AuiPaneInfo().Name(_name).Caption(caption).
+                             ToolbarPane().Top().Layer(1).Position(0).DestroyOnClose(destroy_on_close))
         self._auiMgr.Update()
 
     def remove_toolbar(self, name: str):
         _exist = self._auiMgr.GetPaneByName(name)
-        if _exist is None:
+        if not _exist.IsOk():
             return
+
         self._auiMgr.ClosePane(_exist)
 
     def add_pane(self, pane: wx.Window, pane_info: aui.AuiPaneInfo, refresh=True):

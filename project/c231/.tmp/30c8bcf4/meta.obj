@@ -1,0 +1,21 @@
+children:
+- dirPath: ''
+  extension: .obj
+  name: meta
+  permission: RW
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: properties
+  permission: RW
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: m_bind
+  permission: RW
+  reversion: 1
+dirPath: .
+extension: ''
+name: 30c8bcf4
+permission: RW
+reversion: 0

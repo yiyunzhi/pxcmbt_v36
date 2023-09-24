@@ -27,7 +27,7 @@ elements:
           - children: [ ]
             handler:
               name: '>projectAddNode.reqRepo'
-              kwargs: { role: 0-2-3_0-2-3-0 }
+              kwargs: { role: 0-3_0-3-0 }
             helpString: help
             icon: 'pi.receipt'
             kind: 0

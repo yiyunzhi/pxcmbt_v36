@@ -38,6 +38,7 @@ class AppToolbarViewManager(MBTViewManager):
         if self._view is not None:
             return self._view
         _view = AppToolbarView(**kwargs, manager=self)
+        _view.SetName(self.uid)
         self.post_view(_view)
         return self._view
 

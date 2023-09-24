@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #                                                                            --
 #                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
@@ -25,7 +24,7 @@ import typing, os
 class AppFileIO:
 
     def __init__(self, **kwargs):
-        self.extension = kwargs.get('extension','.txt')
+        self.extension = kwargs.get('extension', '.txt')
         self.data = None
         self.filePath = kwargs.get('file_path')
         self.filename = kwargs.get('filename')
@@ -66,3 +65,4 @@ class AppFileIO:
         with open(path, flag, encoding=encoding) as f:
             _ret = f.write(data)
         return _ret
+

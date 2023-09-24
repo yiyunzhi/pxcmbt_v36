@@ -1,0 +1,10 @@
+!TCSettingGeneral
+author: ZHANGGF
+version: '1.2'
+platform: Windows-10-10.0.22621-SP0
+test_for: ''
+description: description...
+discarded: false
+te_protocol: urpc
+te_com_to: 5.0
+te_step_exe_to: 5.0

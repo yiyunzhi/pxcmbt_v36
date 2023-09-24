@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+import traceback
 
 # ------------------------------------------------------------------------------
 #                                                                            --
@@ -62,3 +64,7 @@ class MBTViewManager(wx.EvtHandler, ViewManager):
 
     def do_sop(self, sop_id, **kwargs):
         pass
+
+    def print_traceback(self):
+        if self.log.getEffectiveLevel() == logging.DEBUG:
+            traceback.print_exc()

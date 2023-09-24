@@ -1,0 +1,14 @@
+todo: ShapeDataObject serialize
+todo: Shape clone
+todo: select all
+todo: copy paste (depends on serialize)
+todo: on drop (depends on serialize)
+todo: redo undo (depends on serialize)
+todo: group shape
+done: drop a child done, but the inside shape also resized if parent changed, if remove resize flag, then the selection->resize not works. -> use LOCK_CHILDREN flag
+todo: textshape size not correctly changed if text need big space.
+done: for child drop, if child type is not be accepted, show a block shape on parent shape.
+todo: change the order if child drop accepted, child.order>parent.order.
+
+done: multselection from right to left not working
+done: snipped to grid not exact

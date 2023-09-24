@@ -5255,3 +5255,11 @@ AttributeError: 'NoneType' object has no attribute 'startswith'
 2023-08-10 11:36:37,393- application.project- ERROR: can not create file for node /fw2/Tester/TestCases/defaultTestCase/result. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\50e859ee\\\\meta.obj' in the archive"
 2023-08-10 11:36:37,406- application.project- ERROR: can not create file for node /fw2/Tester/TestEnvs/newEnv. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\ea342a8a\\\\meta.obj' in the archive"
 2023-08-10 11:36:37,419- application.project- ERROR: can not create file for node /fw2/Tester/Req.Manager/newReqRepo. since:"There is no item named 'D:\\\\pyweb\\\\pxcmbt_v36\\\\project\\\\fw2\\\\.tmp\\\\d3a94cde\\\\meta.obj' in the archive"
+2023-08-21 14:44:36,418- ProjectExplorerManager- ERROR: can not execute paste node, since:
+
+2023-08-21 14:45:12,992- ProjectExplorerManager- ERROR: can not execute paste node, since:
+
+2023-08-21 14:46:27,842- ProjectExplorerManager- ERROR: can not execute paste node, since:
+
+2023-08-21 15:24:36,130- ProjectExplorerManager- ERROR: can not execute reprofile node, since:
+'ProjectNodeProfile' object has no attribute 'name'

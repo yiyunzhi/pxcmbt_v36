@@ -49,14 +49,14 @@ elements:
     expand: false
     icon: 'local.cubes'
     label: Prototypes
-    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN ]
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN,*F_CAN_PASTE ]
     role: '0-1-0'
     description: 'Prototypes node contains more prototype'
   '0-1-1': &0_1_1
     expand: false
     icon: 'local.behaviour'
     label: Behaviours
-    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN ]
+    flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_LABEL_READONLY,*F_ACCEPT_CHILDREN,*F_CAN_PASTE ]
     role: '0-1-1'
     description: 'Behaviours node contains more behaviour node'
   '0-1-0-0': &0_1_0_0
@@ -68,7 +68,7 @@ elements:
     description: 'Prototype node'
   '0-1-0-0-0': &0_1_0_0_0
     expand: false
-    icon: 'pi.cube'
+    icon: 'pi.pen-nib'
     label: sketch
     flag: [ *F_SHOW_TOOLTIP,*F_SAVABLE,*F_CAN_EDIT_CONTENT ]
     fileAttr: 0
@@ -96,8 +96,8 @@ constructors:
     <<: *0_1
   new_child_node_of_0-1-0_0-1-0-0:
     children:
-      children: [ ]
-      <<: *0_1_0_0_0
+      - children: [ ]
+        <<: *0_1_0_0_0
     <<: *0_1_0_0
   new_child_node_of_0-1-1_0-1-1-0:
     children: [ ]

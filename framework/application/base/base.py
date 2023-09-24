@@ -45,6 +45,13 @@ def singleton(cls):
 def is_singleton_object(obj):
     return obj.__name__ == 'get_instance'
 
+class ClassProperty:
+
+    def __init__(self, f):
+        self.f = f
+
+    def __get__(self, instance, owner):
+        return self.f(owner)
 
 class YAMLObjectMetaclass(type):
     """

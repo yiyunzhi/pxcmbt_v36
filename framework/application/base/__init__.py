@@ -22,7 +22,7 @@
 from .class_stack import Node as StackNode, Stack
 from .base import (UUIDContent, Serializable, singleton, ChangeDetectable,
                    Validatable, Validator, IContentContainer,
-                   ContentableMinxin, NodeContent, BasicProfile)
+                   ContentableMinxin, NodeContent, BasicProfile,ClassProperty)
 from .class_content_container import ZViewContentContainer
 from .class_tree_model import TreeModelAnyTreeNode, TreeModel, TreeModelModuleNode, TreeModelDictNode, TreeModelNode
 from .prop_def import PropertyDef

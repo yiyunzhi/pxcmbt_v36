@@ -37,8 +37,8 @@ from mbt.application.base import MBTContentContainer
 class TestCaseSettingContentException(Exception): pass
 
 
-class SettingGeneralContent(Serializable, ChangeDetectable):
-    serializeTag = '!TCSettingGeneral'
+class SettingPropertiesContent(Serializable, ChangeDetectable):
+    serializeTag = '!TCSettingProperties'
 
     def __init__(self, **kwargs):
         ChangeDetectable.__init__(self)
@@ -111,8 +111,20 @@ class SettingGeneralContent(Serializable, ChangeDetectable):
         return _prop_container
 
 
-class SettingOutlineContent:
-    pass
+class SettingOutlineModelBindingContent(Serializable, ChangeDetectable):
+    serializeTag = '!TCSettingOutlineModelBinding'
+
+    def __init__(self, **kwargs):
+        ChangeDetectable.__init__(self)
+        self.bindUid = kwargs.get('bind_uid')
+        self.bindVersion = kwargs.get('bind_version')
+
+    @property
+    def serializer(self):
+        return {
+            'bind_uid': self.bindUid,
+            'bind_version': self.bindVersion
+        }
 
 
 @dataclass
@@ -139,7 +151,8 @@ class TestCaseSettingContentContainer(MBTContentContainer):
         MBTContentContainer.__init__(self, **kwargs)
         self.projectContentContractor = ProjectContentContractor()
         self.compositeContent = dict()
-        self.compositeContent.update({'general': _ContentElement(name='general', data=SettingGeneralContent())})
+        self.compositeContent.update({'properties': _ContentElement(name='properties', data=SettingPropertiesContent()),
+                                      'm_bind': _ContentElement(name='m_bind', data=SettingOutlineModelBindingContent())})
 
     def prepare(self):
         # todo: check outline bind uid is exist.
@@ -161,10 +174,10 @@ class TestCaseSettingContentContainer(MBTContentContainer):
     def has(self, el_name: str):
         return el_name in self.compositeContent
 
-    def query_project_node(self, filter_func: callable):
-        _app = wx.App.GetInstance()
-        _c = self.projectContentContractor.build_node_query_contract(filter_func)
-        return _app.baseContentResolver.query(_c)
+    # def query_project_node(self, filter_func: callable):
+    #     _app = wx.App.GetInstance()
+    #     _c = self.projectContentContractor.build_node_query_contract(filter_func)
+    #     return _app.baseContentResolver.query(_c)
 
     def set(self, *args, **kwargs):
         # normally only for external calling. this editor

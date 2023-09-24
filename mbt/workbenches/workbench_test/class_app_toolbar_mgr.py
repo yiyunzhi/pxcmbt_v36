@@ -37,6 +37,7 @@ class WBProcessToolbarViewManager(MBTViewManager):
         if self._view is not None:
             return self._view
         _view = AppToolbarView(**kwargs, manager=self)
+        _view.SetName(self.uid)
         self.post_view(_view)
         _view.GetParent().add_toolbar(_view)
         return self._view
@@ -61,6 +62,8 @@ class WBProcessToolbarViewManager(MBTViewManager):
 
     def remove_view(self):
         if self._view is not None:
-            self._view.GetParent().remove_toolbar(self._view.GetName())
-            self._view.Destroy()
+            self._view.GetParent().remove_toolbar(self.uid)
             self._view = None
+
+    def refresh_view(self):
+        self._view.Refresh()
