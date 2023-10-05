@@ -49,6 +49,16 @@ class FeedbackDialogs:
             return _path
 
     @staticmethod
+    def show_file_save_dialog(default_dir: str, wildcard: str, parent=None,style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT):
+        _dlg = wx.FileDialog(parent, defaultDir=default_dir,
+                             wildcard=wildcard,style=style)
+        _ret = _dlg.ShowModal()
+        if _ret == wx.ID_OK:
+            _path = _dlg.GetPath()
+            _dlg.Destroy()
+            return _path
+
+    @staticmethod
     @contextmanager
     def show_progress_dialog(title, message, maximum=100, parent=None, style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE):
         _dlg = wx.GenericProgressDialog(title, message, maximum, parent, style)

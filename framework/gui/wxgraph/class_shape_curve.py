@@ -31,8 +31,14 @@ class CurveShape(LineShape):
 
     def __init__(self, **kwargs):
         LineShape.__init__(self, **kwargs)
-        self.steps = 10
+        self.steps = kwargs.get('interpolationSteps',10)
 
+    @property
+    def cloneableAttributes(self):
+        _d = LineShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'interpolationSteps': self.steps
+        })
     def get_boundingbox(self) -> wx.Rect:
         _bb = super().get_boundingbox()
         return _bb.Inflate(20, 20)
@@ -147,7 +153,7 @@ class CurveShape(LineShape):
                 elif i == 3:
                     if self._mode == EnumLineMode.UNDER_CONSTRUCTION:
                         _ret[3] = wg_util_conv2realpoint(self._unfinishedPoint)
-                    elif self.dstShapeId != -1:
+                    elif self.dstShapeId is not None:
                         _ret[3] = self.get_mod_dst_point()
         return _ret
 

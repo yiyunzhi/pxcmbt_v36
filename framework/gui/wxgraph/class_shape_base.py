@@ -47,6 +47,18 @@ class WxShapeBaseStylesheet(DrawObjectStylesheet):
         self.vBorder = kwargs.get('vBorder', 1)
         self.dockPoint = kwargs.get('dockPoint', -3)
 
+    @property
+    def cloneableAttributes(self):
+        _d = DrawObjectStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'vAlign': self.vAlign,
+            'hAlign': self.hAlign,
+            'hBorder': self.hBorder,
+            'vBorder': self.vBorder,
+            'dockPoint': self.dockPoint,
+        })
+        return _d
+
 
 class WxShapeBase(DrawObject, anytree.NodeMixin):
     __identity__ = "WxShapeBase"
@@ -59,16 +71,23 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
         self.userData = kwargs.get('userData')
         self.handles = kwargs.get('handles', list())
         self.connectionPts = kwargs.get('connectionPts', list())
+        if self.handles:
+            for x in self.handles:
+                x.parent = self
+        if self.connectionPts:
+            for x in self.connectionPts:
+                x.parent = self
         self.actionProxy = BaseShapeActionProxy(self)
 
-        self._sAcceptedSrcNeighbours = list()
-        self._sAcceptedDstNeighbours = list()
-        self._wAcceptedConnections = list()
-        self._ddAcceptedChildren = list()
+        self._sAcceptedSrcNeighbours = kwargs.get('acceptedSrcNeighbours', list())
+        self._sAcceptedDstNeighbours = kwargs.get('acceptedDstNeighbours', list())
+        self._wAcceptedConnections = kwargs.get('acceptedConnections', list())
+        self._ddAcceptedChildren = kwargs.get('ddAcceptedChildren', list())
         self._lstProcessed = list()
         self.mouseOffset = None
         self.highlightParent = False
-
+        # if self.parentShape:
+        #     self.mRelativePosition=self.mRelativePosition-self.parentAbsolutePosition
         _children = kwargs.get('children')
         if _children:
             self.children = _children
@@ -80,6 +99,20 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
     @property
     def className(self):
         return self.__class__.__name__
+
+    @property
+    def cloneableAttributes(self):
+        _d = DrawObject.cloneableAttributes.fget(self)
+        _d.update({'userData': self.userData.clone() if self.userData else None,
+                   'style': self.style,
+                   'handles': [x.clone() for x in self.handles],
+                   'connectionPts': [x.clone() for x in self.connectionPts],
+                   'acceptedSrcNeighbours': self._sAcceptedSrcNeighbours,
+                   'acceptedDstNeighbours': self._sAcceptedDstNeighbours,
+                   'acceptedConnections': self._wAcceptedConnections,
+                   'ddAcceptedChildren': self._ddAcceptedChildren
+                   })
+        return _d
 
     @staticmethod
     def find(node, filter_=None, stop=None, max_level=None):
@@ -112,6 +145,16 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
                 _ret.extend(WxShapeBase.dfs(x, filter_))
         return _ret
 
+    def clone(self):
+        _children = list()
+        _this = self.__class__(**self.cloneableAttributes)
+        for x in self.children:
+            _cx = x.clone()
+            _cx.parent = _this
+        # if self.parentShape:
+        #     _this.parent = self.parent
+        return _this
+
     def reparent(self, parent: 'WxShapeBase'):
         if parent is not None:
             if self.parentShape:
@@ -140,7 +183,7 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
             #     x.update(update_parent=False)
             # the update be triggerd always by the leaf shapes of this shape, since in update() function
             # it will start a recursive update to its ancestors.
-        #self.update()
+        # self.update()
 
     def update_all(self):
         for x in self.get_leaf_shapes():
@@ -152,7 +195,6 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
         Returns:
 
         """
-        print('update-> isLeaf:%s' % self.is_leaf, self)
         self.do_alignment()
         # alignment start from top shape of the tree then to the leafs,
         # since the alignment depends on its parent position.
@@ -265,9 +307,9 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
 
         """
         if self.parentShape:
-            return self.relativePosition + self.parent.absolutePosition
+            return self.relativePosition + self.parentAbsolutePosition
         else:
-            return wx.RealPoint(self.relativePosition)
+            return self.relativePosition
 
     @property
     def parentAbsolutePosition(self) -> wx.RealPoint:
@@ -377,8 +419,8 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
                 if n.has_style(EnumShapeStyleFlags.REPOSITION) and (n.verticalAlign == EnumShapeVAlign.NONE or n.horizontalAlign == EnumShapeHAlign.NONE):
                     # n.relativePosition.x *= x
                     # n.relativePosition.y *= y
-                    n.position.x *= x
-                    n.position.y *= y
+                    n.mRelativePosition.x *= x
+                    n.mRelativePosition.y *= y
                 n.do_alignment()
         if self.scene: self.scene.isModified = True
 
@@ -407,7 +449,7 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
             _p_apos = wx.RealPoint(self.parentAbsolutePosition)
         else:
             _p_apos = wx.RealPoint(0, 0)
-        self.position = pos - _p_apos
+        self.relativePosition = pos - _p_apos
         if self.scene and mark: self.scene.isModified = True
 
     def move_by(self, dx: float, dy: float, mark=True) -> None:
@@ -416,8 +458,8 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
         Returns:
 
         """
-        self.position.x += dx
-        self.position.y += dy
+        self.mRelativePosition.x += dx
+        self.mRelativePosition.y += dy
         if self.scene and mark: self.scene.isModified = True
 
     # --------------------------------------------------------------
@@ -499,54 +541,53 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
         _this_bb = self.get_boundingbox()
         # do vertical alignment
         if self.verticalAlign == EnumShapeVAlign.TOP:
-            self.position.y = self.verticalBorder
+            self.mRelativePosition.y = self.verticalBorder
         elif self.verticalAlign == EnumShapeVAlign.MIDDLE:
-            self.position.y = _parent_bb.GetHeight() / 2 - _this_bb.GetHeight() / 2
+            self.mRelativePosition.y = _parent_bb.GetHeight() / 2 - _this_bb.GetHeight() / 2
         elif self.verticalAlign == EnumShapeVAlign.BOTTOM:
-            self.position.y = _parent_bb.GetHeight() - _this_bb.GetHeight() - self.verticalBorder
+            self.mRelativePosition.y = _parent_bb.GetHeight() - _this_bb.GetHeight() - self.verticalBorder
         elif self.verticalAlign == EnumShapeVAlign.EXPAND:
             if self.has_style(EnumShapeStyleFlags.RESIZE):
-                self.position.y = self.verticalBorder
+                self.mRelativePosition.y = self.verticalBorder
                 # print('y scale--->',(_parent_bb.GetHeight() - 2 * self.verticalBorder) / _this_bb.GetHeight())
-                self.scale(1.0, (_parent_bb.GetHeight() - 2 * self.verticalBorder - self.positionOffset.y) / _this_bb.GetHeight())
+                self.scale(1.0, (_parent_bb.GetHeight() - 2 * self.verticalBorder) / _this_bb.GetHeight())
         elif self.verticalAlign == EnumShapeVAlign.LINE_START:
             if _is_line_part:
                 _line_start, _line_end = _parent_shape.get_line_segment(0)
                 if _line_end.y >= _line_start.y:
-                    self.position.y = _line_start.y - _line_pos.y + self.verticalBorder
+                    self.mRelativePosition.y = _line_start.y - _line_pos.y + self.verticalBorder
                 else:
-                    self.position.y = _line_start.y - _line_pos.y - _this_bb.GetHeight() - self.verticalBorder
+                    self.mRelativePosition.y = _line_start.y - _line_pos.y - _this_bb.GetHeight() - self.verticalBorder
         elif self.verticalAlign == EnumShapeVAlign.LINE_END:
             if _is_line_part:
                 _line_start, _line_end = _parent_shape.get_line_segment(len(_parent_shape.controlPoints))
                 if _line_end.y >= _line_start.y:
-                    self.position.y = _line_start.y - _line_pos.y - _this_bb.GetHeight() - self.verticalBorder
+                    self.mRelativePosition.y = _line_start.y - _line_pos.y - _this_bb.GetHeight() - self.verticalBorder
                 else:
-                    self.position.y = _line_end.y - _line_pos.y + self.verticalBorder
+                    self.mRelativePosition.y = _line_end.y - _line_pos.y + self.verticalBorder
         # do horizontal aligment
         if self.horizontalAlign == EnumShapeHAlign.LEFT:
-            self.position.x = self.horizontalBorder
+            self.mRelativePosition.x = self.horizontalBorder
         elif self.horizontalAlign == EnumShapeHAlign.CENTER:
-            self.position.x = _parent_bb.GetWidth() / 2 - _this_bb.GetWidth() / 2
+            self.mRelativePosition.x = _parent_bb.GetWidth() / 2 - _this_bb.GetWidth() / 2
         elif self.horizontalAlign == EnumShapeHAlign.EXPAND:
             if self.has_style(EnumShapeStyleFlags.RESIZE):
-                self.position.x = self.horizontalBorder
-                # print('x scale--->', (_parent_bb.GetWidth() - 2 * self.horizontalBorder-self.positionOffset.x) / _this_bb.GetWidth())
+                self.mRelativePosition.x = self.horizontalBorder
                 self.scale((_parent_bb.GetWidth() - 2 * self.horizontalBorder) / _this_bb.GetWidth(), 1.0)
         elif self.horizontalAlign == EnumShapeHAlign.LINE_START:
             if _is_line_part:
                 _parent_shape.get_line_segment(0, _line_start, _line_end)
                 if _line_end.x >= _line_start.x:
-                    self.position.x = _line_start.x - _line_pos.x + self.horizontalBorder
+                    self.mRelativePosition.x = _line_start.x - _line_pos.x + self.horizontalBorder
                 else:
-                    self.position.x = _line_start.x - _line_pos.x - _this_bb.GetWidth() - self.horizontalBorder
+                    self.mRelativePosition.x = _line_start.x - _line_pos.x - _this_bb.GetWidth() - self.horizontalBorder
         elif self.horizontalAlign == EnumShapeHAlign.LINE_END:
             if _is_line_part:
                 _parent_shape.get_line_segment(len(_parent_shape.controlPoints), _line_start, _line_end)
                 if _line_end.x >= _line_start.x:
-                    self.position.x = _line_start.x - _line_pos.x - _this_bb.GetWidth() - self.horizontalBorder
+                    self.mRelativePosition.x = _line_start.x - _line_pos.x - _this_bb.GetWidth() - self.horizontalBorder
                 else:
-                    self.position.x = _line_end.x - _line_pos.x + self.horizontalBorder
+                    self.mRelativePosition.x = _line_end.x - _line_pos.x + self.horizontalBorder
 
     def fit_to_children(self):
         """
@@ -609,21 +650,6 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
     # --------------------------------------------------------------
     # layout handling
     # --------------------------------------------------------------
-    @property
-    def relativePosition(self) -> wx.RealPoint:
-        return self.position + self.positionOffset
-
-    @relativePosition.setter
-    def relativePosition(self, pos: wx.RealPoint):
-        """
-        Set shape's relative position. Absolute shape's position is then calculated
-        as a sumation of the relative positions of this shape and all parent shapes in the shape's hierarchy
-        Returns:
-
-        """
-        _diff = pos - self.positionOffset
-        self.position.x = _diff.x
-        self.position.y = _diff.y
 
     @property
     def verticalAlign(self) -> EnumShapeVAlign:
@@ -692,7 +718,7 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
 
         """
         for x in self.handles:
-            if x.type == handle_type and (id_ == -1 or id_ == x.id):
+            if x.type == handle_type and (id_ == -1 or id_ == x.nID):
                 return x
 
     def add_handle(self, handle_type: EnumHandleType, id_=-1) -> HandleShapeObject:
@@ -704,7 +730,7 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
         """
         _hnd = self.get_handle(handle_type, id_)
         if _hnd is None:
-            _hnd = HandleShapeObject(parent=self, type=handle_type, n_id=id_)
+            _hnd = HandleShapeObject(parent=self, type=handle_type, nID=id_)
             self.handles.append(_hnd)
         return _hnd
 

@@ -112,34 +112,20 @@ import wx
 # for vp in vertices:
 #     _res.append(wx.Point(int(vp.x * _cosa - vp.y * _sina + 0),int(vp.x * _sina - vp.y * _cosa + 0)))
 # print(_res)
-import anytree
-
-r = anytree.Node('root')
-n1 = anytree.Node('a', parent=r,point=0)
-n2 = anytree.Node('b', parent=r,point=0)
-
-n21 = anytree.Node('b0', parent=n2,point=0)
-n22 = anytree.Node('b1', parent=n2,point=1)
-
-n11 = anytree.Node('a0', parent=n1,point=1)
-n12 = anytree.Node('a1', parent=n1,point=0)
+import anytree, enum
+from framework.gui.wxgraph import EnumGraphViewStyleFlag
+import inspect
 
 
-def bfs(node: anytree.Node, filter_=None):
-    _ret = list()
-    for x in anytree.iterators.LevelOrderIter(node, filter_=filter_):
-        _ret.append(x)
-    return _ret
+def util_get_object_props(obj):
+    _pr = {}
+    for name in dir(obj):
+        value = getattr(obj, name)
+        if not name.startswith('__') and not inspect.ismethod(value):
+            _pr[name] = value
+    return _pr
 
 
-def dfs(node: anytree.Node, filter_=None):
-    _ret = [node]
-    for x in node.children:
-        if filter_(x):
-            _ret.extend(dfs(x, filter_))
-    return _ret
-
-
-# bfs
-print(bfs(r))
-print(dfs(r,lambda x:x.point==0))
+_em = util_get_object_props(EnumGraphViewStyleFlag)
+_em = enum.Enum('EnumGraphViewStyleFlag', _em)
+print([x.name for x in _em],[x.value for x in _em])

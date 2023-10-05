@@ -22,9 +22,8 @@
 import wx
 
 
-
-def gui_util_get_default_font(size=10, family=wx.TELETYPE, style=wx.NORMAL, weight=wx.NORMAL) -> wx.Font:
-    return wx.Font(size, family, style, weight, False, u'Consolas')
+def gui_util_get_default_font(size=10, family=wx.FONTFAMILY_SWISS, style=wx.FONTSTYLE_NORMAL, weight=wx.FONTWEIGHT_NORMAL) -> wx.Font:
+    return wx.Font(size, family, style, weight, False, u'Console')
 
 
 def gui_util_get_simple_text_header(parent: wx.Window, title: str, sub_title: str = None,

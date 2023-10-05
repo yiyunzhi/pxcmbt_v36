@@ -33,9 +33,19 @@ class BitmapShapeStylesheet(RectShapeStylesheet):
         self.processingColor = kwargs.get('processingColor', '#ff0000')
         self.processingBorderStyle = kwargs.get('processingBorderStyle', wx.PENSTYLE_DOT)
 
+    @property
+    def cloneableAttributes(self):
+        _d = RectShapeStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'canScale': self.canScale,
+            'processingColor': self.processingColor,
+            'processingBorderStyle': self.processingBorderStyle
+        })
+        return _d
 
 class BitmapShape(RectShape):
     __identity__ = "BitmapShape"
+
     def __init__(self, **kwargs):
         RectShape.__init__(self, **kwargs)
         self.stylesheet = kwargs.get('stylesheet', BitmapShapeStylesheet())
@@ -51,6 +61,14 @@ class BitmapShape(RectShape):
         elif isinstance(self.bmpData, bytes):
             _ret = self.create_from_bytes(self.bmpData, self.bmpType)
             assert _ret
+
+    @property
+    def cloneableAttributes(self):
+        _d = RectShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'bmpData': self.bmpData,
+            'bmpType': self.bmpType
+        })
 
     def create_from_file(self, path: str, type_: int) -> bool:
         _ok = False

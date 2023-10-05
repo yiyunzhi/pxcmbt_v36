@@ -46,8 +46,17 @@ class ArrowBase(DrawObject):
 class SolidArrow(ArrowBase):
     def __init__(self, **kwargs):
         ArrowBase.__init__(self, **kwargs)
-        self.vertices = kwargs.get('vertices', [wx.Point(0, 0), wx.Point(10, 4), wx.Point(10, -4)])
+        self.vertices = kwargs.get('vertices', [wx.Point(0, 0), wx.Point(10, 5), wx.Point(10, -5)])
         self.toPoint = kwargs.get('to_point', wx.Point())
+
+    @property
+    def cloneableAttributes(self):
+        _d = ArrowBase.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'vertices': self.vertices,
+            'to_point': self.toPoint,
+            'parent': self.parent
+        })
 
     def get_boundingbox(self) -> wx.Rect:
         _top_left = wx.Point()
@@ -78,8 +87,17 @@ class SolidArrow(ArrowBase):
 class CircleArrow(ArrowBase):
     def __init__(self, **kwargs):
         ArrowBase.__init__(self, **kwargs)
-        self.radius = kwargs.get('radius')
+        self.radius = kwargs.get('radius', 4)
         self.toPoint = kwargs.get('to_point', wx.Point())
+
+    @property
+    def cloneableAttributes(self):
+        _d = ArrowBase.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'radius': self.radius,
+            'to_point': self.toPoint,
+            'parent': self.parent
+        })
 
     def get_boundingbox(self) -> wx.Rect:
         return wx.Rect(-self.radius + self.toPoint.x, -self.radius + self.toPoint.y, 2 * self.radius, 2 * self.radius)
@@ -90,6 +108,15 @@ class DiamondArrow(ArrowBase):
         ArrowBase.__init__(self, **kwargs)
         self.vertices = kwargs.get('vertices', [wx.Point(0, 0), wx.Point(10, 4), wx.Point(20, 0), wx.Point(10, -4)])
         self.toPoint = kwargs.get('to_point', wx.Point())
+
+    @property
+    def cloneableAttributes(self):
+        _d = ArrowBase.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'vertices': self.vertices,
+            'to_point': self.toPoint,
+            'parent': self.parent
+        })
 
     def get_boundingbox(self) -> wx.Rect:
         _top_left = wx.Point()
@@ -122,6 +149,15 @@ class OpenArrow(ArrowBase):
         ArrowBase.__init__(self, **kwargs)
         self.vertices = kwargs.get('vertices', [wx.Point(0, 0), wx.Point(10, 4), wx.Point(10, -4)])
         self.toPoint = kwargs.get('to_point', wx.Point())
+
+    @property
+    def cloneableAttributes(self):
+        _d = ArrowBase.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'vertices': self.vertices,
+            'to_point': self.toPoint,
+            'parent': self.parent
+        })
 
     def draw(self, dc, **kwargs):
         _from = kwargs.get('from_')

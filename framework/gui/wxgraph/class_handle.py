@@ -96,6 +96,15 @@ class HandleShapeObject(DrawObject):
         self.nID = kwargs.get('nID', -1)
 
     @property
+    def cloneableAttributes(self):
+        _d = DrawObject.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'type': self.type,
+            'size': self.size,
+            'nID': self.nID
+        })
+
+    @property
     def currentPosition(self):
         return self.actionProxy.curPos
 

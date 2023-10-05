@@ -26,7 +26,8 @@ SOLUTION_DEF = {
     'type': 'bt',
     'version': '1.0.1',
     'view': '',
+    'viewManager': None,
     'setup': None,
     'builtinEntitiesPath': '',
-    'description':'Solution with behaviourTree for modeling.'
+    'description': 'Solution with behaviourTree for modeling.'
 }

@@ -24,8 +24,8 @@ import wx
 
 class BasicLineShape:
     def __init__(self, **kwargs):
-        self.srcShapeId = kwargs.get('srcShapeId', -1)
-        self.dstShapeId = kwargs.get('dstShapeId', -1)
+        self.srcShapeId = kwargs.get('srcShapeId')
+        self.dstShapeId = kwargs.get('dstShapeId')
         self._srcPoint = kwargs.get('srcPoint', wx.RealPoint(0, 0))
         self._dstPoint = kwargs.get('dstPoint', wx.RealPoint(0, 0))
 

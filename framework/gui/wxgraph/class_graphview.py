@@ -35,6 +35,7 @@ from .utils import *
 from .events import *
 from .define import *
 from .__version__ import __VERSION__
+from .class_undo_stack import WGUndoStack
 
 
 class GraphViewDropTarget(wx.DropTarget):
@@ -53,7 +54,6 @@ class GraphViewDropTarget(wx.DropTarget):
 
 class GraphViewSetting:
 
-    # todo: make it serializable
     def __init__(self, **kwargs):
         self.enableGC = kwargs.get('enableGC', True)
         self.backgroundColor = kwargs.get('backgroundColor', '#f0f0f0')
@@ -61,6 +61,7 @@ class GraphViewSetting:
         self.gradientFrom = kwargs.get('gradientFrom', '#f0f0f0')
         self.gradientTo = kwargs.get('gradientTo', '#d8d8ff')
 
+        self.pasteOffset = kwargs.get('pasteOffset', wx.Size(20, 20))
         self.gridSize = kwargs.get('gridSize', wx.Size(5, 5))
         self.gridLineMult = kwargs.get('gridLineMult', 20)
         self.gridColor = kwargs.get('gradientTo', '#c8c8ff')
@@ -121,11 +122,15 @@ class GraphView(wx.ScrolledWindow):
 
         self.currentShapes = list()
         self.setting = GraphViewSetting() if setting is None else setting
-        self.undoStack = undo_stack
+
         # initialize
         self.shapesDataFormat.SetId(GV_DAT_FORMAT_ID)
         self.shapeDataObjectType = ShapeDataObject
         self.scene = scene
+        if undo_stack is None:
+            undo_stack = WGUndoStack()
+            undo_stack.setup(self)
+        self.undoStack = undo_stack
         self.SetScrollbars(5, 5, 100, 100)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self._guiMode.setup()
@@ -203,7 +208,8 @@ class GraphView(wx.ScrolledWindow):
     def export_to_bmp(self, file: typing.IO):
         self.export_to_image(file)
 
-    def export_to_image(self, file: typing.IO, image_type: int = wx.BITMAP_TYPE_BMP, background=True, scale=-1):
+    def export_to_image(self, file: typing.IO, image_type: int = wx.BITMAP_TYPE_PNG, background=True, scale=-1):
+        # todo: quality option expect
         _prev_scale = self.setting.scale
         if scale == -1: scale = _prev_scale
         _bmp_bb = self.get_total_boundingbox()
@@ -214,7 +220,7 @@ class GraphView(wx.ScrolledWindow):
         _bmp_bb = _bmp_bb.Inflate(self.setting.gridSize * scale)
         _out_bmp = wx.Bitmap(_bmp_bb.width, _bmp_bb.height)
         _dc = wx.MemoryDC(_out_bmp)
-        _out_dc = wx.WindowDC(self)
+        _out_dc = _dc
         _out_dc.SetUserScale(scale, scale)
         if _out_dc.IsOk():
             if scale != _prev_scale:
@@ -235,9 +241,9 @@ class GraphView(wx.ScrolledWindow):
             if scale != _prev_scale:
                 self.set_scale(_prev_scale)
             if _out_bmp.SaveFile(file, image_type):
-                wx.MessageBox('image has been saved to %s' % file.name, 'Info')
+                wx.MessageBox('image has been saved to %s' % file, 'Info')
             else:
-                wx.MessageBox('unable save image to %s' % file.name, 'Error')
+                wx.MessageBox('unable save image to %s' % file, 'Error')
         else:
             wx.MessageBox('unable create the image output buffer.', 'Error')
 
@@ -364,11 +370,11 @@ class GraphView(wx.ScrolledWindow):
         for id_, pos in self.mapPrevPositions:
             _shape = self._scene.find_shape(id_)
             if _shape:
-                _shape.position = pos
+                _shape.relativePosition = pos
         self.mapPrevPositions.clear()
 
     def store_prev_position(self, shape: WxShapeBase):
-        self.mapPrevPositions.update({shape.uid: wx.RealPoint(shape.position)})
+        self.mapPrevPositions.update({shape.uid: wx.RealPoint(shape.relativePosition)})
 
     def copy(self):
         if not self.has_style(EnumGraphViewStyleFlag.CLIPBOARD):
@@ -418,7 +424,6 @@ class GraphView(wx.ScrolledWindow):
                 for x in _lst_current:
                     if x not in _to_store:
                         _lst_new.append(x)
-                # todo: position,uid how handle it?
                 # call use define handler
                 self.on_paste(_lst_new)
                 self.save_view_state()
@@ -429,14 +434,14 @@ class GraphView(wx.ScrolledWindow):
         if not self.has_style(EnumGraphViewStyleFlag.UNDOREDO) or self._guiMode is None:
             return
         self.clear_temporaries()
-        self.undoStack.RestoreOlderState()
+        self.undoStack.restore()
         self._guiMode.multiEditShape.hide()
 
     def redo(self):
         if not self.has_style(EnumGraphViewStyleFlag.UNDOREDO) or self._guiMode is None:
             return
         self.clear_temporaries()
-        self.undoStack.RestoreNewerState()
+        self.undoStack.restore(forward=True)
         self._guiMode.multiEditShape.hide()
 
     def can_copy(self):
@@ -460,12 +465,12 @@ class GraphView(wx.ScrolledWindow):
     def can_undo(self):
         if not self.has_style(EnumGraphViewStyleFlag.UNDOREDO):
             return False
-        return self.undoStack.can_undo()
+        return self.undoStack.canUndo
 
     def can_redo(self):
         if not self.has_style(EnumGraphViewStyleFlag.UNDOREDO):
             return False
-        return self.undoStack.can_redo()
+        return self.undoStack.canRedo
 
     def can_align_selected(self):
         if self._guiMode is None:
@@ -477,11 +482,11 @@ class GraphView(wx.ScrolledWindow):
             return
         if self.undoStack is None:
             return
-        self.undoStack.save_view_state()
+        self.undoStack.save()
 
     def clear_view_history(self):
         if self.undoStack is not None:
-            self.undoStack.clear()
+            self.undoStack.clear_history()
 
     # --------------------------------------------------------------
     # coordination conversation
@@ -544,7 +549,7 @@ class GraphView(wx.ScrolledWindow):
         _parent_shape = self.get_shape_at_position(parent_pos, 1, EnumShapeSearchMode.UNSELECTED)
         if _parent_shape is not None and not _parent_shape.is_child_accepted(shape):
             _parent_shape = None
-        if _parent_shape is not None and _parent_shape in shape .descendants:
+        if _parent_shape is not None and _parent_shape in shape.descendants:
             return
         # set new parent
         if shape.has_style(EnumShapeStyleFlags.REPARENT) and not isinstance(shape, LineShape):
@@ -552,12 +557,12 @@ class GraphView(wx.ScrolledWindow):
             if _parent_shape:
                 if _parent_shape.parentShape is not shape:
                     _apos = shape.absolutePosition - _parent_shape.absolutePosition
-                    shape.position = _apos
+                    shape.relativePosition = _apos
                     shape.reparent(_parent_shape)
                     # notify the parent shape about dropped child
                     _parent_shape.handle_child_dropped(_apos, shape)
             else:
-                if self._scene.is_top_shape_accepted(shape):
+                if self._scene.is_top_shape_accepted(shape) and shape.parent is not self._scene.rootShape:
                     if shape.parentShape:
                         _apos = shape.parentShape.absolutePosition
                         shape.move_by(_apos.x, _apos.y)
@@ -599,6 +604,10 @@ class GraphView(wx.ScrolledWindow):
         self.unselectedShapeUnderCursor = None
         self.selectedShapeUnderCursor = None
         self.topMostShapeUnderCursor = None
+
+    def clear(self):
+        if self._guiMode:
+            self._guiMode.reset()
 
     def update_shape_under_cursor_cache(self, pos: wx.Point):
         self.currentShapes.clear()
@@ -860,7 +869,7 @@ class GraphView(wx.ScrolledWindow):
             _union_rect = _union_rect.Union(x.get_boundingbox())
         _union_rect = _union_rect.Inflate(DEFAULT_ME_OFFSET, DEFAULT_ME_OFFSET)
         # draw rectangle
-        self._guiMode.multiEditShape.position = wx.RealPoint(_union_rect.GetPosition())
+        self._guiMode.multiEditShape.relativePosition = wx.RealPoint(_union_rect.GetPosition())
         _w, _h = _union_rect.GetSize()
         self._guiMode.multiEditShape.set_rect_size(_w, _h)
 
@@ -949,7 +958,7 @@ class GraphView(wx.ScrolledWindow):
                 if x.parentShape not in selections:
                     if store_previous:
                         self.store_prev_position(x)
-                        x.position = x.absolutePosition
+                        x.relativePosition = x.absolutePosition
             self.append_assigned_connection(x, selections, False)
 
     def append_assigned_connection(self, shape: WxShapeBase, selections: list, children_only: bool = True):
@@ -1356,8 +1365,8 @@ class GraphView(wx.ScrolledWindow):
         Returns:
 
         """
-        #_id = -1
-        #if connection is not None: _id = connection.uid
+        # _id = -1
+        # if connection is not None: _id = connection.uid
         _evt = WGShapeEvent(T_EVT_LINE_DONE)
         _evt.SetShape(connection)
         self.ProcessEvent(_evt)
@@ -1375,8 +1384,8 @@ class GraphView(wx.ScrolledWindow):
         Returns:
 
         """
-        #_id = -1
-        #if connection is not None: _id = connection.id
+        # _id = -1
+        # if connection is not None: _id = connection.id
         _evt = WGShapeEvent(T_EVT_LINE_BEFORE_DONE)
         _evt.SetShape(connection)
         self.ProcessEvent(_evt)
@@ -1474,6 +1483,7 @@ class GraphView(wx.ScrolledWindow):
             self.setting.printPageSetupData.SetPaperId(wx.PAPER_A4)
             self.setting.printPageSetupData.SetMarginTopLeft(wx.Point(15, 15))
             self.setting.printPageSetupData.SetMarginBottomRight(wx.Point(15, 15))
+            self.setting.printData = self.setting.printPageSetupData.PrintData
 
     @property
     def printPageSetupData(self):
@@ -1484,6 +1494,7 @@ class GraphView(wx.ScrolledWindow):
             return
         _dlg_data = wx.PrintDialogData(self.setting.printData)
         _printer = wx.Printer(_dlg_data)
+        _dlg_data.PrintData.SetPrivData()
         self.deselect_all()
         if not _printer.Print(self, print_out, prompt):
             if wx.Printer.GetLastError() == wx.PRINTER_ERROR:

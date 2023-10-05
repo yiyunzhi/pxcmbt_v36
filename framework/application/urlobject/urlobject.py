@@ -583,3 +583,16 @@ class URLObject(text_type):
         """Replace a field in the ``urlparse.SplitResult`` for this URL."""
         return type(self)(urlparse.urlunsplit(
             urlparse.urlsplit(self)._replace(**replace)))
+
+    @staticmethod
+    def quick_create(scheme: str, net_loc: str=None, path: str=None, queries: dict=None):
+        _url = URLObject()
+        if scheme is not None:
+            _url = _url.with_scheme(scheme)
+        if net_loc is not None:
+            _url = _url.with_netloc(net_loc)
+        if path is not None:
+            _url = _url.with_path(path)
+        if queries:
+            _url = _url.add_query_params(**queries)
+        return _url

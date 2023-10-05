@@ -42,6 +42,7 @@ class STCElementFactoryItem:
             kwargs = dict(self.defaultKwargs, **kwargs)
         return self.klass(**kwargs)
 
+
 @singleton
 class STCElementFactory:
     def __init__(self):
@@ -73,4 +74,3 @@ class STCElementFactory:
             return None
         _item = self._map.get(uid)
         return _item.build(**kwargs)
-

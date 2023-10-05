@@ -25,7 +25,7 @@ from framework.gui.wxgraph import (EnumShapeStyleFlags,
                                    EnumShapeVAlign,
                                    EnumShapeHAlign,
                                    IDENTITY_ALL)
-from .class_base import DiagramRoundRectElement, EditableLabelElement,GridElement
+from .class_base import DiagramRoundRectElement, EditableLabelElement, GridElement
 from .define import *
 
 
@@ -38,7 +38,7 @@ class SimpleStateElement(DiagramRoundRectElement):
         self.add_style(EnumShapeStyleFlags.LOCK_CHILDREN | EnumShapeStyleFlags.EMIT_EVENTS | EnumShapeStyleFlags.PROCESS_K_DEL)
         # todo: add graphNode store (title_text,entry_text,exit_text,hasActions) in node
         self.titleElement = EditableLabelElement(parent=self, labelType=EnumLabelType.TITLE, text='State')
-        self.actionsGrid = GridElement(positionOffset=wx.RealPoint(0, 14), parent=self)
+        self.actionsGrid = GridElement(relativePosition=wx.RealPoint(0, 24), parent=self)
 
         self.entryActionElement = EditableLabelElement(labelType=EnumLabelType.STATE_ENTRY_ACTIONS, parent=self.actionsGrid,
                                                        text='entry/[]')
@@ -52,7 +52,7 @@ class SimpleStateElement(DiagramRoundRectElement):
     @property
     def serializer(self):
         return {
-            'position': self.position,
+            'relativePosition': self.mRelativePosition,
             'stylesheet': self.stylesheet,
             'states': self.states,
             'style': self.style,
@@ -64,9 +64,13 @@ class SimpleStateElement(DiagramRoundRectElement):
         # self.set_rect_size(10, 10)
         self.clear_accepted_children()
         self.stylesheet.fillColor = STATE_FILL_COLOR
+        self.accept_src_neighbour(IDENTITY_SIMPLE_STATE)
+        self.accept_src_neighbour(IDENTITY_INITIAL_STATE)
+        self.accept_dst_neighbour(IDENTITY_SIMPLE_STATE)
+        self.accept_dst_neighbour(IDENTITY_FINAL_STATE)
         self.accept_connection(IDENTITY_TRANSITION)
-        # todo: must be define which identity by this element accepted (for composite ->init,history).
-        # self.accept_child(self.identity)
+        self.accept_connection(IDENTITY_NOTE_CONN)
+
         self.add_style(EnumShapeStyleFlags.SHOW_SHADOW)
         self.verticalAlign = EnumShapeVAlign.NONE
         self.horizontalAlign = EnumShapeHAlign.NONE
@@ -76,6 +80,7 @@ class SimpleStateElement(DiagramRoundRectElement):
             EnumShapeStyleFlags.ALWAYS_INSIDE |
             EnumShapeStyleFlags.PROCESS_K_DEL |
             EnumShapeStyleFlags.SHOW_HANDLES |
+            EnumShapeStyleFlags.PROPAGATE_INTERACTIVE_CONNECTION |
             EnumShapeStyleFlags.DISAPPEAR_WHEN_SMALL)
         self.titleElement.horizontalAlign = EnumShapeHAlign.CENTER
         self.titleElement.stylesheet.fontSize = 11
@@ -93,17 +98,19 @@ class SimpleStateElement(DiagramRoundRectElement):
             EnumShapeStyleFlags.ALWAYS_INSIDE |
             EnumShapeStyleFlags.PROCESS_K_DEL |
             EnumShapeStyleFlags.DISABLE_DO_ALIGNMENT |
+            EnumShapeStyleFlags.PROPAGATE_INTERACTIVE_CONNECTION |
             EnumShapeStyleFlags.PROPAGATE_HOVERING |
             EnumShapeStyleFlags.PROPAGATE_SELECTION)
+        self.actionsGrid.accept_child(self.entryActionElement.identity)
         self.actionsGrid.horizontalAlign = EnumShapeHAlign.LEFT
-        self.actionsGrid.verticalAlign = EnumShapeVAlign.TOP
+        self.actionsGrid.verticalAlign = EnumShapeVAlign.NONE
         self.actionsGrid.stylesheet.cellSpace = 3
         self.actionsGrid.verticalBorder = self.stylesheet.radius / 2
         self.actionsGrid.horizontalBorder = self.stylesheet.radius / 2
-        self.actionsGrid.accept_child(IDENTITY_ALL)
         # initial entry actions
         _action_style = (EnumShapeStyleFlags.HOVERING |
                          EnumShapeStyleFlags.ALWAYS_INSIDE |
+                         EnumShapeStyleFlags.PROPAGATE_INTERACTIVE_CONNECTION |
                          EnumShapeStyleFlags.PROCESS_K_DEL |
                          EnumShapeStyleFlags.DISAPPEAR_WHEN_SMALL)
         self.entryActionElement.set_style(_action_style)
@@ -140,15 +147,10 @@ class SimpleStateElement(DiagramRoundRectElement):
 
     def post_init(self):
         self.initialize()
-        for x in self.get_child_shapes(EditableLabelElement,True):
+        for x in self.get_child_shapes(EditableLabelElement, True):
             x.update_rect_size()
-        print('**'*20+'initialize done')
         super().post_init()
         self.update_all()
-        #_leafs = self.get_leaf_shapes()
-        # todo: every layer update all its children then update parent!!!!!
-        # for x in _leafs:
-        #     x.update()
 
     def _draw_title_line(self, dc: wx.DC):
         _bb = self.get_boundingbox()

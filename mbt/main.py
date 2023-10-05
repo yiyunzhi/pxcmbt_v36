@@ -171,17 +171,19 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin, MBTApplication):
         # --------------------------------------------------------------
         _splash.set_message('loading solutions into context.')
         _mbt_solution_mgr = MBTSolutionsManager()
-        _mbt_solution_mgr.resolve_solutions(SOLUTIONS_PATH)
+        _slt_setups = _mbt_solution_mgr.resolve_solutions(SOLUTIONS_PATH)
         # add local image into artProvider.
         _solution_icon_files = dict()
         for k, v in _mbt_solution_mgr.solutions.items():
             _icon_path, _icon_name = v.iconInfo
             if _icon_path is not None:
                 _solution_icon_files.update({_icon_name: _icon_path})
+            v.run_setup(self)
         if _solution_icon_files:
             _solution_icon_repo = LocalIconRepoCategory(name='solution', files=_solution_icon_files)
             _mbt_art_provider.iconRepo.register(_solution_icon_repo)
         self.mbtSolutionManager = _mbt_solution_mgr
+
         # --------------------------------------------------------------
         # setup application main frame
         # --------------------------------------------------------------

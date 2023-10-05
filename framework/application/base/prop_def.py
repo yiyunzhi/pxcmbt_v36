@@ -23,8 +23,10 @@ import anytree
 
 
 class PropertyDef(anytree.NodeMixin):
+    CONSTANT = 'constant'
+
     def __init__(self, **kwargs):
-        self.object = kwargs.get('object')
+        self.object = kwargs.get('object', self.CONSTANT)
         self.setter = kwargs.get('setter')
         self.getter = kwargs.get('getter')
         self.value = kwargs.get('value')
@@ -36,11 +38,11 @@ class PropertyDef(anytree.NodeMixin):
         self.description = kwargs.get('description', '')
         self.editorInstance = None
         self.parent = kwargs.get('parent')
-        self._autoInit = kwargs.get('auto_init',False)
+        self._autoInit = kwargs.get('auto_init', False)
         _children = kwargs.get('children')
         if _children:
             self.children = _children
-        if self.value is None and self._autoInit:
+        if (self.value is None and self._autoInit) or self.object==self.CONSTANT:
             self._get()
 
     def __str__(self):
@@ -77,6 +79,8 @@ class PropertyDef(anytree.NodeMixin):
     def _set(self):
         if self.object is None:
             raise AssertionError('object is none')
+        if self.object == self.CONSTANT:
+            raise AssertionError('constant could not be set')
         if self.setter is None:
             return
 
@@ -96,7 +100,11 @@ class PropertyDef(anytree.NodeMixin):
 
     def _get(self):
         if self.object is None:
-            raise AssertionError('object is none')
+            raise AssertionError('%s: object is none' % self)
+        if self.object == self.CONSTANT:
+            if self.getter:
+                self.value=self.getter
+            return self.value
         if self.getter is None:
             return
         if isinstance(self.getter, str):

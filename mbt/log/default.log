@@ -5263,3 +5263,5 @@ AttributeError: 'NoneType' object has no attribute 'startswith'
 
 2023-08-21 15:24:36,130- ProjectExplorerManager- ERROR: can not execute reprofile node, since:
 'ProjectNodeProfile' object has no attribute 'name'
+2023-10-02 13:54:30,866- ProjectExplorerManager- ERROR: can not execute reprofile node, since:
+cannot unpack non-iterable NoneType object

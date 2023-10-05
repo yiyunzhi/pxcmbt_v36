@@ -25,7 +25,9 @@ from framework.application.io import AppYamlStreamer
 from framework.gui.wxgraph import (RoundRectShape,
                                    EditTextShape,
                                    GridShape,
+                                   CircleShape,
                                    RoundRectShapeStylesheet,
+                                   RectShapeStylesheet,
                                    TextShapeStylesheet,
                                    GridShapeStylesheet,
                                    CurveShape, GraphScene,
@@ -78,6 +80,39 @@ class DiagramGridElementStylesheet(GridShapeStylesheet, Serializable):
     def __init__(self, **kwargs):
         GridShapeStylesheet.__init__(self, **kwargs)
         self.size = kwargs.get('size', wx.Size(1, 1))
+
+
+class DiagramRectElementStylesheet(RectShapeStylesheet, Serializable):
+    serializeTag = '!DiagramRectElementStylesheet'
+
+    def __init__(self, **kwargs):
+        RectShapeStylesheet.__init__(self, **kwargs)
+        self.size = kwargs.get('size', wx.Size(1, 1))
+
+    @property
+    def serializer(self):
+        return {
+            'size': self.size,
+            'disappearSize': self.disappearSize,
+            'vAlign': self.vAlign,
+            'hAlign': self.hAlign,
+            'vBorder': self.vBorder,
+            'hBorder': self.hBorder,
+            'backgroundColor': self.backgroundColor,
+            'backgroundStyle': int(self.backgroundStyle),
+            'fillColor': self.fillColor,
+            'fillStyle': int(self.fillStyle),
+            'borderColor': self.borderColor,
+            'borderStyle': int(self.borderStyle),
+            'borderWidth': self.borderWidth,
+            'hoverColor': self.hoverColor,
+            'hoverStyle': int(self.hoverStyle),
+            'hoverBorderWidth': self.hoverBorderWidth,
+            'hoverBorderStyle': int(self.hoverBorderStyle),
+            'highlightedColor': self.highlightedColor,
+            'highlightedWidth': self.highlightedWidth,
+            'highlightedBorderStyle': int(self.highlightedBorderStyle),
+        }
 
 
 class DiagramRoundRectElementStylesheet(RoundRectShapeStylesheet, Serializable):
@@ -172,7 +207,7 @@ class EditableLabelElement(EditTextShape, Serializable):
                 'states': self.states,
                 'stylesheet': self.stylesheet,
                 'labelType': self._labelType,
-                'position': self.position,
+                'relativePosition': self.mRelativePosition,
                 'text': self.text
                 }
 
@@ -189,6 +224,15 @@ class DiagramRoundRectElement(RoundRectShape, Serializable):
         self.stylesheet = kwargs.get('stylesheet', DiagramRoundRectElementStylesheet())
 
 
+class DiagramCircleElement(CircleShape, Serializable):
+    serializeTag = '!DiagramCircleElement'
+
+    def __init__(self, **kwargs):
+        CircleShape.__init__(self, **kwargs)
+        self.states = kwargs.get('states', DiagramElementState())
+        self.stylesheet = kwargs.get('stylesheet', DiagramRectElementStylesheet())
+
+
 class DiagramCurveLineElement(CurveShape, Serializable):
     serializeTag = '!DiagramCurveLineElement'
 
@@ -202,6 +246,6 @@ class DiagramCurveLineElement(CurveShape, Serializable):
                 'states': self.states,
                 'stylesheet': self.stylesheet,
                 'points': self.points,
-                'position': self.position,
+                'relativePosition': self.mRelativePosition,
                 'children': self.children
                 }

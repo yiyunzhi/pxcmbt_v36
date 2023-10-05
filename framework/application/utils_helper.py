@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import ast, functools, json, decimal, gettext, pathlib
-import datetime
+import datetime,inspect
 import wx
 import os, sys, platform, math, uuid, bitstring, glob, re
 from collections import defaultdict
@@ -45,6 +45,13 @@ def util_iterable(obj):
     else:
         return True
 
+def util_get_object_props(obj):
+    _pr = {}
+    for name in dir(obj):
+        value = getattr(obj, name)
+        if not name.startswith('__') and not inspect.ismethod(value):
+            _pr[name] = value
+    return _pr
 
 def util_remove_folder(file_path):
     _pth = pathlib.Path(file_path)

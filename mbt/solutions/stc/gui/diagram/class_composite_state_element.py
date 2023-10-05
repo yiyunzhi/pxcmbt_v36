@@ -68,7 +68,7 @@ class CompositeStateElement(SimpleStateElement):
     def __init__(self, **kwargs):
         SimpleStateElement.__init__(self, **kwargs)
         self.titleElement.text = 'CompositeState'
-        self.regionSizer = ElementSizerShape(positionOffset=wx.RealPoint(0, 64), parent=self)
+        self.regionSizer = ElementSizerShape(relativePosition=wx.RealPoint(0, 64), parent=self)
         self.regionSizer.stylesheet.space = 0
         self.defaultRegion = RegionElement(parent=self.regionSizer)
         self.defaultRegion.stylesheet.fillColor = 'red'
@@ -106,7 +106,6 @@ class CompositeStateElement(SimpleStateElement):
     def update(self, **kwargs):
         # print(self.actionsGrid.relativePosition,self.actionsGrid.stylesheet.size)
         _y = self.actionsGrid.relativePosition.y + self.actionsGrid.stylesheet.size.y
-        self.regionSizer.positionOffset.y = _y
         super().update()
 
     def handle_child_dropped(self, pos: wx.RealPoint, child: 'WxShapeBase'):

@@ -19,6 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
+import anytree
 from .property_def_mgr import PropertyDefPageManager
 
 
@@ -51,3 +52,12 @@ class BasePropContainer:
             if _find:
                 _res.append((k, _find))
         return _res
+
+    def update(self):
+        for k, v in self._pages.items():
+            _l = anytree.findall(v.root)
+            for x in _l:
+                try:
+                    x.get_value()
+                except Exception as e:
+                    continue

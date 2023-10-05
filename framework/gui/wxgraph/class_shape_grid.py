@@ -33,6 +33,16 @@ class GridShapeStylesheet(RectShapeStylesheet):
         self.column = kwargs.get('column', 3)
         self.cellSpace = kwargs.get('cellSpace', 5)
 
+    @property
+    def cloneableAttributes(self):
+        _d = RectShapeStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'row': self.row,
+            'column': self.column,
+            'cellSpace': self.cellSpace
+        })
+        return _d
+
 
 class GridShape(RectShape):
     __identity__ = "GridShape"
@@ -43,6 +53,13 @@ class GridShape(RectShape):
         self.remove_style(EnumShapeStyleFlags.RESIZE)
         self.add_style(EnumShapeStyleFlags.DISABLE_DO_ALIGNMENT)
         self._cells = kwargs.get('cells', dict())
+
+    @property
+    def cloneableAttributes(self):
+        _d = RectShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'cells': self._cells
+        })
 
     def get_dimension(self):
         return self.stylesheet.row, self.stylesheet.column
@@ -79,7 +96,7 @@ class GridShape(RectShape):
         else:
             return -1
 
-    def append_to_grid(self, shape: WxShapeBase)->bool:
+    def append_to_grid(self, shape: WxShapeBase) -> bool:
         _last_row = self.lastRow
         if _last_row == -1:
             _last_row += 1
@@ -92,7 +109,7 @@ class GridShape(RectShape):
                 _last_col = 0
         return self.insert_to_grid(_last_row, _last_col, shape)
 
-    def insert_to_grid(self, row, col, shape: WxShapeBase)->bool:
+    def insert_to_grid(self, row, col, shape: WxShapeBase) -> bool:
         if shape is None or not isinstance(shape, WxShapeBase) or not self.is_child_accepted(shape.identity):
             return False
         if shape.uid in self._cells:
@@ -140,7 +157,7 @@ class GridShape(RectShape):
                                 _max_rect.GetHeight())
             self._fit_shape_to_rect(_shape, _trg_rect)
 
-    def update(self,**kwargs):
+    def update(self, **kwargs):
         # invalid ids
         _invalid_ids = list()
         for idd in self._cells.keys():
@@ -154,7 +171,7 @@ class GridShape(RectShape):
         if not self.has_style(EnumShapeStyleFlags.NO_FIT_TO_CHILDREN):
             self.fit_to_children()
         # do it recursively on all parent shapes
-        if self.parentShape and kwargs.get('update_parent',True): self.parentShape.update()
+        if self.parentShape and kwargs.get('update_parent', True): self.parentShape.update()
 
     def fit_to_children(self):
         _pos = self.absolutePosition
@@ -169,37 +186,37 @@ class GridShape(RectShape):
         self.stylesheet.size = wx.RealPoint(_bb.GetSize().x + 2 * self.stylesheet.cellSpace,
                                             _bb.GetSize().y + 2 * self.stylesheet.cellSpace)
 
-    def handle_child_dropped(self, pos:wx.RealPoint,child: 'WxShapeBase'):
+    def handle_child_dropped(self, pos: wx.RealPoint, child: 'WxShapeBase'):
         if child is not None and isinstance(child, WxShapeBase):
             self.append_to_grid(child)
 
     def _fit_shape_to_rect(self, shape: WxShapeBase, rect: wx.Rect):
         _bb = shape.get_boundingbox()
-        _prev_pos = shape.position
+        _prev_pos = shape.relativePosition
         _v_align = shape.verticalAlign
         if _v_align == EnumShapeVAlign.TOP:
-            shape.position = wx.RealPoint(_prev_pos.x, rect.GetTop() + shape.verticalBorder)
+            shape.relativePosition = wx.RealPoint(_prev_pos.x, rect.GetTop() + shape.verticalBorder)
         elif _v_align == EnumShapeVAlign.MIDDLE:
-            shape.position = wx.RealPoint(_prev_pos.x, rect.GetTop() + (rect.GetHeight() / 2 - _bb.GetHeight() / 2))
+            shape.relativePosition = wx.RealPoint(_prev_pos.x, rect.GetTop() + (rect.GetHeight() / 2 - _bb.GetHeight() / 2))
         elif _v_align == EnumShapeVAlign.BOTTOM:
-            shape.position = wx.RealPoint(_prev_pos.x, rect.GetBottom() - _bb.GetHeight() - shape.verticalBorder)
+            shape.relativePosition = wx.RealPoint(_prev_pos.x, rect.GetBottom() - _bb.GetHeight() - shape.verticalBorder)
         elif _v_align == EnumShapeVAlign.EXPAND:
             if shape.has_style(EnumShapeStyleFlags.RESIZE) or True:
-                shape.position = wx.RealPoint(_prev_pos.x, rect.GetTop() + shape.verticalBorder)
-                shape.scale(1.0, (rect.GetHeight() - 2 * shape.verticalBorder-shape.positionOffset.y) / _bb.GetHeight())
+                shape.relativePosition = wx.RealPoint(_prev_pos.x, rect.GetTop() + shape.verticalBorder)
+                shape.scale(1.0, (rect.GetHeight() - 2 * shape.verticalBorder) / _bb.GetHeight())
         else:
-            shape.position = wx.RealPoint(_prev_pos.x, rect.GetTop())
-        _prev_pos = shape.position
+            shape.relativePosition = wx.RealPoint(_prev_pos.x, rect.GetTop())
+        _prev_pos = shape.relativePosition
         _h_align = shape.horizontalAlign
         if _h_align == EnumShapeHAlign.LEFT:
-            shape.position = wx.RealPoint(rect.GetLeft() + shape.horizontalBorder, _prev_pos.y)
+            shape.relativePosition = wx.RealPoint(rect.GetLeft() + shape.horizontalBorder, _prev_pos.y)
         elif _h_align == EnumShapeHAlign.CENTER:
-            shape.position = wx.RealPoint(rect.GetLeft() + rect.GetWidth() / 2 - _bb.GetWidth() / 2, _prev_pos.y)
+            shape.relativePosition = wx.RealPoint(rect.GetLeft() + rect.GetWidth() / 2 - _bb.GetWidth() / 2, _prev_pos.y)
         elif _h_align == EnumShapeHAlign.RIGHT:
-            shape.position = wx.RealPoint(rect.GetRight() - _bb.GetWidth() - shape.horizontalBorder, _prev_pos.y)
+            shape.relativePosition = wx.RealPoint(rect.GetRight() - _bb.GetWidth() - shape.horizontalBorder, _prev_pos.y)
         elif _h_align == EnumShapeHAlign.EXPAND:
             if shape.has_style(EnumShapeStyleFlags.RESIZE) or True:
-                shape.position = wx.RealPoint(rect.GetLeft() + shape.horizontalBorder, _prev_pos.y)
-                shape.scale((rect.GetWidth() - 2 * shape.horizontalBorder-shape.positionOffset.x) / _bb.GetWidth(), 1.0)
+                shape.relativePosition = wx.RealPoint(rect.GetLeft() + shape.horizontalBorder, _prev_pos.y)
+                shape.scale((rect.GetWidth() - 2 * shape.horizontalBorder) / _bb.GetWidth(), 1.0)
         else:
-            shape.position = wx.RealPoint(rect.GetLeft(),_prev_pos.y)
+            shape.relativePosition = wx.RealPoint(rect.GetLeft(), _prev_pos.y)

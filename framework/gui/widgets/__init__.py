@@ -25,3 +25,5 @@ from .panel_olv_selector import OLVSelectorPanel
 from .panel_ex_hyperlink import ExHyperLinkWidget
 from .panel_header import HeaderPanel
 from .panel_wizard_page import ZWizardPage
+from .panel_caption_bar import CaptionBarStyle,StaticCaptionBar
+from .widget_ex_bars import ExtAuiToolbar,ExtStatusBar

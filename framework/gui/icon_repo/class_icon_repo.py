@@ -76,7 +76,7 @@ class LocalIconRepoCategory(IconRepoCategory):
         if _name is None or _name not in self._files:
             return wx.NullBitmap
         _color = kwargs.get('color')
-        _size: wx.Size = kwargs.get('size')
+        _size: wx.Size = kwargs.get('size',wx.Size(-1,-1))
         _w, _h = _size.GetWidth(), _size.GetHeight()
         if _w == -1:
             _w = 16
@@ -92,8 +92,14 @@ class LocalIconRepoCategory(IconRepoCategory):
         if _ext.lower() == '.svg':
             _img: wsvg.SVGimage = wsvg.SVGimage.CreateFromFile(_path)
             _bmp = _img.ConvertToScaledBitmap(wx.Size(_w, _h))
-        else:
+        elif _ext.lower()=='.xpm':
+            _bmp = wx.Bitmap(_path, wx.BITMAP_TYPE_XPM)
+            _bmp.Rescale(_bmp, wx.Size(_w, _h))
+        elif _ext.lower()=='.png':
             _bmp = wx.Bitmap(_path, wx.BITMAP_TYPE_PNG)
+            _bmp.Rescale(_bmp, wx.Size(_w, _h))
+        else:
+            _bmp = wx.Bitmap(_path, wx.BITMAP_TYPE_ANY)
             _bmp.Rescale(_bmp,wx.Size(_w,_h))
         self._cache.update({_cache_key: _bmp})
         return wx.Bitmap(_bmp)

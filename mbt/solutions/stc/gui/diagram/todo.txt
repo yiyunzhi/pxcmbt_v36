@@ -1,4 +1,7 @@
 done: multselection part of parent should select parent. add style :Propgation the selection.
 done: not hovered and not selcted
+todo: region and region divider algorithm
+done: index element in factory use __identity__
 
 https://www.ibm.com/docs/en/engineering-lifecycle-management-suite/design-rhapsody/8.4.0?topic=statecharts-drawing-lines
+

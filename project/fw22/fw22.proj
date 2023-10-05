@@ -1,0 +1,127 @@
+meta: !ProjectMeta
+  fileResolverVersion: 1.0.0
+  DBfileExt: .ioz
+perspective: null
+project:
+  children:
+  - children:
+    - profile: !Profile
+        name: Prototypes
+        description: no description
+      role: 0-1-0
+      sorter: 0
+      stereotype: node/native
+      stereotypeQuery: {}
+      uuid: c6a78a6c
+    - children:
+      - profile: !Profile
+          name: Behaviour
+          description: description of Behaviour
+        role: 0-1-1-0
+        sorter: 0
+        stereotype: node/solution
+        stereotypeQuery:
+          name: stc
+          uid: 12aab13d-bbae-4092-9ace-fb4c996293fd
+        uuid: 7e5d7af0
+      profile: !Profile
+        name: Behaviours
+        description: no description
+      role: 0-1-1
+      sorter: 0
+      stereotype: node/native
+      stereotypeQuery: {}
+      uuid: 4374b4a0
+    profile: !Profile
+      name: Model
+      description: no description
+    role: 0-1
+    sorter: 0
+    stereotype: node/workbenchRoot
+    stereotypeQuery: {}
+    uuid: wb_model_v1
+  - children:
+    - children:
+      - children:
+        - profile: !Profile
+            name: setting
+            description: no description
+          role: 0-2-0-0-0
+          sorter: 0
+          stereotype: node/native
+          stereotypeQuery: {}
+          uuid: b99097d1
+        - profile: !Profile
+            name: result
+            description: no description
+          role: 0-2-0-0-1
+          sorter: 0
+          stereotype: node/native
+          stereotypeQuery: {}
+          uuid: 0ab242c7
+        profile: !Profile
+          name: defaultTestCase
+          description: no description
+        role: 0-2-0-0
+        sorter: 0
+        stereotype: node/native
+        stereotypeQuery: {}
+        uuid: 75b1781c
+      profile: !Profile
+        name: TestCases
+        description: no description
+      role: 0-2-0
+      sorter: 0
+      stereotype: node/native
+      stereotypeQuery: {}
+      uuid: 19f63e0e
+    - children:
+      - profile: !Profile
+          name: newEnv
+          description: no description
+        role: 0-2-1-0
+        sorter: 0
+        stereotype: node/native
+        stereotypeQuery: {}
+        uuid: 1d1f1610
+      profile: !Profile
+        name: TestEnvs
+        description: no description
+      role: 0-2-1
+      sorter: 0
+      stereotype: node/native
+      stereotypeQuery: {}
+      uuid: d7bdee6e
+    - children:
+      - profile: !Profile
+          name: TestRun
+          description: no description
+        role: 0-2-2-0
+        sorter: 0
+        stereotype: node/native
+        stereotypeQuery: {}
+        uuid: 2e3b148b
+      profile: !Profile
+        name: TestRuns
+        description: no description
+      role: 0-2-2
+      sorter: 0
+      stereotype: node/native
+      stereotypeQuery: {}
+      uuid: 3bedb98f
+    profile: !Profile
+      name: Tester
+      description: no description
+    role: 0-2
+    sorter: 0
+    stereotype: node/workbenchRoot
+    stereotypeQuery: {}
+    uuid: wb_test_v1
+  profile: !Profile
+    name: Project
+    description: no description
+  role: '0'
+  sorter: 0
+  stereotype: node/native
+  stereotypeQuery: {}
+  uuid: __root__

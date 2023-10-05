@@ -41,7 +41,7 @@ class SquareShape(RectShape):
                 _s = x
             else:
                 _s = y
-            self.set_rect_size(self.stylesheet.size.x * _s, self.stylesheet.y * _s)
+            self.set_rect_size(self.stylesheet.size.x * _s, self.stylesheet.size.y * _s)
             super().scale(x, y, children)
 
     def handle_handle(self, handle: HandleShapeObject):

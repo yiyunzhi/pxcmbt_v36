@@ -38,6 +38,5 @@ class MBTSolutionScanner:
             _spec = importlib.util.spec_from_file_location('SOLUTION_PKG_%s' % _dir_name, p.resolve())
             _module = importlib.util.module_from_spec(_spec)
             _spec.loader.exec_module(_module)
-            if hasattr(_module, 'SOLUTION_DEF'):
-                _res.update({p: (_module, _module.SOLUTION_DEF)})
+            _res.update({p: _module})
         return True, _res

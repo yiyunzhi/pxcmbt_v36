@@ -248,6 +248,13 @@ class RoundOrthoLineShapeStylesheet(WxShapeBaseStylesheet):
         WxShapeBaseStylesheet.__init__(self, **kwargs)
         self.maxRadius = kwargs.get('maxRadius', 7)
 
+    @property
+    def cloneableAttributes(self):
+        _d = WxShapeBaseStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'maxRadius': self.maxRadius
+        })
+        return _d
 
 class RoundOrthoLineShape(OrthoLineShape):
     def __init__(self, **kwargs):

@@ -105,6 +105,14 @@ class EditTextShape(TextShape):
         self._forceMultiline = kwargs.get('forceMultiline', False)
         self._editType = kwargs.get('editType', EnumEditType.INPLACE)
 
+    @property
+    def cloneableAttributes(self):
+        _d = TextShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'editType': self._editType,
+            'forceMultiline': self._forceMultiline,
+        })
+
     def start_edit(self):
         if self.view:
             _pos = self.absolutePosition

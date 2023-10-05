@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import wx
 from .class_graphview import GraphView
-from .define import EnumPrintMode, EnumShapeHAlign, EnumShapeVAlign, EnumGraphViewStyleFlag
+from .define import EnumPrintMode, EnumHAlignFunction, EnumVAlignFunction, EnumGraphViewStyleFlag
 
 
 class WxGraphPrintoutException(Exception): pass
@@ -32,22 +32,22 @@ class WxGraphPrintout(wx.Printout):
         wx.Printout.__init__(self, title)
         self.view = view
 
-    def HasPage(self, pageNum):
-        return pageNum == 1
+    def HasPage(self, page_num):
+        return page_num == 1
 
-    def OnBeginDocument(self, startPage, endPage):
-        return super().OnBeginDocument(startPage, endPage)
+    def OnBeginDocument(self, start_page, end_page):
+        return super().OnBeginDocument(start_page, end_page)
 
     def OnEndDocument(self):
         super().OnEndDocument()
 
-    def OnPrintPage(self, pageNum):
-        if self.view is None:
-            raise WxGraphPrintoutException('no graphview bound.')
+    def OnPrintPage(self, page_num):
         _dc = self.GetDC()
-        if _dc:
+        if _dc and self.view:
             # get grawing size
             _fit_rect = _total_bb = self.view.get_total_boundingbox()
+            if _total_bb.IsEmpty():
+                _total_bb=_total_bb.Inflate(100,100)
             _maxx = _total_bb.GetRight()
             _maxy = _total_bb.GetBottom()
             # set print mode
@@ -78,13 +78,13 @@ class WxGraphPrintout(wx.Printout):
             _y_offset = (_fit_rect.height - _maxy - _total_bb.GetTop()) / 2 - _fit_rect.y
             _print_h_align = self.view.setting.printHAlign
             _print_v_align = self.view.setting.printVAlign
-            if _print_h_align == EnumShapeHAlign.LEFT:
+            if _print_h_align == EnumHAlignFunction.LEFT:
                 _x_offset = 0
-            elif _print_h_align == EnumShapeHAlign.RIGHT:
+            elif _print_h_align == EnumHAlignFunction.RIGHT:
                 _x_offset = _fit_rect.width - _total_bb.GetWidth()
-            if _print_v_align == EnumShapeVAlign.TOP:
+            if _print_v_align == EnumVAlignFunction.TOP:
                 _y_offset = 0
-            elif _print_v_align == EnumShapeVAlign.BOTTOM:
+            elif _print_v_align == EnumVAlignFunction.BOTTOM:
                 _y_offset = _fit_rect.height - _total_bb.GetHeight()
 
             self.OffsetLogicalOrigin(_x_offset, _y_offset)
@@ -105,6 +105,9 @@ class WxGraphPrintout(wx.Printout):
             if not self.view.has_style(EnumGraphViewStyleFlag.PRINT_BACKGROUND):
                 self.view.set_style(_prev_style)
                 self.view.setting.backgroundColor = _prev_color
+            return True
+        else:
+            return False
 
     def GetPageInfo(self):
         return 1, 1, 1, 1

@@ -70,9 +70,14 @@ class ConnectionPointShapeObject(DrawObject):
         self.type = kwargs.get('type', EnumCPType.UNDEF)
         self.orientDir = kwargs.get('orientDir', EnumCPOrientDir.UNDEF)
         self.actionProxy = CPActionProxy(self)
+
     @property
-    def relativePosition(self):
-        return self.position+self.positionOffset
+    def cloneableAttributes(self):
+        _d = DrawObject.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'type': self.type,
+            'orientDir': self.orientDir
+        })
     @property
     def connectionPoint(self) -> wx.RealPoint:
         _pt = wx.RealPoint(0, 0)

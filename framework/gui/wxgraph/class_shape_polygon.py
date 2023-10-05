@@ -30,7 +30,16 @@ class PolygonStylesheet(RectShapeStylesheet):
     def __init__(self, **kwargs):
         RectShapeStylesheet.__init__(self, **kwargs)
         self.connectToVertex = kwargs.get('connectToVertex', True)
+        self.vertices=kwargs.get('vertices', list())
 
+    @property
+    def cloneableAttributes(self):
+        _d = RectShapeStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'connectToVertex': self.connectToVertex,
+            'vertices': self.vertices
+        })
+        return _d
 
 class PolygonShape(RectShape):
     __identity__ = "PolygonShape"
@@ -39,15 +48,14 @@ class PolygonShape(RectShape):
         RectShape.__init__(self, **kwargs)
         self.stylesheet = kwargs.get('stylesheet', PolygonStylesheet())
         # auxiliary variables
-        self._vertices = kwargs.get('vertices', list())
 
     @property
     def vertices(self):
-        return self._vertices
+        return self.stylesheet.vertices
 
     @vertices.setter
     def vertices(self, vertices: list):
-        self._vertices = vertices
+        self.stylesheet.vertices = vertices
         self.normalize_vertices()
         self.fit_boundingbox_to_vertices()
 
@@ -85,34 +93,36 @@ class PolygonShape(RectShape):
 
     def fit_to_children(self):
         super().fit_to_children()
-        self.fit_boundingbox_to_vertices()
+        self.fit_vertices_to_boundingbox()
 
     def scale(self, x: float, y: float, children: bool = True) -> None:
         self.stylesheet.size.x *= x
         self.stylesheet.size.y *= y
-        self.fit_boundingbox_to_vertices()
+        self.fit_vertices_to_boundingbox()
         super().scale(x, y, children)
 
     def handle_handle(self, handle: HandleShapeObject):
         super().handle_handle(handle)
-        self.fit_boundingbox_to_vertices()
+        self.fit_vertices_to_boundingbox()
 
     def get_extents(self):
         _minx, _miny, _maxx, _maxy = 0, 0, 0, 0
         if self.vertices:
+            _minx=_maxx=self.vertices[0].x
+            _miny=_maxy=self.vertices[0].y
             _lst_x = [x.x for x in self.vertices]
             _lst_y = [x.y for x in self.vertices]
-            _minx = min(_lst_x)
-            _miny = min(_lst_y)
-            _maxx = max(_lst_x)
-            _maxy = max(_lst_y)
+            _minx = min(_minx,min(_lst_x))
+            _miny = min(_miny,min(_lst_y))
+            _maxx = max(_maxx,max(_lst_x))
+            _maxy = max(_maxy,max(_lst_y))
         return _minx, _miny, _maxx, _maxy
 
     def get_translated_vertices(self) -> list:
         _abs_pos = self.absolutePosition
         _pts = []
         for x in self.vertices:
-            _pts.append(_abs_pos + x)
+            _pts.append(wx.Point(_abs_pos + x))
         return _pts
 
     def normalize_vertices(self):
@@ -158,11 +168,17 @@ class PolygonShape(RectShape):
             dc.SetPen(wx.NullPen)
         elif _state == EnumDrawObjectState.SHADOWED:
             dc.SetPen(wx.TRANSPARENT_PEN)
-            dc.SetBrush(wx.Brush(self.view.shapeShadowFillColor, self.view.shapeShadowFillStyle))
-            _offset = self.view.shapeShadowOffset
+            dc.SetBrush(self.view.setting.shadowBrush)
+            _offset = self.view.setting.shadowOffset
             self.move_by(_offset.x, _offset.y)
             self.draw_shape(dc)
             self.move_by(-_offset.x, -_offset.y)
+            dc.SetBrush(wx.NullBrush)
+            dc.SetPen(wx.NullPen)
+        elif _state==EnumDrawObjectState.SELECTED:
+            if self.has_style(EnumShapeStyleFlags.SHOW_HANDLES):
+                for x in self.handles:
+                    x.draw(dc)
             dc.SetBrush(wx.NullBrush)
             dc.SetPen(wx.NullPen)
         else:
@@ -171,3 +187,4 @@ class PolygonShape(RectShape):
             self.draw_shape(dc)
             dc.SetBrush(wx.NullBrush)
             dc.SetPen(wx.NullPen)
+

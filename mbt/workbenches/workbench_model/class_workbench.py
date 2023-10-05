@@ -57,9 +57,32 @@ class ModelWorkbench(MBTProjectOrientedWorkbench):
                                          role=EnumProjectItemRole.PROTOTYPE_SKETCH.value,
                                          stereotype_uri=_model_stereotype_uri,
                                          item_class=ProjectNodeEditorTypeFactoryItem)
+        _app = wx.App.GetInstance()
+        for k, v in _app.mbtSolutionManager.solutions.items():
+            if v.viewManagerClass is not None:
+                _slt_stereotype_uri = ProjectTreeNode.get_node_stereotype_uri(self.uid,
+                                                                              ProjectTreeNode.NODE_ST_SOLUTION,
+                                                                              name=v.type_,
+                                                                              uid=v.uuid)
+                self.editorFactory.register_with('ModelBehaviourEditor/%s' % v.name,
+                                                 v.viewManagerClass,
+                                                 wb_uid=self.uid,
+                                                 role=EnumProjectItemRole.BEHAVIOUR.value,
+                                                 stereotype_uri=_slt_stereotype_uri,
+                                                 item_class=ProjectNodeEditorTypeFactoryItem)
 
     def _do_find_this_child_by_uid(self, uid):
         return Project.find(self.rootNode, lambda x: x.uuid == uid.uid)
+
+    def _update_solution_node_icon(self):
+        _slt_nodes = self.viewManager.find_all(self.rootNode, lambda x: x.stereotype == ProjectTreeNode.NODE_ST_SOLUTION)
+        _app = wx.App.GetInstance()
+        for x in _slt_nodes:
+            _slt_uid = x.stereotypeQuery.get('uid')
+            if _slt_uid:
+                _slt = _app.mbtSolutionManager.get_solution_by_uuid(_slt_uid)
+                if _slt:
+                    x.icon = _slt.iconInfo[1]
 
     def setup(self, project: Project):
         _ret = super().setup(project)
@@ -68,6 +91,7 @@ class ModelWorkbench(MBTProjectOrientedWorkbench):
             self.viewManager = MBTModelWorkbenchViewManager(uid=self.uid, workbench=self, undo_stack=_root_undo_stack)
             self.viewManager.parent = self.project.contentManager.manager
             self.viewManager.setup()
+            self._update_solution_node_icon()
         return _ret
 
     def get_role_name(self, role: str) -> str:

@@ -29,7 +29,8 @@ class CategoryPropertyDef(PropertyDef):
 class ArrayStringPropertyDef(PropertyDef):
     def __init__(self, **kwargs):
         PropertyDef.__init__(self, **kwargs)
-        assert isinstance(self.value, list)
+        if self.value is not None:
+            assert isinstance(self.value, list)
         self.editor = wxpg.ArrayStringProperty
 
     def get_editor_instance(self):
@@ -131,6 +132,8 @@ class FlagsPropertyDef(PropertyDef):
         self.editor = wxpg.FlagsProperty
 
     def get_editor_instance(self):
+        if not self.value:
+            self.get_value()
         self.editorInstance = self.editor(self.label, self.name, self.labels, self.values, self.value)
         if not self.options:
             self.editorInstance.SetAttribute('Bool_with_Checkbox', True)
@@ -272,7 +275,7 @@ class XYPropertyDef(PropertyDef):
         if val is None:
             return
         if self.editorInstance is not None:
-            if not isinstance(val, wx.Point):
+            if not isinstance(val, (wx.Point,wx.RealPoint)):
                 self.editorInstance.SetValue(wx.Point(*val))
             else:
                 self.editorInstance.SetValue(val)

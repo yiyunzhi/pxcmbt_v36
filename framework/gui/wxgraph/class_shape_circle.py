@@ -69,3 +69,15 @@ class CircleShape(SquareShape):
             dc.DrawCircle(int(_pos.x + self.stylesheet.size.x / 2) + _sx, int(_pos.y + self.stylesheet.size.y / 2) + _sy, int(self.stylesheet.size.x / 2))
             dc.SetBrush(wx.NullBrush)
             dc.SetPen(wx.NullPen)
+        elif _state==EnumDrawObjectState.SELECTED:
+            dc.SetPen(wx.Pen(self.stylesheet.hoverColor, self.stylesheet.hoverBorderWidth))
+            dc.SetBrush(wx.Brush(self.stylesheet.backgroundColor, self.stylesheet.backgroundStyle))
+            dc.DrawCircle(int(_pos.x + self.stylesheet.size.x / 2), int(_pos.y + self.stylesheet.size.y / 2), int(self.stylesheet.size.x / 2))
+            dc.SetBrush(wx.NullBrush)
+            dc.SetPen(wx.NullPen)
+        else:
+            dc.SetPen(wx.Pen(self.stylesheet.borderColor, self.stylesheet.borderWidth))
+            dc.SetBrush(wx.Brush(self.stylesheet.backgroundColor, self.stylesheet.backgroundStyle))
+            dc.DrawCircle(int(_pos.x + self.stylesheet.size.x / 2), int(_pos.y + self.stylesheet.size.y / 2), int(self.stylesheet.size.x / 2))
+            dc.SetBrush(wx.NullBrush)
+            dc.SetPen(wx.NullPen)

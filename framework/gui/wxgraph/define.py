@@ -23,6 +23,8 @@ DEFAULT_ME_OFFSET = 5
 
 IDENTITY_ALL = 'ALL'
 
+BASE_SHAPE_DOCK_POINT = -3
+
 
 class EnumHandleType:
     LEFT_TOP = 0

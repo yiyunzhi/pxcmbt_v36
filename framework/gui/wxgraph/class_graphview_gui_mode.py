@@ -72,7 +72,8 @@ class BaseGUIMode:
         self.graphView.SetCursor(wx.NullCursor)
 
     def reset(self):
-        pass
+        self.selectionShape.hide()
+        self.multiEditShape.hide()
 
     def on_scene_updated(self):
         self.selectionShape.scene = self.graphView.scene
@@ -159,7 +160,7 @@ class BaseGUIMode:
                             self.graphView.deselect_all()
                         self.selectionShape.show()
                         self.selectionShape.show_handles(False)
-                        self.selectionShape.position = self.selectionStartPos
+                        self.selectionShape.relativePosition = self.selectionStartPos
                         self.selectionShape.set_rect_size(0, 0)
                         self.workingState = EnumGraphViewWorkingState.MULTISELECTION
                     else:
@@ -211,13 +212,13 @@ class BaseGUIMode:
                         # inform user that the line is completed
                         _ret = self.graphView.on_pre_connection_finished(self.newLineShape)
                         if _ret == EnumConnectionFinishedState.FAILED_CANCELED:
-                            self.newLineShape.dstShapeId = -1
+                            self.newLineShape.dstShapeId = None
                             self.graphView.scene.remove_shape(self.newLineShape)
                             self.workingState = EnumGraphViewWorkingState.READY
                             self.newLineShape = None
                             return
                         elif _ret == EnumConnectionFinishedState.FAILED_AND_CONTINUE_EDIT:
-                            self.newLineShape.dstShapeId = -1
+                            self.newLineShape.dstShapeId = None
                             return
                         self.newLineShape.create_handles()
                         self.newLineShape.lineMode = EnumLineMode.READY
@@ -228,7 +229,7 @@ class BaseGUIMode:
                         self.newLineShape = None
                         self.graphView.save_view_state()
             else:
-                if self.newLineShape.srcShapeId != -1:
+                if self.newLineShape.srcShapeId is not None:
                     self.newLineShape.points.append(wx.RealPoint(self.graphView.fit_position_to_grid(_l_pos)))
         else:
             self.workingState = EnumGraphViewWorkingState.READY
@@ -493,7 +494,7 @@ class BaseGUIMode:
             if _sel_size.y < 0:
                 _sel_pos.y += _sel_size.y
                 _sel_size.y = -_sel_size.y
-            self.selectionShape.position = _sel_pos
+            self.selectionShape.relativePosition = _sel_pos
             self.selectionShape.set_rect_size(_sel_size.x, _sel_size.y)
             self.graphView.invalidate_visible_rect()
         self.graphView.refresh_invalidate_rect()
@@ -746,18 +747,21 @@ class BaseGUIMode:
                 if isinstance(shp, LineShape) and not shp.isStandalone:
                     shp.draw(dc, False)
 
-    def start_interactive_connection(self, shape_type: type, pos: wx.Point, connection_point: 'ConnectionPointShape' = None) -> int:
+    def start_interactive_connection(self, line_shape_type: type, pos: wx.Point, connection_point: 'ConnectionPointShape' = None,start_shape:WxShapeBase=None) -> int:
         if self.graphView is None or self.graphView.scene is None:
             return EnumInteractionErrorCode.INVALID_INPUT
         _l_pos = self.graphView.dp2lp(pos)
-        if self.workingState == EnumGraphViewWorkingState.READY and issubclass(shape_type, LineShape):
-            _shape_under = self.graphView.get_shape_at_position(pos)
+        if self.workingState == EnumGraphViewWorkingState.READY and issubclass(line_shape_type, LineShape):
+            if start_shape is not None:
+                _shape_under=start_shape
+            else:
+                _shape_under = self.graphView.get_shape_at_position(pos)
             # propagate request for interactive connection if requested
             while _shape_under is not None and _shape_under.has_style(EnumShapeStyleFlags.PROPAGATE_INTERACTIVE_CONNECTION):
                 _shape_under = _shape_under.parentShape
             # start the connection's creation process if possible
-            if _shape_under and _shape_under.uid is not None and _shape_under.is_connection_accepted(shape_type.identity):
-                _ls = shape_type()
+            if _shape_under and _shape_under.uid is not None and _shape_under.is_connection_accepted(line_shape_type.identity):
+                _ls = line_shape_type()
                 _ret, _res = self.graphView.scene.add_shape(_ls, pos=_l_pos, save_state=False)
                 if not _ret:
                     return EnumInteractionErrorCode.NOT_CREATED

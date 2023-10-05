@@ -27,10 +27,18 @@ from .utils import *
 
 class DiamondShape(PolygonShape):
     __identity__ = "DiamondShape"
+
     def __init__(self, **kwargs):
         PolygonShape.__init__(self, **kwargs)
         self.vertices = kwargs.get('vertices', [wx.RealPoint(0, 25), wx.RealPoint(50.0),
                                                 wx.RealPoint(100, 25), wx.RealPoint(50, 50)])
+
+    @property
+    def cloneableAttributes(self):
+        _d = PolygonShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'vertices': self.vertices
+        })
 
     def contains(self, pos: wx.Point) -> bool:
         _bb = self.get_boundingbox()

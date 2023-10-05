@@ -34,8 +34,22 @@ class RectShapeStylesheet(WxShapeBaseStylesheet):
 
         self.fillColor = kwargs.get('fillColor', '#ffffff')
         self.fillStyle = kwargs.get('fillStyle', wx.BRUSHSTYLE_SOLID)
-        self.disappearSize=kwargs.get('disappearSize',5)
+        self.disappearSize = kwargs.get('disappearSize', 5)
 
+    @property
+    def cloneableAttributes(self):
+        if isinstance(self.size,wx.RealPoint):
+            _size=wx.Size(self.size.x,self.size.y)
+        else:
+            _size=wx.Size(self.size)
+        _d = WxShapeBaseStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'size': _size,
+            'disappearSize': self.disappearSize,
+            'fillColor': self.fillColor,
+            'fillStyle': self.fillStyle
+        })
+        return _d
 
 class RectShape(WxShapeBase):
     __identity__ = "RectShape"
@@ -43,8 +57,14 @@ class RectShape(WxShapeBase):
     def __init__(self, **kwargs):
         WxShapeBase.__init__(self, **kwargs)
         self.stylesheet = kwargs.get('stylesheet', RectShapeStylesheet())
-        self.prevPosition = self.position
+        self.prevPosition = self.relativePosition
         self.prevSize = self.stylesheet.size
+
+    def clone(self):
+        _c = super().clone()
+        _c.prevPosition = self.prevPosition
+        _c.prevSize = self.prevSize
+        return _c
 
     def get_boundingbox(self) -> wx.Rect:
         _pos = self.absolutePosition
@@ -80,8 +100,8 @@ class RectShape(WxShapeBase):
                 self.stylesheet.size = wx.Size(_rect.GetSize())
                 if _dx < 0 or _dy < 0:
                     for x in self.children:
-                        if _dx < 0: x.move_by(abs(int(_dx)), 0,False)
-                        if _dy < 0: x.move_by(0, abs(int(_dy)),False)
+                        if _dx < 0: x.move_by(abs(int(_dx)), 0, False)
+                        if _dy < 0: x.move_by(0, abs(int(_dy)), False)
 
     def get_border_point(self, start: wx.RealPoint, end: wx.RealPoint) -> wx.RealPoint:
         _bb = self.get_boundingbox()
@@ -153,7 +173,7 @@ class RectShape(WxShapeBase):
                 if x.horizontalAlign == EnumShapeHAlign.NONE:
                     x.move_by(-_dx, 0)
         self.stylesheet.size.x -= _dx
-        self.position.x += _dx
+        self.relativePosition.x += _dx
 
     def handle_right_handle(self, handle: HandleShapeObject):
         self.stylesheet.size.x += handle.delta.x
@@ -165,7 +185,7 @@ class RectShape(WxShapeBase):
                 if x.horizontalAlign == EnumShapeHAlign.NONE:
                     x.move_by(0, -_dy)
         self.stylesheet.size.y -= _dy
-        self.position.y += _dy
+        self.relativePosition.y += _dy
 
     def handle_bottom_handle(self, handle: HandleShapeObject):
         self.stylesheet.size.y += handle.delta.y
@@ -214,6 +234,13 @@ class RoundRectShapeStylesheet(RectShapeStylesheet):
         RectShapeStylesheet.__init__(self, **kwargs)
         self.radius = kwargs.get('radius', 20)
 
+    @property
+    def cloneableAttributes(self):
+        _d = RectShapeStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'radius': self.radius
+        })
+        return _d
 
 class RoundRectShape(RectShape):
     def __init__(self, **kwargs):

@@ -85,7 +85,7 @@ class MBTModelWorkbenchViewManager(MBTBaseWorkbenchViewManager):
             _wz_options['title'] = 'New%sNode' % role_name
             _wz_options['profile_content'] = _init_param['profile']
             _solution_choice = False
-
+            _wb_uid = parent.workbenchUid
             if child_role == EnumProjectItemRole.BEHAVIOUR.value:
                 _solution_choice = True
                 _app = wx.App.GetInstance()
@@ -104,10 +104,13 @@ class MBTModelWorkbenchViewManager(MBTBaseWorkbenchViewManager):
                 if _solution_choice:
                     _slt_uid, _slt_typ = _slts[_res['selected']]
                     _res['icon'] = _bmps[_res['selected']]
-                    _res.update({'stereotypeUri': util_generate_uri(ProjectTreeNode.NODE_STEREOTYPE_URI_SCHEME,
-                                                                    uri_netloc='solution',
-                                                                    name=_slt_typ,
-                                                                    uid=_slt_uid)})
+                    _res.update({
+                        'stereotype': ProjectTreeNode.NODE_ST_SOLUTION,
+                        'stereotypeQuery': {
+                            'name': _slt_typ,
+                            'uid': _slt_uid,
+                        }
+                    })
                     _res.pop('selected')
                 _res['profile'] = ProjectNodeProfile(**_res['profile'])
                 _res['role'] = child_role

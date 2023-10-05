@@ -39,6 +39,20 @@ class TextShapeStylesheet(RectShapeStylesheet):
         self._lineHeight = self.fontSize
 
     @property
+    def cloneableAttributes(self):
+        _d = RectShapeStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'fontFamily': self.fontFamily,
+            'fontStyle': self.fontStyle,
+            'fontWeight': self.fontWeight,
+            'fontUnderline': self.fontUnderline,
+            'fontSize': self.fontSize,
+            'textColor': self.textColor,
+            'showBox': self.showBox,
+        })
+        return _d
+
+    @property
     def font(self):
         return wx.Font(self.fontSize, self.fontFamily, self.fontStyle, self.fontWeight, self.fontUnderline)
 
@@ -77,7 +91,7 @@ class TextShape(RectShape, BasicTextShape):
         self.update_rect_size()
         super().post_init()
 
-    def update(self,**kwargs):
+    def update(self, **kwargs):
         self.update_rect_size()
         super().update(**kwargs)
 

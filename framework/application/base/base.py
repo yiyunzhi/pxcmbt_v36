@@ -45,6 +45,7 @@ def singleton(cls):
 def is_singleton_object(obj):
     return obj.__name__ == 'get_instance'
 
+
 class ClassProperty:
 
     def __init__(self, f):
@@ -52,6 +53,7 @@ class ClassProperty:
 
     def __get__(self, instance, owner):
         return self.f(owner)
+
 
 class YAMLObjectMetaclass(type):
     """
@@ -140,12 +142,6 @@ class Serializable(YAMLObject):
         # print('---from yaml called',loader,node)
         _fields = loader.construct_mapping(node, deep=True)
         return cls(**_fields)
-
-
-class Cloneable:
-    @abstractmethod
-    def clone(self):
-        pass
 
 
 class ChangeDetectable:
@@ -335,7 +331,7 @@ class ContentableMinxin:
 
 
 class BasicProfile:
-    def __init__(self, name:str, description:str):
+    def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
 
@@ -389,3 +385,12 @@ class NodeContent(Serializable):
 
     def get(self, k: str):
         return self._attrs.get(k)
+
+
+class Cloneable:
+    @property
+    def cloneableAttributes(self):
+        return {}
+
+    def clone(self, *args, **kwargs):
+        raise NotImplementedError

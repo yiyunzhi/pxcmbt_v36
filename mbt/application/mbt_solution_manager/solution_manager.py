@@ -44,7 +44,7 @@ class MBTSolutionsManager:
     def add_solution(self, solution: MBTSolution):
         _k = solution.key
         if _k in self.solutions:
-            raise SolutionRegisterException(_('Solution with key %s already exist.')%_k)
+            raise SolutionRegisterException(_('Solution with key %s already exist.') % _k)
         self.solutions.update({_k: solution})
 
     def resolve_solutions(self, path):
@@ -55,7 +55,10 @@ class MBTSolutionsManager:
         try:
             for p, mi in _slt_info.items():
                 _cur_p = p
-                _slt = MBTSolution(module_path=p, module=mi[0], solution_def=mi[1])
+                _solution_def = None
+                if hasattr(mi, 'SOLUTION_DEF'):
+                    _solution_def = mi.SOLUTION_DEF
+                _slt = MBTSolution(module_path=p, module=mi, solution_def=_solution_def)
                 self.add_solution(_slt)
         except Exception as e:
             raise SolutionAssertException(_('can not resolve solution.') + '\n%s' % e)

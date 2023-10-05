@@ -31,7 +31,7 @@ class MBTSolution:
         'version': '1.0.1',
         'editor': '',
     """
-    EXPECT_DEF_KEY = ['icon', 'namespace', 'type', 'version', 'view', 'builtinEntitiesPath', 'setup', 'uuid']
+    EXPECT_DEF_KEY = ['icon', 'namespace', 'type', 'version', 'view','viewManager', 'builtinEntitiesPath', 'setup', 'uuid']
 
     def __init__(self, **kwargs):
         self._module = kwargs.get('module')
@@ -40,9 +40,11 @@ class MBTSolution:
         _solutionDef = kwargs.get('solution_def', dict())
         assert all([k in _solutionDef for k in self.EXPECT_DEF_KEY])
         self._solutionDef = Dict(_solutionDef)
+
     @property
     def key(self):
         return '%s.%s' % (self.namespace, self.type_)
+
     @property
     def namespace(self):
         return self._solutionDef.get('namespace')
@@ -80,6 +82,13 @@ class MBTSolution:
         return self._solutionDef['uuid']
 
     @property
+    def viewClass(self) -> type:
+        return self._solutionDef['view']
+
+    @property
+    def viewManagerClass(self) -> type:
+        return self._solutionDef['viewManager']
+    @property
     def iconInfo(self) -> str:
         return self._solutionDef.get('icon')
 
@@ -95,6 +104,8 @@ class MBTSolution:
         else:
             return wx.ArtProvider.GetBitmap(_icon, wx.ART_OTHER, size)
 
-    def run_setup(self, app_ctx):
+    def run_setup(self, app):
         if self.isValid:
-            self._solutionDef.get('setup')(app_ctx)
+            _setup = self._solutionDef.get('setup')
+            if callable(_setup):
+                _setup(app)

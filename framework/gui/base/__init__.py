@@ -25,3 +25,5 @@ from .property_def import *
 from .property_def_mgr import PropertyDefPageManager, PropertyDefManagerExistException, PropertyDefManagerNotExistException
 from .class_prop_container import BasePropContainer,PropContainerException
 from .define import *
+from .class_window import BufferedWindow
+from .class_mapped_image_list import MappedImageList

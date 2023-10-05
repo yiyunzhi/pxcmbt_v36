@@ -68,18 +68,28 @@ class ControlEventSink:
             wx.PostEvent(self.shape.view, event)
 
 
-class ControlShape(RectShape,BasicControlShape):
+class ControlShape(RectShape, BasicControlShape):
     __identity__ = "ControlShape"
+
     def __init__(self, **kwargs):
         RectShape.__init__(self, **kwargs)
         self.control = None
-        self.processEvents = EnumEventProcessFlag.DEFAULT
-        self.controlOffset = 0
+        self.processEvents = kwargs.get('processEvents',EnumEventProcessFlag.DEFAULT)
+        self.controlOffset = kwargs.get('controlOffset',0)
         self.eventSink = ControlEventSink(self)
         self.prevParent = None
         self.prevFill = None
         # todo: during it modification the background and border should be difference.
         self.modFill = wx.Brush(wx.BLUE, wx.BRUSHSTYLE_CROSS_HATCH)
+
+    @property
+    def cloneableAttributes(self):
+        _d = RectShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'controlOffset': self.controlOffset,
+            'modFill': self.modFill,
+            'processEvents': self.processEvents,
+        })
 
     def set_control(self, ctrl: wx.Window, fit: bool = True):
         if self.control is not None:
@@ -164,7 +174,7 @@ class ControlShape(RectShape,BasicControlShape):
             self.control.SetFocus()
         super().handle_end_handle(handle)
 
-    def update(self,**kwargs):
+    def update(self, **kwargs):
         super().update(**kwargs)
         self.update_control()
 

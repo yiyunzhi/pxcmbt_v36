@@ -44,6 +44,15 @@ class LineShapeStylesheet(WxShapeBaseStylesheet):
         self.invalidWidth = kwargs.get('invalidWidth', 1)
         self.invalidStyle = kwargs.get('invalidStyle', wx.PENSTYLE_DOT)
 
+    @property
+    def cloneableAttributes(self):
+        _d = WxShapeBaseStylesheet.cloneableAttributes.fget(self)
+        _d.update({
+            'invalidColor': self.invalidColor,
+            'invalidWidth': self.invalidWidth,
+            'invalidStyle': self.invalidStyle
+        })
+        return _d
 
 class LineShape(WxShapeBase, BasicLineShape):
     __identity__ = "LineShape"
@@ -55,7 +64,10 @@ class LineShape(WxShapeBase, BasicLineShape):
         self.arrowVertices = kwargs.get('arrowVertices', [wx.RealPoint(0, 0), wx.RealPoint(10, 4), wx.RealPoint(10, -4)])
         self._srcArrow = kwargs.get('srcArrow')
         self._dstArrow = kwargs.get('dstArrow')
-
+        if self._srcArrow is not None:
+            self._srcArrow.parent = self
+        if self._dstArrow is not None:
+            self._dstArrow.parent = self
         self.dockPointIdx = kwargs.get('dockPoint', 0)
         self._srcOffset = kwargs.get('srcOffset', wx.RealPoint(-1, -1))
         self._dstOffset = kwargs.get('dstOffset', wx.RealPoint(-1, -1))
@@ -64,6 +76,23 @@ class LineShape(WxShapeBase, BasicLineShape):
         self._mode = EnumLineMode.READY
         self._unfinishedPoint = wx.Point()
         self.prevPosition = wx.RealPoint()
+
+    @property
+    def cloneableAttributes(self):
+        _d = WxShapeBase.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'srcShapeId': self.srcShapeId,
+            'dstShapeId': self.dstShapeId,
+            'arrowVertices': self.arrowVertices,
+            'srcPoint': self._srcPoint,
+            'dstPoint': self._dstPoint,
+            'srcOffset': self._srcOffset,
+            'dstOffset': self._dstOffset,
+            'isStandalone': self.isStandalone,
+            'points': [wx.RealPoint(x) for x in self.points],
+            'srcArrow': None if not self._srcArrow else self._srcArrow.clone(),
+            'dstArrow': None if not self._dstArrow else self._dstArrow.clone(),
+        })
 
     @property
     def lineMode(self):
@@ -374,7 +403,6 @@ class LineShape(WxShapeBase, BasicLineShape):
             self._draw_complete_line(dc)
             dc.SetPen(wx.NullPen)
 
-
     def _draw_complete_line(self, dc: wx.DC):
         if self.scene is None:
             return
@@ -442,7 +470,7 @@ class LineShape(WxShapeBase, BasicLineShape):
         _bb = self.get_boundingbox()
         if not _bb.Contains(pos): return -1
         # Get all polyline segments
-        for idx, pt in enumerate(self.points):
+        for idx in range(len(self.points) + 1):
             _src, _dst = self.get_line_segment(idx)
             _ls_bb = wx.Rect(wg_util_conv2point(_src), wg_util_conv2point(_dst))
             _ls_bb = _ls_bb.Inflate(2)

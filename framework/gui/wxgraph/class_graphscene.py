@@ -42,7 +42,7 @@ class GraphScene:
         self._view = None
         self._isModified = False
         # initial a dummy shape as root
-        self._rootShape = WxShapeBase()
+        self._rootShape = WxShapeBase(uid='__root__')
         self._foregroundRootShape = WxShapeBase()
         self._foregroundRootShape.style = 0
         self._rootShape.style = 0
@@ -52,6 +52,7 @@ class GraphScene:
         self._foregroundRootShape.states.active = False
 
         self._acceptedShapes = list()
+        # the top shape means the shapes use _rootShape as parent.
         self._acceptedTopShapes = list()
         self._idPairs = list()
         self._linesForUpdate = list()
@@ -61,6 +62,16 @@ class GraphScene:
     @property
     def rootShape(self):
         return self._rootShape
+
+    @rootShape.setter
+    def rootShape(self, shape: WxShapeBase):
+        if shape is self._rootShape:
+            return
+        self._rootShape = shape
+        # fixme: why need assign scene again, possible to optimize???
+        for x in self._rootShape.children:
+            x.scene = self
+            x.post_init()
 
     @property
     def foregroundRootShape(self):
@@ -139,21 +150,34 @@ class GraphScene:
         if not self.is_shape_accepted(shape):
             return False, 'not accepted shape type.'
         if pos is None:
-            pos = shape.relativePosition
+            pos = self.view.lp2dp(shape.absolutePosition)
+            # _pos = wx.GetMousePosition()
+            # pos = self.view.ScreenToClient(wx.GetMousePosition())
         if self.view:
             _a_pos = self.view.fit_position_to_grid(self.view.dp2lp(pos))
-            shape.position = wg_util_conv2realpoint(_a_pos)
+            shape.relativePosition = wg_util_conv2realpoint(_a_pos)
         else:
-            shape.position = wg_util_conv2realpoint(pos)
-        if shape.scene is not self:
-            shape.scene = self
-        if parent_shape is not self._rootShape:
+            shape.relativePosition = wg_util_conv2realpoint(pos)
+        if not isinstance(shape, LineShape):
+            if parent_shape is None:
+                parent_shape = self.get_shape_at_position(shape.relativePosition)
+            if parent_shape:
+                if not parent_shape.is_child_accepted(shape.identity):
+                    parent_shape = None
+                else:
+                    shape.relativePosition = wx.RealPoint(pos - wx.Point(parent_shape.absolutePosition))
+        else:
+            parent_shape = self.rootShape
+
+        if parent_shape and parent_shape is not self._rootShape:
             self._add_item(shape, parent_shape)
         else:
             if self.is_top_shape_accepted(shape):
-                self._add_item(shape, parent_shape)
+                self._add_item(shape, self.rootShape)
             else:
                 return False, 'not accepted top shape type.'
+        if shape.scene is not self:
+            shape.scene = self
         if initialize:
             shape.post_init()
         # reset scale of assigned shape canvas
@@ -190,10 +214,13 @@ class GraphScene:
         if self.view is not None: self.view.Refresh(False)
 
     def clear(self, start_from: WxShapeBase = None):
+        if not start_from.children:
+            # ignore while no shapes managed by start_from node.
+            return
         self._remove_all_item(start_from)
         if self.view:
-            self.view.multiSelectionbox.show(False)
-            self.view.UpdateVirtualSize()
+            self.view.clear()
+            self.view.update_virtual_size()
 
     def _add_item(self, node: WxShapeBase, parent_node: WxShapeBase):
         node.parent = parent_node
@@ -368,6 +395,7 @@ class GraphScene:
                 _cnt += 1
             else:
                 _sorted_shapes.insert(_cnt, s)
+        # find the topmost shape according to the given rules
         _cnt = 1
         for s in _sorted_shapes:
             if s.states.visible and s.states.active and s.contains(pos):
