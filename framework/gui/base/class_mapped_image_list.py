@@ -29,6 +29,14 @@ class MappedImageList(wx.ImageList):
         self._nameMap = dict()
         self.initialize()
 
+    @property
+    def idxMap(self):
+        return self._idxMap
+
+    @property
+    def nameMap(self):
+        return self._nameMap
+
     def add_index_map(self, idx: int, name: str):
         self._nameMap.update({idx: name})
         self._idxMap.update({name: idx})

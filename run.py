@@ -19,8 +19,9 @@
 #
 #
 # ------------------------------------------------------------------------------
-import sys
+import sys,faulthandler
 from mbt.main import start
 
 if __name__ == '__main__':
+    faulthandler.enable()
     sys.exit(start())

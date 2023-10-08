@@ -59,6 +59,10 @@ class SimpleStateElement(DiagramRoundRectElement):
             'uid': self.uid
         }
 
+    @property
+    def name(self):
+        return self.titleElement.text
+
     def initialize(self):
         # self.actionsGrid.set_rect_size(10,10)
         # self.set_rect_size(10, 10)

@@ -20,12 +20,16 @@ import wx
 #
 #
 # ------------------------------------------------------------------------------
-from framework.gui.wxgraph import EVT_LEFT_DOWN, WGShapeMouseEvent, EnumGraphViewWorkingState
+from framework.gui.wxgraph import (EVT_LEFT_DOWN,
+                                   WGShapeMouseEvent,
+                                   EnumGraphViewWorkingState,
+                                   EVT_UNDO_STACK_CHANGED, WGUndoStackChangedEvent)
 from mbt.application.base import MBTViewManager, MBTContentContainer
 from mbt.gui.base import MBTUniView
 from mbt.gui.base.class_pane_prop_container_mgr import PropContainerManager
 from .stc_editor_view import STCEditorView
-from .stc_prop_container import DiagramViewPropContainer, DiagramElementPropContainer
+from .stc_prop_container import DiagramViewPropContainer, DiagramElementPropContainer, PreferenceViewPropContainer, BasePropContainer
+from .class_preference import STCPreference
 
 
 class STCEditorContentContainer(MBTContentContainer):
@@ -42,6 +46,7 @@ class STCEditorManager(MBTViewManager):
         MBTViewManager.__init__(self, **kwargs)
         self.diagramViewPropContainer = None
         self.propMgr = None
+        self.stcPreference = STCPreference(self)
 
     def create_view(self, **kwargs):
         if self._view is not None:
@@ -53,6 +58,9 @@ class STCEditorManager(MBTViewManager):
         self.diagramViewPropContainer = DiagramViewPropContainer(_view.diagramView.view)
         self.propMgr.set_content(self.diagramViewPropContainer)
         self.post_view(_view)
+        _pc = PreferenceViewPropContainer(self.stcPreference)
+        _view.sideView.graphPreferenceView.set_content(_pc)
+        #_view.diagramView.view.Bind(EVT_UNDO_STACK_CHANGED, self.on_diagram_undo_stack_changed)
         _view.diagramView.view.Bind(EVT_LEFT_DOWN, self.on_diagram_element_left_down)
         _view.diagramView.view.Bind(wx.EVT_LEFT_DOWN, self.on_diagram_view_left_down)
         return self._view
@@ -87,3 +95,7 @@ class STCEditorManager(MBTViewManager):
         _pc.set_element(_element)
         self.propMgr.set_content(_pc)
         evt.Skip()
+
+    # def on_diagram_undo_stack_changed(self, evt: WGUndoStackChangedEvent):
+    #     _graph_view = evt.GetView()
+    #     self._view.sideView.graphHistoryView.set_content(_graph_view.undoStack.stack)

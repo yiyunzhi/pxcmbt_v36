@@ -42,10 +42,11 @@ from .class_stc_diagram_gui_mode import STCDiagramGUIMode
 from .class_diagram_scene import STCDiagramGraphScene
 from .class_navigation import GRAPHVIEW_CTX_MENU_DEF, ELEMENT_CTX_MENU_DEF
 from .define import *
-from ..class_image_resources import LOCAL_XPM_IMAGE_REPO_CATEGORY
+from ..class_image_resources import get_xpm_resources_icon
 
 
 class STCDiagramView(wx.Panel):
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, style=wx.WANTS_CHARS)
         self._shapeEventShape = None
@@ -88,7 +89,6 @@ class STCDiagramView(wx.Panel):
         self.view.Bind(wx.EVT_KILL_FOCUS, self.on_graphview_kill_focus)
         self.view.Bind(wx.EVT_LEFT_DOWN, self.on_graphview_left_down)
         self.view.Bind(wx.EVT_CONTEXT_MENU, self.on_graphview_context_menu)
-        self.view.Bind(EVT_UNDO_STACK_CHANGED, self.on_graphview_undostack_changed)
         self._clickEvtFilter = ClickEvtFilter(self)
         self.AddFilter(self._clickEvtFilter)
         # layout
@@ -116,33 +116,30 @@ class STCDiagramView(wx.Panel):
         _pos = self.view.ScreenToClient(_pos)
         self._scene.add_shape(_element, _pos)
 
-    def _get_bmp(self, **kwargs):
-        return LOCAL_XPM_IMAGE_REPO_CATEGORY.get_bmp(**kwargs)
-
     def _init_toolbar(self):
         _toolbar = ExtAuiToolbar(self)
         _toolbar.SetToolBitmapSize(wx.Size(16, 16))
 
         _toolbar.AddSimpleTool(EnumSTCMenuId.DESIGN_MODE, 'DesignMode',
-                               self._get_bmp(name='tool_mode'),
+                               get_xpm_resources_icon(name='tool_mode'),
                                'DesignMode',
                                kind=wx.ITEM_RADIO)
 
         _adjust_need: aui.AuiToolBarItem = _toolbar.AddSimpleTool(EnumSTCMenuId.PLACE_ELEMENT, 'Place Element',
-                                                                  self._get_bmp(name='state'),
+                                                                  get_xpm_resources_icon(identity=IDENTITY_SIMPLE_STATE),
                                                                   'Place Diagram Element',
                                                                   kind=wx.ITEM_RADIO)
 
         _toolbar.AddSimpleTool(EnumSTCMenuId.TRANSITION_MODE, 'Transition Connection',
-                               self._get_bmp(name='line1'),
+                               get_xpm_resources_icon(identity=IDENTITY_TRANSITION),
                                'Transition Connection',
                                kind=wx.ITEM_RADIO)
         _toolbar.AddSeparator()
         _toolbar.AddSimpleTool(EnumSTCMenuId.ZOOM_FIT, 'Zoom Fit',
-                               self._get_bmp(name='zoom_all'),
+                               get_xpm_resources_icon(name='zoom_all'),
                                'Zoom Fit')
         _toolbar.AddSimpleTool(EnumSTCMenuId.ZOOM_100P, 'Zoom 100%',
-                               self._get_bmp(name='zoom_100'),
+                               get_xpm_resources_icon(name='zoom_100'),
                                'Zoom 100%')
         _toolbar.Realize()
         _toolbar.SetToolDropDown(EnumSTCMenuId.PLACE_ELEMENT, True)
@@ -180,14 +177,14 @@ class STCDiagramView(wx.Panel):
             # create the popup menu
             _drop_menu = wx.Menu()
             _mi = _drop_menu.Append(EnumSTCMenuId.CREATE_SIMPLE_STATE, 'Simple State')
-            _mi.SetBitmap(self._get_bmp(name='state'))
+            _mi.SetBitmap(get_xpm_resources_icon(identity=IDENTITY_SIMPLE_STATE))
             _mi = _drop_menu.Append(EnumSTCMenuId.CREATE_INITIAL_STATE, 'Initial State')
-            _mi.SetBitmap(self._get_bmp(name='initial'))
+            _mi.SetBitmap(get_xpm_resources_icon(identity=IDENTITY_INITIAL_STATE))
             _mi = _drop_menu.Append(EnumSTCMenuId.CREATE_FINAL_STATE, 'Final State')
-            _mi.SetBitmap(self._get_bmp(name='final'))
+            _mi.SetBitmap(get_xpm_resources_icon(identity=IDENTITY_FINAL_STATE))
             _drop_menu.AppendSeparator()
             _mi = _drop_menu.Append(EnumSTCMenuId.CREATE_NOTE, 'Note')
-            _mi.SetBitmap(self._get_bmp(name='note'))
+            _mi.SetBitmap(get_xpm_resources_icon(identity=IDENTITY_NOTE))
             self.Bind(wx.EVT_TOOL, self.on_place_tool_triggered)
             self.PopupMenu(_drop_menu)
             # make sure the button is "un-sticky"
@@ -223,6 +220,8 @@ class STCDiagramView(wx.Panel):
             _po1 = WxGraphPrintout(self.view, 'STC Diagram []')
             _po2 = WxGraphPrintout(self.view, 'STC Diagram []')
             self.view.print_preview(_po1, _po2)
+        elif _id == EnumSTCMenuId.EDIT_ELEMENT_PROP:
+            print('--->editElementProp:..')
         elif _id == EnumSTCMenuId.ZOOM_FIT:
             self.view.set_scale_to_view_all()
         elif _id == EnumSTCMenuId.ZOOM_100P:
@@ -278,9 +277,6 @@ class STCDiagramView(wx.Panel):
         _menu.Enable(EnumSTCMenuId.REMOVE_ALL, not self.view.scene.isEmpty)
         _menu.Enable(EnumSTCMenuId.ZOOM_FIT, not self.view.scene.isEmpty)
         self.view.PopupMenu(_menu)
-
-    def on_graphview_undostack_changed(self, evt: WGUndoStackChangedEvent):
-        print('--->undoStack changed,', len(self.view.undoStack.stack.GetCommands()))
 
     def on_element_right_down(self, evt: WGShapeMouseEvent):
         self._shapeEventShape = evt.GetShape()

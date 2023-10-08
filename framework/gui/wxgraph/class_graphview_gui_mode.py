@@ -227,7 +227,7 @@ class BaseGUIMode:
                         self.newLineShape.refresh(delayed=True)
                         self.workingState = EnumGraphViewWorkingState.READY
                         self.newLineShape = None
-                        self.graphView.save_view_state()
+                        self.graphView.save_view_state(reason='ConnectionCreated')
             else:
                 if self.newLineShape.srcShapeId is not None:
                     self.newLineShape.points.append(wx.RealPoint(self.graphView.fit_position_to_grid(_l_pos)))
@@ -258,7 +258,7 @@ class BaseGUIMode:
             if _shape_under:
                 _shape_under.handle_left_double_click(_l_pos)
                 if isinstance(_shape_under, LineShape):
-                    self.graphView.save_view_state()
+                    self.graphView.save_view_state('LineEdited')
         self.graphView.refresh_invalidate_rect()
 
     def on_left_up(self, evt: wx.MouseEvent):
@@ -299,7 +299,7 @@ class BaseGUIMode:
                             _line.dstShapeId = _shape_under.uid
             self.selectedHandle.actionProxy.on_end_drag(_l_pos)
             self.selectedHandle = None
-            if self.canSaveStateOnMouseUp: self.graphView.save_view_state()
+            if self.canSaveStateOnMouseUp: self.graphView.save_view_state('PossibleResize')
         elif self.workingState == EnumGraphViewWorkingState.SHAPEMOVE:
             _selected_shapes = self.graphView.get_selected_shapes()
             for x in _selected_shapes:
@@ -311,7 +311,7 @@ class BaseGUIMode:
             else:
                 self.multiEditShape.hide()
             self.graphView.move_shapes_from_negative()
-            if self.canSaveStateOnMouseUp: self.graphView.save_view_state()
+            if self.canSaveStateOnMouseUp: self.graphView.save_view_state('Reposition')
         elif self.workingState == EnumGraphViewWorkingState.MULTISELECTION:
             _selected_shapes = self.graphView.get_selected_shapes()
             _ss_bb = self.selectionShape.get_boundingbox()
@@ -555,7 +555,7 @@ class BaseGUIMode:
                 self.graphView.clear_temporaries()
                 self.graphView.scene.remove_shapes([x.uid for x in _shapes_to_remove])
                 self.multiEditShape.hide()
-                self.graphView.save_view_state()
+                self.graphView.save_view_state('Delete')
                 self.graphView.Refresh(False)
         elif _key_code == wx.WXK_ESCAPE:
             if self.workingState == EnumGraphViewWorkingState.CREATECONNECTION:
@@ -583,7 +583,7 @@ class BaseGUIMode:
             if self.multiEditShape.states.visible:
                 self.multiEditShape.actionProxy.on_key(_key_code)
             self.graphView.refresh_invalidate_rect()
-            self.graphView.save_view_state()
+            self.graphView.save_view_state('Reposition')
         else:
             for x in _selected_shapes:
                 x.actionProxy.on_key(_key_code)
@@ -609,7 +609,7 @@ class BaseGUIMode:
                     elif isinstance(_p_shp, BitmapShape):
                         _p_shp.handle_end_handle(self.selectedHandle)
                     self.selectedHandle.actionProxy.on_end_drag(_l_pos)
-                    self.graphView.save_view_state()
+                    self.graphView.save_view_state('Resize')
                     self.workingState = EnumGraphViewWorkingState.READY
                     self.selectedHandle = None
                     self.graphView.invalidate_visible_rect()
@@ -807,7 +807,7 @@ class BaseGUIMode:
             self.graphView.restore_prev_positions()
             self.graphView.move_shapes_from_negative()
             self.graphView.update_virtual_size()
-            self.graphView.save_view_state()
+            self.graphView.save_view_state('DragDrop')
             self.graphView.Refresh(False)
         self.workingState = EnumGraphViewWorkingState.READY
         return _result

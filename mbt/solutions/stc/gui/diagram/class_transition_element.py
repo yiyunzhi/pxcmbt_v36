@@ -45,6 +45,10 @@ class TransitionElement(DiagramCurveLineElement, Serializable):
             'label': self.label
         })
 
+    @property
+    def name(self):
+        return 'transition'
+
     def initialize(self):
         self.add_style(EnumShapeStyleFlags.PROCESS_K_DEL)
 

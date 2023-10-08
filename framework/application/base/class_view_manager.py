@@ -205,7 +205,7 @@ class ViewManager(anytree.NodeMixin):
         if content is None:
             self.contentContainer.reset_to_default()
             return
-        self.contentContainer.set(content)
+        self.contentContainer.set(content=content)
         self._undoStack.ClearCommands()
 
     def restore_content(self):

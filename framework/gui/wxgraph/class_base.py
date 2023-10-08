@@ -123,6 +123,10 @@ class DrawObject(Cloneable):
     def uid(self):
         return self._uid
 
+    @property
+    def name(self):
+        return self.__identity__
+
     def clone(self):
         return self.__class__(**self.cloneableAttributes)
 

@@ -40,3 +40,7 @@ class NoteConnElement(LineShape, Serializable):
     def __init__(self, **kwargs):
         LineShape.__init__(self, **kwargs)
         self.stylesheet = kwargs.get('stylesheet', NoteConnStylesheet())
+
+    @property
+    def name(self):
+        return 'noteConnection'

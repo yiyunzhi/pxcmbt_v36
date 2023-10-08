@@ -44,8 +44,7 @@ class WxGraphViewOutline(wx.Panel):
         self.graphView = None
         self.scale = 1
         self.outlineStyle = EnumOutlineStyle.SHOW_CONNECTIONS | EnumOutlineStyle.SHOW_ELEMENTS
-        self.updateTimer = wx.Timer()
-        self.updateTimer.SetOwner(self, EnumOutlineIDs.ID_UPDATE_TIMER)
+        self.updateTimer = wx.Timer(self, id=EnumOutlineIDs.ID_UPDATE_TIMER)
         self._prevMousePos = None
         # bind event
         self.Bind(wx.EVT_NAVIGATION_KEY, self.on_navigation_key)
@@ -71,13 +70,19 @@ class WxGraphViewOutline(wx.Panel):
             return wx.Size(_x * _ux, _y * _uy)
         return wx.Size()
 
-    def set_graph_view(self, graph_view: GraphView):
+    def on_grapview_destroyed(self, evt):
+        self.set_graph_view(None)
+
+    def set_graph_view(self, graph_view: GraphView or None):
         self.graphView = graph_view
         if self.graphView:
+            self.graphView.Bind(wx.EVT_WINDOW_DESTROY, self.on_grapview_destroyed)
             self.updateTimer.Start(100)
         else:
             self.updateTimer.Stop()
-            self.Refresh(False)
+            if bool(self):
+                # prevent calling the deleted c++ object
+                self.Refresh(False)
 
     def draw_content(self, dc: wx.DC):
         for x in self.graphView.scene.rootShape.children:
@@ -144,7 +149,7 @@ class WxGraphViewOutline(wx.Panel):
             _dc.DrawRectangle(0, 0,
                               _size_vr_canvas.x * self.scale,
                               _size_vr_canvas.y * self.scale)
-            _prev_scale_x,_prev_scale_y=_dc.GetUserScale()
+            _prev_scale_x, _prev_scale_y = _dc.GetUserScale()
             # draw top level shapes
             _sdc = _dc
             _scale = self.scale * self.graphView.setting.scale
@@ -163,8 +168,12 @@ class WxGraphViewOutline(wx.Panel):
         _dc.SetBackground(wx.NullBrush)
 
     def on_update_timer(self, evt: wx.TimerEvent):
-        if self.graphView and self.IsShown():
-            self.Refresh(False)
+        if self.__nonzero__() and self.graphView.__nonzero__():
+            # if not bool(self.graphView):
+            #     self.set_graph_view(None)
+            #     return
+            if self.graphView and self.IsShown():
+                wx.CallAfter(self.Refresh, False)
 
     def on_menu_show_connections(self, evt: wx.CommandEvent):
         if self.outlineStyle & EnumOutlineStyle.SHOW_CONNECTIONS:

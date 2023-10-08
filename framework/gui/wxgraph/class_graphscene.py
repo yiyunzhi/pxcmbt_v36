@@ -68,7 +68,8 @@ class GraphScene:
         if shape is self._rootShape:
             return
         self._rootShape = shape
-        # fixme: why need assign scene again, possible to optimize???
+        # fixme: need assign scene again, possible to optimize, some descedants may lose the scene, why???
+        # reassign be called expectly only in undoStack method do or undo
         for x in self._rootShape.children:
             x.scene = self
             x.post_init()
@@ -185,7 +186,7 @@ class GraphScene:
             self.view.set_scale(1)
         if self.view:
             if save_state:
-                self.view.save_view_state()
+                self.view.save_view_state('Create')
         self._isModified = True
         return True, ''
 
@@ -197,9 +198,12 @@ class GraphScene:
         if _shape is None or _shape.is_root:
             return
         _shape_parent = _shape.parentShape
+        _lst_conns=list()
+        _lst_conns.extend(self.get_assigned_connections(_shape,LineShape,EnumShapeConnectionSearchMode.BOTH))
         for x in _shape.descendants:
-            for l in self.get_assigned_connections(x, LineShape, EnumShapeConnectionSearchMode.BOTH):
-                self.remove_shape(l.uid, False)
+            _lst_conns.extend(self.get_assigned_connections(x, LineShape, EnumShapeConnectionSearchMode.BOTH))
+        for l in _lst_conns:
+            self.remove_shape(l.uid, False)
         # remove the shape also from currentShapes list
         if self.view: self.view.remove_from_temporaries(_shape)
         self._remove_item(_shape)

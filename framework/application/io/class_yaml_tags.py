@@ -72,6 +72,17 @@ def wx_real_point_constructor(loader: yaml.Loader, node):
     return wx.RealPoint(**loader.construct_mapping(node))
 
 
+def wx_colour_representer(dumper: yaml.Dumper, data: wx.Colour):
+    return dumper.represent_mapping('!wxColour', {'red': data.GetRed(),
+                                                  'green': data.GetGreen(),
+                                                  'blue': data.GetBlue(),
+                                                  'alpha': data.GetAlpha()})
+
+
+def wx_colour_constructor(loader: yaml.Loader, node):
+    return wx.Colour(**loader.construct_mapping(node))
+
+
 def ignore_aliases(data):
     try:
         if data is None or data == ():
@@ -126,12 +137,14 @@ def yaml_register_represent_constructor(dumper: yaml.Dumper, loader: yaml.Loader
     dumper.add_multi_representer(wx.Size, wxsize_representer)
     dumper.add_multi_representer(wx.Point, wxpoint_representer)
     dumper.add_multi_representer(wx.RealPoint, wx_real_point_representer)
+    dumper.add_multi_representer(wx.Colour, wx_colour_representer)
     dumper.ignore_aliases = staticmethod(ignore_aliases)
     # loader
     loader.add_constructor('!OrderDict', od_constructor)
     loader.add_constructor('!Size', wxsize_constructor)
     loader.add_constructor('!Point', wxpoint_constructor)
     loader.add_constructor('!RealPoint', wx_real_point_constructor)
+    loader.add_constructor('!wxColour', wx_colour_constructor)
     if np is not None:
         dumper.add_representer(complex, complex_representer)
         dumper.add_representer(np.ndarray, ndarray_representer)

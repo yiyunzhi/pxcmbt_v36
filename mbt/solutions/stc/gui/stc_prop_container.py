@@ -34,6 +34,7 @@ from framework.gui.base import (PropertyDefPageManager,
                                 PropContainerException)
 from framework.gui.wxgraph import WxShapeBase, __VERSION__, EnumGraphViewStyleFlag, EnumShapeStyleFlags
 from .diagram.class_diagram_graph_view import STCGraphView
+from .class_preference import STCPreference
 
 
 class DiagramViewPropContainer(BasePropContainer):
@@ -150,3 +151,26 @@ class DiagramElementPropContainer(BasePropContainer):
         if not _ret:
             _ret.append('None')
         return _ret
+
+
+class PreferenceViewPropContainer(BasePropContainer):
+    def __init__(self, preference: STCPreference):
+        BasePropContainer.__init__(self)
+        self.preference = preference
+        self._pageUi = PropertyDefPageManager(name='ui')
+        _cat_bg = self._pageUi.register_with(CategoryPropertyDef, object=self.preference,
+                                             label='Background')
+        self._pageUi.register_with(BoolPropertyDef, object=self.preference,
+                                   label='showGrid', getter='isGridVisible', setter='isGridVisible', parent=_cat_bg)
+        self._pageUi.register_with(BoolPropertyDef, object=self.preference,
+                                   label='showGradient', getter='isGradientVisible', setter='isGradientVisible', parent=_cat_bg)
+
+        self._pageSpec = PropertyDefPageManager(name='specified')
+        self.add_page(self._pageUi)
+        self.add_page(self._pageSpec)
+        self.update()
+
+    def set_preference(self, preference):
+        _l = anytree.findall(self._pageUi.root, lambda x: isinstance(x.object, (WxShapeBase, _ElementPlaceHolder)))
+        for x in _l:
+            x.set_object(preference)

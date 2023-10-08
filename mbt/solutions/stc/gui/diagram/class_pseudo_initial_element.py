@@ -64,6 +64,10 @@ class InitialElement(DiagramCircleElement):
             'uid': self.uid
         }
 
+    @property
+    def name(self):
+        return 'initialState'
+
     def initialize(self):
         self.set_rect_size(18, 18)
         self.clear_accepted_children()

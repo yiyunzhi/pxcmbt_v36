@@ -37,7 +37,7 @@ class FinalElementStylesheet(DiagramRectElementStylesheet):
         self.borderColor = '#000000'
         self.fillStyle = wx.BRUSHSTYLE_TRANSPARENT
         self.backgroundStyle = wx.BRUSHSTYLE_TRANSPARENT
-        self.innerCircleSize = wx.Size(8,8)
+        self.innerCircleSize = wx.Size(8, 8)
         self.innerBackgroundColor = '#000000'
         self.innerBackgroundStyle = wx.BRUSHSTYLE_SOLID
 
@@ -65,6 +65,10 @@ class FinalElement(DiagramCircleElement):
             'style': self.style,
             'uid': self.uid
         }
+
+    @property
+    def name(self):
+        return 'finalState'
 
     def initialize(self):
         self.set_rect_size(18, 18)

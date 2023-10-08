@@ -79,6 +79,10 @@ class NoteElement(PolygonShape, Serializable):
             'content': self.content,
         })
 
+    @property
+    def name(self):
+        return 'note'
+
     def initialize(self):
         self.remove_style(EnumShapeStyleFlags.REPARENT)
         self.add_style(EnumShapeStyleFlags.SHOW_SHADOW)

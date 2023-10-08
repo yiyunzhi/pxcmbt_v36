@@ -71,7 +71,7 @@ class GraphViewSetting:
         self.shadowFillColor = kwargs.get('shadowFillColor', wx.Colour(150, 150, 150, 128))
         self.shadowStyle = kwargs.get('shadowFillStyle', wx.BRUSHSTYLE_SOLID)
 
-        self.acceptedShapes = []
+        # self.acceptedShapes = []
 
         self.scale = kwargs.get('scale', 1.0)
         self.minScale = kwargs.get('minScale', 0.25)
@@ -402,7 +402,7 @@ class GraphView(wx.ScrolledWindow):
         self.validate_selection_for_clipboard(_selected_shapes, True)
         self._scene.remove_shapes(_selected_shapes)
         self._guiMode.multiEditShape.hide()
-        self.save_view_state()
+        self.save_view_state('Cut')
         self.Refresh(False)
 
     def paste(self):
@@ -426,7 +426,7 @@ class GraphView(wx.ScrolledWindow):
                         _lst_new.append(x)
                 # call use define handler
                 self.on_paste(_lst_new)
-                self.save_view_state()
+                self.save_view_state('Paste')
                 self.Refresh(False)
         if wx.TheClipboard.IsOpened(): wx.TheClipboard.Close()
 
@@ -477,12 +477,12 @@ class GraphView(wx.ScrolledWindow):
             return False
         return self._guiMode.multiEditShape.states.visible and self._guiMode.workingState == EnumGraphViewWorkingState.READY
 
-    def save_view_state(self):
+    def save_view_state(self, reason: str = 'NewState'):
         if not self.has_style(EnumGraphViewStyleFlag.UNDOREDO):
             return
         if self.undoStack is None:
             return
-        self.undoStack.save()
+        self.undoStack.save(reason=reason)
 
     def clear_view_history(self):
         if self.undoStack is not None:
@@ -767,7 +767,7 @@ class GraphView(wx.ScrolledWindow):
                     x.parentShape.update()
         if not _upt_rect.IsEmpty():
             self.update_multi_edit_shape_size()
-            self.save_view_state()
+            self.save_view_state('AlignChanged')
             self.refresh_with(False, _upt_rect)
 
     # --------------------------------------------------------------
@@ -1429,7 +1429,7 @@ class GraphView(wx.ScrolledWindow):
         for x in _parents_to_update:
             x.update()
         if not self.dndStartedHere:
-            self.save_view_state()
+            self.save_view_state('Drop')
             self.Refresh(False)
         self.on_drop(x, y, result, _news)
 

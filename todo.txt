@@ -6,29 +6,8 @@
 # todo: preference: setting show/hide [perference, help] on toolbar,
 
 # done: line hovering not correct
-# todo: undoStack:
-        element:
-            create
-            remove
-            propertyChange:
-                reposition:
-                    do: save prevPosition, do reposition
-                    undo: assign pre position
-                reparent:
-                    do: save prevParent, position, do reparent and reposition
-                    undo: assign pre position, preParent
-                resize:
-                    do: save prevSize and position, do reposition and resize
-                    undo: assign pre position and preSize
-        line:
-            create
-            remove
-            propertyChange:
-                addHandle
-                removeHandle
-                labelChange
-                handleReposition
-# todo: element removed, the line still there.
+# done: undoStack use snapshot instead of commands
+# done: element removed, the line still there.
 # todo: behaviour node store content as .mi,.mo,.md,.mp file .
 # todo: behaviour node add context menu, compile
 # todo: solution and addon could also register the contentProvider.
