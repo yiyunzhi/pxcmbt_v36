@@ -27,3 +27,5 @@ from .panel_header import HeaderPanel
 from .panel_wizard_page import ZWizardPage
 from .panel_caption_bar import CaptionBarStyle,StaticCaptionBar
 from .widget_ex_bars import ExtAuiToolbar,ExtStatusBar
+from .dialog import GenericBackgroundDialog
+from .panel_stc import PythonSTC

@@ -62,11 +62,19 @@ class TreeModel(object):
         :param parent: parent node of the new node
         :return: new node
         """
-        _node = self.nodeClass(**kwargs)
+        _nc = kwargs.get('node_class')
+        if _nc is None:
+            _nc = self.nodeClass
+        _node = _nc(**kwargs)
+        if parent is None:
+            parent = self.root
         # useful for debugging deleting nodes
         # weakref.finalize(node, print, "Deleted node {}".format(label))
         # parent.children.append(node)
-        parent.append_children(_node)
+        if hasattr(parent, 'append_children'):
+            parent.append_children(_node)
+        else:
+            _node.parent = parent
         # weakref doesn't work out of the box when deepcopying this class
         # node.parent = weakref.proxy(parent)
         # node.parent = parent

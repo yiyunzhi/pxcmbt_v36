@@ -24,14 +24,15 @@ from framework.application.define import _
 from framework.application.base import TreeModel, TreeModelAnyTreeNode
 from framework.gui.base import FeedbackDialogs, TreeView
 from framework.gui.wxgraph import WxShapeBase, EVT_VIEW_REPAINT, WGViewRepaintEvent, EnumGraphViewWorkingState
-from .diagram.define import IDENTITY_PREFIX, EnumSTCMenuId
-from .diagram.class_diagram_graph_view import STCGraphView
+from ..diagram.define import IDENTITY_PREFIX, EnumSTCMenuId
+from ..diagram.class_diagram_graph_view import STCGraphView
 from .class_image_resources import STCElementImageList
 
 
 class _GraphTreeNode(TreeModelAnyTreeNode):
     def __init__(self, **kwargs):
         TreeModelAnyTreeNode.__init__(self, **kwargs)
+        self.label = kwargs.get('label', 'root')
         self.uid = kwargs.get('uid')
         self.userData = kwargs.get('userData')
 
@@ -46,7 +47,7 @@ class GraphTreeView(wx.Panel):
         self.toolbar = self._initial_toolbar()
         _il = STCElementImageList()
         _il.initialize()
-        self.treeView = TreeView(self, style=wx.TR_DEFAULT_STYLE, image_list=_il, image_list_map=_il.idxMap)
+        self.treeView = TreeView(self, image_list=_il, image_list_map=_il.idxMap)
         # bind event
         self.treeView.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_tree_item_selection_changed)
         self.treeView.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_tree_item_activated)
@@ -81,10 +82,10 @@ class GraphTreeView(wx.Panel):
         return _gtn
 
     def _build_model(self, root: WxShapeBase) -> TreeModel:
-        _model = TreeModel(TreeModelAnyTreeNode)
-        _model.root = _GraphTreeNode(uid=root.uid, label=_('root'), userData=root)
+        _model = TreeModel(_GraphTreeNode)
+        _co_c = _GraphTreeNode(uid=root.uid, label=_('root'), userData=root, parent=_model.root, icon=root.identity)
         for x in root.children:
-            self._build_model_node(x, parent=_model.root)
+            self._build_model_node(x, parent=_co_c)
         return _model
 
     def on_tool(self, evt: wx.CommandEvent):
@@ -102,9 +103,12 @@ class GraphTreeView(wx.Panel):
         _u_evt = wx.MouseEvent(wx.EVT_LEFT_UP.typeId)
         _d_evt.SetEventObject(self)
         _u_evt.SetEventObject(self)
-        _center = element.get_center()
-        _end = wx.RealPoint(_center.x, 0)
-        _bp = element.get_border_point(_center, _end)
+        if element is self.graphView.scene.rootShape:
+            _bp = wx.Point(element.absolutePosition)
+        else:
+            _center = element.get_center()
+            _end = wx.RealPoint(_center.x, 0)
+            _bp = element.get_border_point(_center, _end)
         _d_evt.SetPosition(wx.Point(_bp))
         _u_evt.SetPosition(wx.Point(_bp))
         wx.PostEvent(self.graphView, _d_evt)
@@ -130,13 +134,17 @@ class GraphTreeView(wx.Panel):
         _node = self.treeView.item_to_node(_item)
         _graph_view_is_ready = self.graphView.guiMode.workingState == EnumGraphViewWorkingState.READY
         if _node and _graph_view_is_ready:
-            _s_evt = wx.MouseEvent(wx.EVT_LEFT_DOWN.typeId)
-            self._emit_menu_event(_node.userData, EnumSTCMenuId.EDIT_ELEMENT_PROP)
+            if _node.userData is self.graphView.scene.rootShape:
+                _id = EnumSTCMenuId.EDIT_PROP
+            else:
+                _id = EnumSTCMenuId.EDIT_ELEMENT_PROP
+            self._emit_menu_event(_node.userData, _id)
 
     def on_diagram_repaint(self, evt: WGViewRepaintEvent):
         _view = evt.GetView()
         if _view is self.graphView:
             self.update_tree()
+        evt.Skip()
 
     def has_any_changed(self, model: TreeModel):
         if self.content is None:
@@ -154,3 +162,4 @@ class GraphTreeView(wx.Panel):
         if self.has_any_changed(_model):
             self.content = _model
             self.treeView.set_model(self.content)
+            self.treeView.ExpandAll()

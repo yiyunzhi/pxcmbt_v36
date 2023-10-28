@@ -33,7 +33,7 @@ from framework.gui.base import (PropertyDefPageManager,
                                 XYPropertyDef,
                                 PropContainerException)
 from framework.gui.wxgraph import WxShapeBase, __VERSION__, EnumGraphViewStyleFlag, EnumShapeStyleFlags
-from .diagram.class_diagram_graph_view import STCGraphView
+from ..diagram.class_diagram_graph_view import STCGraphView
 from .class_preference import STCPreference
 
 

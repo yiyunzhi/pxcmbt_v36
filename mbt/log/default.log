@@ -5265,3 +5265,5 @@ AttributeError: 'NoneType' object has no attribute 'startswith'
 'ProjectNodeProfile' object has no attribute 'name'
 2023-10-02 13:54:30,866- ProjectExplorerManager- ERROR: can not execute reprofile node, since:
 cannot unpack non-iterable NoneType object
+2023-10-25 21:52:55,932- application.art_provider- ERROR: MBTArtProvider error: providing pi.file-code:wxART_OTHER_C at size (16, 16) failed.
+

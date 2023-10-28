@@ -588,10 +588,6 @@ class GraphView(wx.ScrolledWindow):
         if self.topMostShapeUnderCursor is shape:
             self.topMostShapeUnderCursor = None
 
-    def save_canvas_state(self):
-        # todo: finish this.
-        pass
-
     def about_to_remove_shapes(self, shapes: typing.List[WxShapeBase]) -> bool:
         if not shapes:
             return False
@@ -1473,6 +1469,9 @@ class GraphView(wx.ScrolledWindow):
     def on_update_virtual_size(self, v_rect: wx.Rect):
         _x, _y = self.CalcUnscrolledPosition(0, 0)
         self.viewportTopLeft = wx.RealPoint(_x, _y)
+
+    def on_shape_fails_notified(self, shape: WxShapeBase, reason: str):
+        wx.MessageBox('{} fails since {}'.format(shape,reason), 'Fails', parent=self)
 
     # --------------------------------------------------------------
     # printing

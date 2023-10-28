@@ -21,9 +21,10 @@
 # ------------------------------------------------------------------------------
 import wx
 from framework.gui.base import MappedImageList
+from framework.gui.wxgraph import WxShapeBase
 from framework.gui.icon_repo.class_icon_repo import LocalIconRepoCategory
 from mbt.gui.art_provider.class_art_provider import MBTArtProvider
-from .diagram.define import *
+from ..diagram.define import *
 from ..resources import THIS_IMAGE_PATH, THIS_XPMS_PATH
 
 
@@ -34,6 +35,7 @@ class STCEditorSideImageList(MappedImageList):
                     ('pi.compass', 'minimap'),
                     ('pi.fingerprint', 'property'),
                     ('pi.gear', 'setting'),
+                    ('pi.code-simple', 'code'),
                     ]
 
     def __init__(self, width=16, height=16, mask=True, initial_count=1):
@@ -46,13 +48,6 @@ class STCEditorSideImageList(MappedImageList):
 
 
 class STCElementImageList(MappedImageList):
-    _artNameList = [('pi.stack', 'history'),
-                    ('pi.tree-structure', 'structure'),
-                    ('pi.database', 'iod'),
-                    ('pi.compass', 'minimap'),
-                    ('pi.fingerprint', 'property'),
-                    ('pi.gear', 'setting'),
-                    ]
 
     def __init__(self, width=16, height=16, mask=True, initial_count=1):
         MappedImageList.__init__(self, width, height, mask, initial_count)
@@ -71,6 +66,7 @@ LOCAL_XPM_IMAGE_REPO_IDENTITY_DEF = {
     IDENTITY_SIMPLE_STATE: 'state',
     IDENTITY_TRANSITION: 'line1',
     IDENTITY_NOTE_CONN: 'line2',
+    WxShapeBase.identity: 'sub_state',
 }
 
 

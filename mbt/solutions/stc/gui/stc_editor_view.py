@@ -24,7 +24,7 @@ import wx
 from framework.application.define import _
 from framework.gui.widgets import StaticCaptionBar
 from mbt.gui.base import MBTUniView
-from .diagram.class_diagram_view import STCDiagramView
+from .class_diagram_view import STCDiagramView
 from .stc_editor_side import STCEditorSide
 
 

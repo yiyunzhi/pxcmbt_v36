@@ -52,3 +52,46 @@ class EnumAppSignal:
 class EnumTEProtocol(enum.Enum):
     PROTOCOL_URPC = 'urpc'
     PROTOCOL_TCP = 'tcp'
+
+
+class EnumDataType:
+    # USER_DEFINED = 0
+    BOOL = 1
+    BYTE = 2
+    INT = 3
+    FLOAT = 4
+    STRING = 5
+    VOID = 255
+    E_DEF = {
+        # 0: 'userDefined',
+        1: 'bool',
+        2: 'bytes',
+        3: 'int',
+        4: 'float',
+        5: 'str',
+        255: 'None',
+    }
+    T_DEF = {
+        # 0: 'userDefined',
+        1: bool,
+        2: bytes,
+        3: int,
+        4: float,
+        5: str,
+        255: lambda x: None
+    }
+    C_DEF={
+        1: lambda x:x,
+        2: lambda x:'b"{}"'.format(x),
+        3: lambda x:x,
+        4: lambda x:x,
+        5: lambda x:'"{}"'.format(x),
+        255: lambda x:'None'
+    }
+
+
+class EnumValueType:
+    VALUE = 0
+    E_DEF = {
+        0: 'value'
+    }

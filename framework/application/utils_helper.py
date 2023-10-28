@@ -20,7 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import ast, functools, json, decimal, gettext, pathlib
-import datetime,inspect
+import datetime, inspect
 import wx
 import os, sys, platform, math, uuid, bitstring, glob, re
 from collections import defaultdict
@@ -45,6 +45,7 @@ def util_iterable(obj):
     else:
         return True
 
+
 def util_get_object_props(obj):
     _pr = {}
     for name in dir(obj):
@@ -52,6 +53,7 @@ def util_get_object_props(obj):
         if not name.startswith('__') and not inspect.ismethod(value):
             _pr[name] = value
     return _pr
+
 
 def util_remove_folder(file_path):
     _pth = pathlib.Path(file_path)
@@ -72,6 +74,10 @@ def util_simple_py_script_execute(src, envs: dict):
     _code = compile(_ast_object, filename='', mode='exec')
     exec(_code, envs)
     envs.pop('__builtins__')
+
+
+def util_py_contains_explicit_return(source_code):
+    return any(isinstance(node, ast.Return) for node in ast.walk(ast.parse(source_code)))
 
 
 def util_py_script_execute(src, kwargs: dict, result_vars: list or str):
@@ -119,6 +125,35 @@ def util_python_casting_test(typ, string):
         return isinstance(DEFAULT_EXPRESSION_EVALUATOR.parse(string), typ)
     except ValueError as e:
         return False
+
+
+def util_is_py_statement(fragment: str):
+    _is_statement = False
+    try:
+        _code = compile(fragment, '<stdin>', 'eval')
+    except SyntaxError:
+        _is_statement = True
+    return _is_statement
+
+
+def util_execute_py_statement(fragment, context: dict):
+    try:
+        _code = compile(fragment, '<stdin>', 'exec')
+        exec(fragment, globals(), context)
+    except Exception as e:
+        print('util_execute_py_statement>', e)
+        pass
+
+
+def util_execute_py_expression(fragment, context: dict) -> any:
+    _result = None
+    try:
+        _code = compile(fragment, '<stdin>', 'eval')
+        _result = eval(fragment, globals(), context)
+    except Exception as e:
+        print('..>', e)
+        pass
+    return _result
 
 
 def util_is_python(string):

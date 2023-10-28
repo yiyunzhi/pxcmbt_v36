@@ -19,4 +19,4 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .panel_utils import ProfileEditPanel,ChoiceEditPanel
+from .panel_utils import ProfileEditPanel,ChoiceEditPanel,BasicProfileEditPanel

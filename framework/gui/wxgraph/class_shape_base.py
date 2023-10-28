@@ -146,7 +146,6 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
         return _ret
 
     def clone(self):
-        _children = list()
         _this = self.__class__(**self.cloneableAttributes)
         for x in self.children:
             _cx = x.clone()
@@ -214,6 +213,11 @@ class WxShapeBase(DrawObject, anytree.NodeMixin):
             self.view.invalidate_rect(rect)
         else:
             self.view.refresh_with(False, rect)
+
+    def notify_fails(self, reason: str):
+        if self.scene is None or self.view is None:
+            return
+        self.view.on_shape_fails_notified(self, reason)
 
     def draw(self, dc: wx.DC, draw_children: bool = True, **kwargs) -> None:
         """

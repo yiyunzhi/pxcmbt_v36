@@ -34,6 +34,30 @@ class EnumZViewFlag:
     REPARENT = 1 << 0
     DESTROY_ON_CLOSE = 1 << 1
 
+if wx.Platform == '__WXMSW__':
+    SCRIPT_EDITOR_FACES = {'times': 'Times New Roman',
+                           'mono': 'Courier New',
+                           'helv': 'Arial',
+                           'other': 'Comic Sans MS',
+                           'size': 10,
+                           'size2': 8,
+                           }
+elif wx.Platform == '__WXMAC__':
+    SCRIPT_EDITOR_FACES = {'times': 'Times New Roman',
+                           'mono': 'Monaco',
+                           'helv': 'Arial',
+                           'other': 'Comic Sans MS',
+                           'size': 12,
+                           'size2': 10,
+                           }
+else:
+    SCRIPT_EDITOR_FACES = {'times': 'Times',
+                           'mono': 'Courier',
+                           'helv': 'Helvetica',
+                           'other': 'new century schoolbook',
+                           'size': 12,
+                           'size2': 10,
+                           }
 
 # Standard images for all the buttons we use in the dialog
 # ----------------------------------------------------------------------

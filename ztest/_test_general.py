@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import wx
 
 # ------------------------------------------------------------------------------
 #                                                                            --
@@ -112,20 +111,52 @@ import wx
 # for vp in vertices:
 #     _res.append(wx.Point(int(vp.x * _cosa - vp.y * _sina + 0),int(vp.x * _sina - vp.y * _cosa + 0)))
 # print(_res)
-import anytree, enum
-from framework.gui.wxgraph import EnumGraphViewStyleFlag
-import inspect
 
+# def util_get_object_props(obj):
+#     _pr = {}
+#     for name in dir(obj):
+#         value = getattr(obj, name)
+#         if not name.startswith('__') and not inspect.ismethod(value):
+#             _pr[name] = value
+#     return _pr
+#
+#
+# _em = util_get_object_props(EnumGraphViewStyleFlag)
+# _em = enum.Enum('EnumGraphViewStyleFlag', _em)
+# print([x.name for x in _em],[x.value for x in _em])
 
-def util_get_object_props(obj):
-    _pr = {}
-    for name in dir(obj):
-        value = getattr(obj, name)
-        if not name.startswith('__') and not inspect.ismethod(value):
-            _pr[name] = value
-    return _pr
+# reg = r'(.*)\[(.*)\]\/(.*)'
+# #reg = r'.*'
+# s = 'evtKK[x>=1]/setAbc()'
+# print(re.findall(reg, s),re.match(r'(.*)\<(.*)\>\/(.*)',s))
+import ast,types,inspect,typing
 
+#def y(): pass
+        #_code=self.stc.GetValue()
+        # y_code = types.CodeType(args,
+        #                         y.func_code.co_nlocals,
+        #                         y.func_code.co_stacksize,
+        #                         y.func_code.co_flags,
+        #                         y.func_code.co_code,
+        #                         y.func_code.co_consts,
+        #                         y.func_code.co_names,
+        #                         y.func_code.co_varnames,
+        #                         y.func_code.co_filename,
+        #                         name,
+        #                         y.func_code.co_firstlineno,
+        #                         y.func_code.co_lnotab)
 
-_em = util_get_object_props(EnumGraphViewStyleFlag)
-_em = enum.Enum('EnumGraphViewStyleFlag', _em)
-print([x.name for x in _em],[x.value for x in _em])
+# def contains_explicit_return(source_code):
+#     return any(isinstance(node, ast.Return) for node in ast.walk(ast.parse(source_code)))
+#
+# _s="""def {name}({args}):\n    {content}"""
+# _ss=_s.format(**{'name':'Test','args':'a,b','content':'return a+b'})
+# _code=compile(_ss, '<string>', 'exec')
+# print(_ss)
+# _func:typing.Callable=types.FunctionType(_code.co_consts[0], globals())
+#
+# print( _func(10,12),contains_explicit_return(_ss))
+# _sig=inspect.signature(_func)
+# print(_sig.parameters,_sig.return_annotation)
+_code=compile('b"15"', '<string>', 'eval')
+print(eval(_code),type(eval(_code)))

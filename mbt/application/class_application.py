@@ -24,12 +24,14 @@ from framework.application.class_application_context import IApplicationContext
 from framework.application.base import ZViewContentContainer, Serializable, GenericTypeFactory
 from .project import Project
 from .workbench_base import WorkbenchRegistry
+from .base.class_uid_registry import UidRegistry
 
 
 class MBTApplication(Application):
     mbtSolutionManager = None
     # create singleton workbenchRegistry
     workbenchRegistry: WorkbenchRegistry = WorkbenchRegistry()
+    uidRegistry: UidRegistry = UidRegistry()
 
 
 class MBTApplicationContentContainer(ZViewContentContainer):

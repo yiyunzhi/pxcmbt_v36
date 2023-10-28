@@ -102,7 +102,8 @@ class GraphScene:
         line.srcShapeId = src_id
         line.dstShapeId = dst_id
         if self.view:
-            self.view.save_state()
+            if save_state:
+                self.view.save_state(reason='ConnectionCreated')
             line.refresh()
         return True, ''
 

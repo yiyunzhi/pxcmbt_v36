@@ -8,10 +8,13 @@
 # done: line hovering not correct
 # done: undoStack use snapshot instead of commands
 # done: element removed, the line still there.
-# todo: behaviour node store content as .mi,.mo,.md,.mp file .
+# todo: behaviour node store content as .bi,.bo,.bd,.bp file . Graph stored as .bvi for visualization purpose.
+# todo: prototype node store content as .pi,.po,.pd,.pp file . Graph stored as .pvi for visualization purpose.
 # todo: behaviour node add context menu, compile
 # todo: solution and addon could also register the contentProvider.
 # todo: node should expose a content named "export" for external reference.(.Version,...)??
+# todo: contextMenu of IODItem? for what?
+# todo: <-15>sideEditor label has no tooltip,
 
 # projectRoot: # cm: add workbench,
     - workbenchModel

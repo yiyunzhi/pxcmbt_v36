@@ -90,6 +90,9 @@ class DrawObject(Cloneable):
         self.actionProxy = kwargs.get('actionProxy')
         self._shapeManager = kwargs.get('shapeManager')
 
+    def __repr__(self):
+        return 'Object identity={},name={},uid={}'.format(self.__identity__, self.name, self.uid)
+
     @property
     def cloneableAttributes(self):
         return {'shapeManager': self._shapeManager,

@@ -42,6 +42,7 @@ class EditTextControl(wx.TextCtrl):
             self.SetFont(_font)
             self.SetBackgroundColour(self.associatedShape.stylesheet.fillColor)
             self.SetFocus()
+        self.SetLabelText(self.prevContent)
 
     def on_kill_focus(self, evt: wx.FocusEvent):
         pass
@@ -65,11 +66,15 @@ class EditTextControl(wx.TextCtrl):
         if self.associatedShape:
             self.associatedShape.textControl = None
             self.associatedShape.set_style(self.associatedShape.currentState)
-            if apply and self.prevContent != self.GetValue() and not self.IsEmpty():
-                self.associatedShape.text = self.GetValue()
-                self.prevContent = self.GetValue()
-                self.associatedShape.view.on_text_change(self.associatedShape)
-                self.associatedShape.view.save_canvas_state()
+            if apply and self.prevContent != self.GetValue():
+                _ret,_res=self.associatedShape.is_text_accepted(self.GetValue())
+                if _ret:
+                    self.associatedShape.text = self.GetValue()
+                    self.prevContent = self.GetValue()
+                    self.associatedShape.view.on_text_change(self.associatedShape)
+                    self.associatedShape.view.save_view_state('TextChanged')
+                else:
+                    self.associatedShape.notify_fails(_res)
             self.associatedShape.update()
             self.associatedShape.view.Refresh()
         self.DestroyLater()
@@ -122,22 +127,22 @@ class EditTextShape(TextShape):
                 _bb = self.get_boundingbox()
                 _bb = _bb.Inflate(2)
                 _style = 0
-                if self._forceMultiline or '\n' in self.text:
+                if self._forceMultiline or '\n' in self.textContent:
                     _style = wx.TE_MULTILINE
-                if self.text == wx.EmptyString or (_style == wx.TE_MULTILINE and _bb.GetWidth() < 50):
+                if self.textContent == wx.EmptyString or (_style == wx.TE_MULTILINE and _bb.GetWidth() < 50):
                     _bb.SetWidth(50)
                 self.currentState = self.style
                 self.remove_style(EnumShapeStyleFlags.RESIZE)
-                self.textControl = EditTextControl(parent=self.view, content=self.text, style=_style, associated_shape=self,
+                self.textControl = EditTextControl(parent=self.view, content=self.textContent, style=_style, associated_shape=self,
                                                    pos=wx.Point(_pos.x * _scale - _dx, _pos.y * _scale - _dy),
                                                    size=wx.Size(_bb.GetWidth() * _scale, _bb.GetHeight() * _scale))
             elif self._editType == EnumEditType.DIALOG:
                 self.textControl = TextControlDialog(self.view, 'Edit Text')
-                self.textControl.textEdit.SetValue(self.text)
+                self.textControl.textEdit.SetValue(self.textContent)
                 if self.textControl.ShowModal() == wx.ID_OK:
                     self.text = self.textControl.textEdit.GetValue()
                     self.view.on_text_change(self)
-                    self.view.save_canvas_state()
+                    self.view.save_view_state('TextChanged')
                     self.update()
                     self.view.Refresh(False)
                 self.textControl.Destroy()

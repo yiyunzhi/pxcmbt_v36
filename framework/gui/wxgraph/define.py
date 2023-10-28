@@ -26,6 +26,10 @@ IDENTITY_ALL = 'ALL'
 BASE_SHAPE_DOCK_POINT = -3
 
 
+class EnumInteractionFailsReason:
+    TEXT_NOT_ACCEPTED = 'ATTR:TEXT_NOT_ACCEPTED'
+
+
 class EnumHandleType:
     LEFT_TOP = 0
     TOP = 1

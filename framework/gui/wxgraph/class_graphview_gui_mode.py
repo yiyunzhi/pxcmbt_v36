@@ -747,7 +747,10 @@ class BaseGUIMode:
                 if isinstance(shp, LineShape) and not shp.isStandalone:
                     shp.draw(dc, False)
 
-    def start_interactive_connection(self, line_shape_type: type, pos: wx.Point, connection_point: 'ConnectionPointShape' = None,start_shape:WxShapeBase=None) -> int:
+    def start_interactive_connection(self, line_shape_type: type,
+                                     pos: wx.Point,
+                                     connection_point: 'ConnectionPointShape' = None,
+                                     start_shape:WxShapeBase=None,shape_options:dict={}) -> int:
         if self.graphView is None or self.graphView.scene is None:
             return EnumInteractionErrorCode.INVALID_INPUT
         _l_pos = self.graphView.dp2lp(pos)
@@ -761,7 +764,7 @@ class BaseGUIMode:
                 _shape_under = _shape_under.parentShape
             # start the connection's creation process if possible
             if _shape_under and _shape_under.uid is not None and _shape_under.is_connection_accepted(line_shape_type.identity):
-                _ls = line_shape_type()
+                _ls = line_shape_type(**shape_options)
                 _ret, _res = self.graphView.scene.add_shape(_ls, pos=_l_pos, save_state=False)
                 if not _ret:
                     return EnumInteractionErrorCode.NOT_CREATED

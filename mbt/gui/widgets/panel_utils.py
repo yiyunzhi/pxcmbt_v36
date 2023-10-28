@@ -21,23 +21,26 @@
 import wx
 import wx.adv
 from framework.application.define import _
-from framework.application.base import ContentableMinxin
+from framework.application.base import ContentableMinxin, BasicProfile
 
 
 class ProfileEditPanel(wx.Panel, ContentableMinxin):
     def __init__(self, parent=None):
         wx.Panel.__init__(self, parent)
-        self.mainSizer = wx.GridBagSizer(5, 5)
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.formSizer = wx.GridBagSizer(5, 5)
         self.nameLabel = wx.StaticText(self, wx.ID_ANY, _('Name:'))
         self.nameEdit = wx.TextCtrl(self, wx.ID_ANY)
         self.descLabel = wx.StaticText(self, wx.ID_ANY, _('Description:'))
         self.descEdit = wx.TextCtrl(self, wx.ID_ANY, style=wx.TE_MULTILINE | wx.SUNKEN_BORDER)
         # layout
         self.SetSizer(self.mainSizer)
-        self.mainSizer.Add(self.nameLabel, (0, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
-        self.mainSizer.Add(self.nameEdit, (0, 1), (0, 1), wx.EXPAND)
-        self.mainSizer.Add(self.descLabel, (1, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
-        self.mainSizer.Add(self.descEdit, (1, 1), (5, 5), wx.EXPAND)
+        self.formSizer.Add(self.nameLabel, (0, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
+        self.formSizer.Add(self.nameEdit, (0, 1), (0, 1), wx.EXPAND)
+        self.formSizer.Add(self.descLabel, (1, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
+        self.formSizer.Add(self.descEdit, (1, 1), (5, 5), wx.EXPAND)
+        self.formSizer.AddGrowableCol(1)
+        self.mainSizer.Add(self.formSizer, 1, wx.EXPAND | wx.ALL, 5)
         self.Layout()
 
     def set_content(self, content: dict, validators: dict = None):
@@ -55,6 +58,51 @@ class ProfileEditPanel(wx.Panel, ContentableMinxin):
         if not ignore_validate:
             assert self.nameEdit.Validate() and self.descEdit.Validate()
         return {'name': self.nameEdit.GetValue(), 'description': self.descEdit.GetValue()}
+
+
+class BasicProfileEditPanel(wx.Panel, ContentableMinxin):
+    def __init__(self, parent=None):
+        wx.Panel.__init__(self, parent)
+        self.content = None
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.formSizer = wx.GridBagSizer(5, 5)
+        self.nameLabel = wx.StaticText(self, wx.ID_ANY, _('Name:'))
+        self.nameEdit = wx.TextCtrl(self, wx.ID_ANY)
+        self.descLabel = wx.StaticText(self, wx.ID_ANY, _('Description:'))
+        self.descEdit = wx.TextCtrl(self, wx.ID_ANY, style=wx.TE_MULTILINE | wx.SUNKEN_BORDER)
+        # layout
+        self.SetSizer(self.mainSizer)
+        self.formSizer.Add(self.nameLabel, (0, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
+        self.formSizer.Add(self.nameEdit, (0, 1), (0, 1), wx.EXPAND)
+        self.formSizer.Add(self.descLabel, (1, 0), (0, 1), wx.ALIGN_CENTER_VERTICAL)
+        self.formSizer.Add(self.descEdit, (1, 1), (5, 5), wx.EXPAND)
+        self.formSizer.AddGrowableCol(1)
+        self.mainSizer.Add(self.formSizer, 1, wx.EXPAND | wx.ALL, 5)
+        self.Layout()
+
+    def set_content(self, content: BasicProfile, validators: dict = None):
+        self.content = content
+        self.nameEdit.SetValue(content.name)
+        self.descEdit.SetValue(content.description)
+        if validators is not None:
+            _name_validator = validators.get('name')
+            _desc_validator = validators.get('description')
+            if _name_validator: self.nameEdit.SetValidator(_name_validator)
+            if _desc_validator: self.descEdit.SetValidator(_name_validator)
+
+    def get_content(self, ignore_validate=False) -> dict:
+        if not ignore_validate:
+            if not (self.nameEdit.Validate() and self.descEdit.Validate()):
+                return self.content
+        return {'name': self.nameEdit.GetValue(), 'description': self.descEdit.GetValue()}
+
+    def apply(self, **kwargs):
+        _ignore_validate = kwargs.get('ignore_validate', False)
+        if not _ignore_validate:
+            if not (self.nameEdit.Validate() and self.descEdit.Validate()):
+                return
+        self.content.name = self.nameEdit.GetValue()
+        self.content.description = self.descEdit.GetValue()
 
 
 class ChoiceEditPanel(wx.Panel):
@@ -111,11 +159,11 @@ class ChoiceEditPanel(wx.Panel):
                     _bmp = wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_MENU)
                     _bmps = [_bmp] * len(_choices)
                 for idx, x in enumerate(_choices):
-                    _cb=_bmps[idx]
-                    if isinstance(_cb,str):
-                        _bmp=wx.ArtProvider.GetBitmap(_cb, wx.ART_MENU)
-                    elif isinstance(_cb,wx.Bitmap):
-                        _bmp=_cb
+                    _cb = _bmps[idx]
+                    if isinstance(_cb, str):
+                        _bmp = wx.ArtProvider.GetBitmap(_cb, wx.ART_MENU)
+                    elif isinstance(_cb, wx.Bitmap):
+                        _bmp = _cb
                     else:
                         _bmp = wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_MENU)
                     self.cEdit.Append(x, _bmp)

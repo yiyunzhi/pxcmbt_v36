@@ -23,10 +23,11 @@ import wx
 
 
 class MappedImageList(wx.ImageList):
-    def __init__(self, width=16, height=16, mask=True, initial_count=1):
+    def __init__(self, width=16, height=16, mask=True, initial_count=1, default=wx.ART_NORMAL_FILE):
         wx.ImageList.__init__(self, width, height, mask, initial_count)
         self._idxMap = dict()
         self._nameMap = dict()
+        self.defaultArt = default
         self.initialize()
 
     @property

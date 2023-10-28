@@ -72,10 +72,27 @@ class TextShape(RectShape, BasicTextShape):
         RectShape.__init__(self, **kwargs)
         BasicTextShape.__init__(self, **kwargs)
         self.stylesheet = kwargs.get('stylesheet', TextShapeStylesheet())
+        self._txtFormatter = kwargs.get('txtFormatter')
+        self._textValidator = kwargs.get('txtValidator')
         self.update_rect_size()
 
     @property
+    def cloneableAttributes(self):
+        _d = RectShape.cloneableAttributes.fget(self)
+        return dict(_d, **{
+            'txtFormatter': self._txtFormatter,
+            'textValidator': self._textValidator,
+            'text': self._text,
+        })
+
+    @property
     def text(self):
+        if callable(self._txtFormatter):
+            return self._txtFormatter(self._text)
+        return self._text
+
+    @property
+    def textContent(self):
         return self._text
 
     @text.setter
@@ -86,6 +103,16 @@ class TextShape(RectShape, BasicTextShape):
     @property
     def font(self):
         return self.stylesheet.font
+
+    def is_text_accepted(self, txt: str) -> (bool, str):
+        if callable(self._textValidator):
+            _ret,_res=self._textValidator(txt)
+        else:
+            _ret = txt is not None
+            _res=''
+        if not _ret:
+            _res = '{}\n{}'.format(EnumInteractionFailsReason.TEXT_NOT_ACCEPTED,_res)
+        return _ret, _res
 
     def post_init(self):
         self.update_rect_size()
@@ -140,7 +167,7 @@ class TextShape(RectShape, BasicTextShape):
 
     def get_text_extent(self) -> wx.Size:
         _w, _h = -1, -1
-        _tl = self._text.split('\n\r')
+        _tl = self.text.split('\n\r')
         # if self.scene is not None and self.view is not None:
         if self.view is not None:
             _dc = wx.BufferedDC()
@@ -161,7 +188,7 @@ class TextShape(RectShape, BasicTextShape):
                     if _alh > _lh:
                         _lh = _alh
             else:
-                _w, _h, _lh = _dc.GetFullMultiLineTextExtent(self._text, self.stylesheet.font)
+                _w, _h, _lh = _dc.GetFullMultiLineTextExtent(self.text, self.stylesheet.font)
         else:
             _w = self.stylesheet.size.x
             _h = self.stylesheet.size.y

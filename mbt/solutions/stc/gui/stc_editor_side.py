@@ -27,6 +27,8 @@ from .class_image_resources import STCEditorSideImageList
 from .stc_editor_side_history import HistoryView
 from .stc_editor_side_preference import PreferenceView
 from .stc_editor_side_graph_tree import GraphTreeView
+from .stc_editor_side_code_slot import CodeSlotEditor
+from .stc_editor_side_iod_view import IODViewEditor
 
 
 class STCEditorSide(wx.Panel):
@@ -42,12 +44,16 @@ class STCEditorSide(wx.Panel):
         self.graphHistoryView = HistoryView(self.pageBook)
         self.graphPreferenceView = PreferenceView(self.pageBook)
         self.graphTreeView = GraphTreeView(self.pageBook)
+        self.codeSlotView = CodeSlotEditor(self.pageBook)
+        self.iodView = IODViewEditor(self.pageBook)
         _il = STCEditorSideImageList()
         self.pageBook.AssignImageList(_il)
         self.pageBook.AddPage(self.graphTreeView, 'Graph Node Tree View', select=True,
                               imageId=_il.name2index('structure'))
-        # self.pageBook.AddPage(self.graphNodeTreeView, 'IOD',
-        #                       imageId=_il.name2index('iod'))
+        self.pageBook.AddPage(self.iodView, 'IOD',
+                              imageId=_il.name2index('iod'))
+        self.pageBook.AddPage(self.codeSlotView, 'CodeSlot',
+                              imageId=_il.name2index('code'))
         self.pageBook.AddPage(self.graphPreferenceView, 'Preferences',
                               imageId=_il.name2index('setting'))
         self.pageBook.AddPage(self.graphHistoryView, 'Action History',
@@ -55,8 +61,10 @@ class STCEditorSide(wx.Panel):
         self.pageBook.AddPage(self.graphViewOutline, 'Diagram Outline View',
                               imageId=_il.name2index('minimap'))
         self.update_caption(self.pageBook.GetPageText(0))
+
         # bind event
         self.pageBook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_note_page_changed)
+
         # layout
         self.SetSizer(self.mainSizer)
         self.mainSizer.Add(self.captionBar, 0, wx.EXPAND)

@@ -21,11 +21,17 @@
 # ------------------------------------------------------------------------------
 import os
 from mbt.application.class_application_context import MBTApplicationContext
-from mbt.solutions.stc.gui.stc_mc import STCEditorManager, STCEditorContentContainer
+from mbt.solutions.stc.stc_mc import STCEditorManager, STCEditorContentContainer
 
 from mbt.solutions.stc.gui.stc_editor_view import STCEditorView
 
+
 THIS_PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+
+
+# _elm_factory.register(CompositeStateElement.identity, 'CompositeStateElement', CompositeStateElement)
 
 
 def setup(app_ctx: MBTApplicationContext):

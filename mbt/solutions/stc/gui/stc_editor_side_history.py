@@ -24,7 +24,7 @@ from framework.application.define import _
 from framework.gui.wxgraph import EVT_UNDO_STACK_CHANGED, WGUndoStackChangedEvent
 from framework.gui.base import FeedbackDialogs
 from framework.gui.thirdparty.object_list_view import FastObjectListView, ColumnDefn
-from .diagram.class_diagram_graph_view import STCGraphView
+from ..diagram.class_diagram_graph_view import STCGraphView
 
 
 class HistoryView(wx.Panel):

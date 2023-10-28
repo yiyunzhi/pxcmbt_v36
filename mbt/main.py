@@ -76,8 +76,23 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin, MBTApplication):
         wx.SystemOptions.SetOption("mac.window-plain-transition", 1)
         self.SetAppName(APP_NAME)
         try:
-            ctypes.windll.shcore.SetProcessDpiAwareness(1)  # Global dpi aware
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)  # Per-monitor dpi aware
+            """
+            PROCESS_DPI_UNAWARE
+            Value: 0
+            DPI unaware. This app does not scale for DPI changes and is always assumed to have a scale factor of 100% (96 DPI). 
+            It will be automatically scaled by the system on any other DPI setting.
+            PROCESS_SYSTEM_DPI_AWARE
+            Value: 1
+            System DPI aware. This app does not scale for DPI changes. 
+            It will query for the DPI once and use that value for the lifetime of the app. 
+            If the DPI changes, the app will not adjust to the new DPI value. It will be automatically scaled up or 
+            down by the system when the DPI changes from the system value.
+            PROCESS_PER_MONITOR_DPI_AWARE
+            Value: 2
+            Per monitor DPI aware. This app checks for the DPI when it is created and adjusts the scale 
+            factor whenever the DPI changes. These applications are not automatically scaled by the system.
+            """
+            ctypes.windll.shcore.SetProcessDpiAwareness(True)
         except AttributeError:
             wx.MessageBox(_('can not pass the current DPI setting.\nthere could be some display issues.'))
         except OSError:
@@ -90,6 +105,7 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin, MBTApplication):
         self.configLoc = os.path.join(wx.StandardPaths.Get().GetUserConfigDir(), APP_NAME)
         self.systemConfig = wx.FileConfig(APP_NAME, APP_VENDOR_NAME, os.path.join(self.configLoc, 'system.ini'))
         self._init_app_config()
+        # dark mode not working, don't know why
         # wx.SystemOptions.SetOption('msw.dark-mode', 2)
         _appearance_cfg = self.appConfigMgr.get_config('appearance')
         _i18n_cfg = self.appConfigMgr.get_config('i18n')

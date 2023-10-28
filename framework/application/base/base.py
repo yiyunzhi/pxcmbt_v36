@@ -329,6 +329,9 @@ class ContentableMinxin:
     def get_content(self, *args, **kwargs):
         raise NotImplementedError
 
+    def apply(self, **kwargs):
+        raise NotImplementedError
+
 
 class BasicProfile:
     def __init__(self, name: str, description: str):

@@ -65,11 +65,19 @@ class DirNameValidator(wx.Validator):
 class TextValidator(wx.Validator):
     ALPHA_ONLY = 1
     DIGIT_ONLY = 2
+    BOTH_NO_EMPTY = 3
 
     def __init__(self, flag=1, py_var=None):
         wx.Validator.__init__(self)
         self.flag = flag
         self.Bind(wx.EVT_CHAR, self.on_char)
+
+    def TransferToWindow(self):
+        return True
+
+    # ----------------------------------------------------------------------
+    def TransferFromWindow(self):
+        return True
 
     def Clone(self):
         return TextValidator(self.flag)
@@ -87,6 +95,13 @@ class TextValidator(wx.Validator):
             for x in _val:
                 if x not in string.digits:
                     return False
+        elif self.flag == self.BOTH_NO_EMPTY:
+            _ret = _val.strip() != ''
+            if not _ret:
+                print('---->is empty')
+                _tc.SetFocus()
+                _tc.Refresh()
+            return _ret
         return True
 
     def on_char(self, event):
@@ -103,7 +118,9 @@ class TextValidator(wx.Validator):
         if self.flag == self.DIGIT_ONLY and chr(_key) in string.digits:
             event.Skip()
             return
-
+        if self.flag == self.BOTH_NO_EMPTY and (chr(_key) in string.ascii_letters or chr(_key) in string.digits):
+            event.Skip()
+            return
         if not wx.Validator.IsSilent():
             wx.Bell()
         # Returning without calling even.Skip eats the event before it
@@ -117,6 +134,13 @@ class RangeValidator(wx.Validator):
         self.min = min_
         self.max = max_
 
+    def TransferToWindow(self):
+        return True
+
+    # ----------------------------------------------------------------------
+    def TransferFromWindow(self):
+        return True
+
     def Validate(self, parent):
         _tc = self.GetWindow()
         _val = _tc.GetValue()
@@ -127,6 +151,13 @@ class CallbackValidator(wx.Validator):
     def __init__(self, cb: callable):
         wx.Validator.__init__(self)
         self.cb = cb
+
+    def TransferToWindow(self):
+        return True
+
+    # ----------------------------------------------------------------------
+    def TransferFromWindow(self):
+        return True
 
     def Validate(self, parent):
         _tc = self.GetWindow()
