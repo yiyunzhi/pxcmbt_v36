@@ -51,32 +51,22 @@ _elm_factory.register(NoteElement.identity, 'NoteElement', NoteElement, uid=IDEN
 _elm_factory.register(NoteConnElement.identity, 'NoteConnElement', NoteConnElement, uid=IDENTITY_NOTE_CONN)
 _elm_factory.register(TransitionElement.identity, 'TransitionElement', TransitionElement, uid=IDENTITY_TRANSITION)
 
+# todo: compile->codeResolver()
+#       coderesolver accepts function,iods, could validate,
+# todo: url for implementation: gUidRepo:\\funcImpl?uuid=xxxx&arg1=gUidRepo:\\iod?uuid=xxxx
+# todo: action: function select->iod bind->validate|code write->validate.
+#  ->write to element's userData CodeEntry(code(signature if func else codeSource),codeUri(func: uid,domain...),iodIDs)
+# todo: condition: function[retValType==bool] select(url)->iod bind(build Uri queries)->validate|code write->validate
 
-class STCActionRepository:
-    def __init__(self,context):
-        self.functions = None
-        self.context = context
-
-    def get_codes(self):
-        pass
-
-    def implement_function(self,func_id,):
-        pass
+# todo: where come the .pi file from?.pi file generated after compile.
+# todo: prototype->bind IOD to behaviour,define IOD Domain, SettingPrototype Property->get Processor(from .pi created)->exe Processor
 
 
-class STCEditorContentContainer(MBTContentContainer):
-    def __init__(self, **kwargs):
-        MBTContentContainer.__init__(self, **kwargs)
-        self.actionRepository = None
-        self.iodRepository = None
-        # todo: Implicit variables: InFinalState<bool>,ReInit<bool>,Abort<bool>,AutoReInit<bool>,States<array>,Names<array>
 
-    def transform_data(self, *args):
-        return {}
+
 
 
 class STCEditorManager(MBTViewManager):
-    # todo: actionCodeResolver,GuardCodeResolver
 
     def __init__(self, **kwargs):
         MBTViewManager.__init__(self, **kwargs)

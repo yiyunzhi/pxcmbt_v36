@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : _test_iod_mgr_serialization.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : _test_iod_mgr_serialization.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,7 +19,15 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .define import *
-from .class_code_item import CodeItem, FunctionItem, VariableItem,CodeItemManager
-from .model import CodeTreeModel, BaseCodeItemTreeNode
-from .class_impl import ImplItem,ImplItemManager
+from framework.application.io.class_yaml_file_io import AppYamlFileIO
+from mbt.application.ipod import IODManager, IODItem, EnumIODItemScope
+
+mgr = IODManager()
+mgr.add_iod(IODItem(name='A', scope=EnumIODItemScope.DATA))
+mgr.add_iod(IODItem(name='B', scope=EnumIODItemScope.INPUT))
+mgr.add_iod(IODItem(name='BE', scope=EnumIODItemScope.OUTPUT))
+
+file = AppYamlFileIO(file_path='', filename='iod_mgr', extension='.yaml')
+file.write(mgr)
+_obj = file.read()
+print(_obj)

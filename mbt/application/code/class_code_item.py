@@ -21,8 +21,9 @@ import typing
 #
 # ------------------------------------------------------------------------------
 import anytree
+from anytree.exporter import DictExporter
 from framework.application.utils_helper import util_get_uuid_string
-from framework.application.base import UUIDContent, BasicProfile
+from framework.application.base import UUIDContent, BasicProfile, Serializable, ExAnyTreeDictImporter
 from mbt.application.define import EnumValueType, EnumDataType
 
 
@@ -104,7 +105,7 @@ class VariableItem(CodeItem):
         return EnumValueType.E_DEF[self.valueType]
 
     def is_valid(self, compile_context=locals()) -> bool:
-        _ret,_val=self.compile()
+        _ret, _val = self.compile()
         if not _ret:
             return _ret
         return type(_val) == EnumDataType.T_DEF[self.dataType]
@@ -220,3 +221,33 @@ class FunctionItem(CodeItem):
 
     def __str__(self):
         return self.__repr__()
+
+
+class CodeItemManager(Serializable):
+    serializeTag = '!CodeItemManager'
+
+    def __init__(self, **construction_data):
+        if construction_data:
+            self.ciRoot = ExAnyTreeDictImporter(CodeItem, {FunctionItem.__name__: FunctionItem,
+                                                           VariableItem.__name__: VariableItem}).import_(construction_data)
+        else:
+            self.ciRoot = CodeItem(name='__root__')
+
+    @property
+    def serializer(self):
+        return DictExporter(attriter=self._attr_normalizer).export(self.ciRoot)
+
+    def _attr_normalizer(self, attrs):
+        _allowed = list()
+        for k, v in attrs:
+            if k == 'profile':
+                _allowed.append(('name', v.name))
+                _allowed.append(('description', v.description))
+            else:
+                _allowed.append((k, v))
+            if 'retValType' == k:
+                _allowed.append(('_klass_', FunctionItem.__name__))
+            elif 'dataType' == k:
+                _allowed.append(('_klass_', VariableItem.__name__))
+
+        return _allowed

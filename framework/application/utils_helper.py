@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-import ast, functools, json, decimal, gettext, pathlib
+import ast, functools, json, decimal, gettext, pathlib,time
 import datetime, inspect
 import wx
 import os, sys, platform, math, uuid, bitstring, glob, re
@@ -35,6 +35,12 @@ RGET_RSET_DELIMITER = "."
 # gettext.bindtextdomain('myapplication', '/path/to/my/language/directory')
 # gettext.textdomain('myapplication')
 _ = gettext.gettext
+
+
+def util_utc2local(utc: datetime)->datetime.datetime:
+    _epoch = time.mktime(utc.timetuple())
+    _offset = datetime.datetime.fromtimestamp(_epoch) - datetime.datetime.utcfromtimestamp(_epoch)
+    return utc + _offset
 
 
 def util_iterable(obj):

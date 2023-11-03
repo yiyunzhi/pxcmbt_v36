@@ -129,22 +129,22 @@
 # #reg = r'.*'
 # s = 'evtKK[x>=1]/setAbc()'
 # print(re.findall(reg, s),re.match(r'(.*)\<(.*)\>\/(.*)',s))
-import ast,types,inspect,typing
+import ast, types, inspect, typing
 
-#def y(): pass
-        #_code=self.stc.GetValue()
-        # y_code = types.CodeType(args,
-        #                         y.func_code.co_nlocals,
-        #                         y.func_code.co_stacksize,
-        #                         y.func_code.co_flags,
-        #                         y.func_code.co_code,
-        #                         y.func_code.co_consts,
-        #                         y.func_code.co_names,
-        #                         y.func_code.co_varnames,
-        #                         y.func_code.co_filename,
-        #                         name,
-        #                         y.func_code.co_firstlineno,
-        #                         y.func_code.co_lnotab)
+# def y(): pass
+# _code=self.stc.GetValue()
+# y_code = types.CodeType(args,
+#                         y.func_code.co_nlocals,
+#                         y.func_code.co_stacksize,
+#                         y.func_code.co_flags,
+#                         y.func_code.co_code,
+#                         y.func_code.co_consts,
+#                         y.func_code.co_names,
+#                         y.func_code.co_varnames,
+#                         y.func_code.co_filename,
+#                         name,
+#                         y.func_code.co_firstlineno,
+#                         y.func_code.co_lnotab)
 
 # def contains_explicit_return(source_code):
 #     return any(isinstance(node, ast.Return) for node in ast.walk(ast.parse(source_code)))
@@ -158,5 +158,6 @@ import ast,types,inspect,typing
 # print( _func(10,12),contains_explicit_return(_ss))
 # _sig=inspect.signature(_func)
 # print(_sig.parameters,_sig.return_annotation)
-_code=compile('b"15"', '<string>', 'eval')
-print(eval(_code),type(eval(_code)))
+# _code=compile('b"15"', '<string>', 'eval')
+# print(eval(_code),type(eval(_code)))
+

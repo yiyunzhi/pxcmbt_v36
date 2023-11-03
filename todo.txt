@@ -15,6 +15,7 @@
 # todo: node should expose a content named "export" for external reference.(.Version,...)??
 # todo: contextMenu of IODItem? for what?
 # todo: <-15>sideEditor label has no tooltip,
+# todo: <-15><nextVersion>extend anyTree import/export method for attriter,importer with classMap,
 
 # projectRoot: # cm: add workbench,
     - workbenchModel

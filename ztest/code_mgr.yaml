@@ -1,0 +1,55 @@
+!CodeItemManager
+uuid: cc07f591
+code: ''
+ordId: 0
+scope: CI
+signature: ''
+name: __root__
+description: description...
+children:
+- _klass_: FunctionItem
+  children:
+  - _klass_: VariableItem
+    code: '""'
+    dataType: 5
+    description: description...
+    name: VAR_AA
+    ordId: 0
+    scope: CI
+    signature: ''
+    uuid: 823979ce
+    value: ''
+    valueType: 0
+  - _klass_: VariableItem
+    code: '""'
+    dataType: 5
+    description: description...
+    name: VAR_AB
+    ordId: 0
+    scope: CI
+    signature: ''
+    uuid: 2e140971
+    value: ''
+    valueType: 0
+  - _klass_: VariableItem
+    code: '""'
+    dataType: 5
+    description: description...
+    name: VAR_AC
+    ordId: 0
+    scope: CI
+    signature: ''
+    uuid: 4356d0bf
+    value: ''
+    valueType: 0
+  code: '#-----here start coding. indented block required-----
+
+    pass'
+  description: description...
+  name: FUNC_AA
+  ordId: 0
+  retValDataType: 255
+  retValType: 0
+  scope: CI
+  signature: ''
+  uuid: f96e6ad0

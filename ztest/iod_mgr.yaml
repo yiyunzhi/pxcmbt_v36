@@ -1,0 +1,42 @@
+!IODManager
+uuid: 4ca915ab
+code: '""'
+ordId: 0
+scope: 2
+signature: ''
+name: __root__
+description: description...
+value: ''
+dataType: 5
+valueType: 0
+children:
+- code: '""'
+  dataType: 5
+  description: description...
+  name: A
+  ordId: 0
+  scope: 2
+  signature: ''
+  uuid: f6dd2ee9
+  value: ''
+  valueType: 0
+- code: '""'
+  dataType: 5
+  description: description...
+  name: B
+  ordId: 0
+  scope: 0
+  signature: ''
+  uuid: 5435f71d
+  value: ''
+  valueType: 0
+- code: '""'
+  dataType: 5
+  description: description...
+  name: BE
+  ordId: 0
+  scope: 1
+  signature: ''
+  uuid: 4d303b42
+  value: ''
+  valueType: 0
