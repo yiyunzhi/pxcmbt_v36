@@ -145,25 +145,32 @@ class Serializable(YAMLObject):
 
 
 class ChangeDetectable:
+    DUMPS_JSON = 'json'
+    DUMPS_PICKLE = 'pickle'
+
     def __init__(self):
         self._cmLastDumpBytes = b''
 
     @staticmethod
-    def inspect_dump_obj(obj: object, bytes_: bytes):
+    def inspect_dump_obj(obj: object, bytes_: bytes = b''):
         if isinstance(obj, dict):
+            _db = b''
             for k, v in obj.items():
                 if isinstance(v, ChangeDetectable):
-                    bytes_ += v.dump()
+                    _db += v.dump()
                 else:
-                    bytes_ += ChangeDetectable.inspect_dump_obj(v, bytes_)
+                    _db += ChangeDetectable.inspect_dump_obj(v)
+            bytes_ += _db
         elif isinstance(obj, (set, tuple, list)):
+            _db = b''
             for x in obj:
                 if isinstance(x, ChangeDetectable):
-                    bytes_ += x.dump()
+                    _db += x.dump()
                 else:
-                    bytes_ += ChangeDetectable.inspect_dump_obj(x, bytes_)
+                    _db += ChangeDetectable.inspect_dump_obj(x)
+            bytes_ += _db
         elif isinstance(obj, Serializable):
-            bytes_ += ChangeDetectable.inspect_dump_obj(obj.serializer, bytes_)
+            bytes_ += ChangeDetectable.inspect_dump_obj(obj.serializer)
         elif isinstance(obj, ChangeDetectable):
             bytes_ += obj.dump()
         else:

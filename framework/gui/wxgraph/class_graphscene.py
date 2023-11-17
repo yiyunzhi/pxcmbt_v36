@@ -258,7 +258,7 @@ class GraphScene:
             if not self.shape_has_children(x):
                 x.update()
 
-    def accept_shape(self, type_: str):
+    def accept_shape(self, type_: typing.Union[str, WxShapeBase]):
         """
         Add given shape type to an acceptance list. The acceptance list contains class
         names of the shapes which can be inserted into this instance of shapes canvas.
@@ -269,10 +269,12 @@ class GraphScene:
         Returns:
 
         """
+        if isinstance(type_, WxShapeBase):
+            type_ = type_.identity
         if type_ not in self._acceptedShapes:
             self._acceptedShapes.append(type_)
 
-    def is_shape_accepted(self, type_: str):
+    def is_shape_accepted(self, type_: typing.Union[str, WxShapeBase]):
         """
         Add given shape type to an acceptance list. The acceptance list contains class
         names of the shapes which can be inserted into this instance of shapes canvas.
@@ -283,6 +285,8 @@ class GraphScene:
         Returns:
 
         """
+        if isinstance(type_, WxShapeBase):
+            type_ = type_.identity
         return type_ in self._acceptedShapes or IDENTITY_ALL in self._acceptedShapes
 
     def is_top_shape_accepted(self, type_: typing.Union[str, WxShapeBase]):

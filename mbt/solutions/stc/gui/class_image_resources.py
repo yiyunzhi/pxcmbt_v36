@@ -32,6 +32,7 @@ class STCEditorSideImageList(MappedImageList):
     _artNameList = [('pi.stack', 'history'),
                     ('pi.tree-structure', 'structure'),
                     ('pi.database', 'iod'),
+                    ('pi.hourglass', 'event'),
                     ('pi.compass', 'minimap'),
                     ('pi.fingerprint', 'property'),
                     ('pi.gear', 'setting'),

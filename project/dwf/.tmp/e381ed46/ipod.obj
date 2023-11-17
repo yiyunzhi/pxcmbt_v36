@@ -1,0 +1,52 @@
+!StcIPODE
+iodMgr: !IODManager
+  uuid: 26d946b3
+  code: '""'
+  ordId: 0
+  scope: 2
+  signature: ''
+  name: __root__
+  description: description...
+  value: ''
+  dataType: 5
+  valueType: 0
+ciMgr: !CodeItemManager
+  uuid: 3775e9bc
+  code: ''
+  ordId: 0
+  scope: CI
+  signature: ''
+  name: __root__
+  description: description...
+  children:
+  - _klass_: FunctionItem
+    children:
+    - _klass_: VariableItem
+      code: '""'
+      dataType: 5
+      description: description...
+      name: NewParameter
+      ordId: 1
+      scope: CI
+      signature: ''
+      uuid: 4ed738aa
+      value: ''
+      valueType: 0
+    code: '#-----here start coding. indented block required-----
+
+      pass'
+    description: description...
+    name: NewFunction
+    ordId: 0
+    retValDataType: 255
+    retValType: 0
+    scope: CI
+    signature: CI::NewFunction#b2f7ae9e
+    uuid: b2f7ae9e
+evtMgr: !EventItemManager
+  uuid: c03d990f
+  name: __root__
+  description: NewEvent description...
+  scope: local
+  userData: null
+stc: null

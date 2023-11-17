@@ -35,7 +35,7 @@ from mbt.gui.widgets import BasicProfileEditPanel
 
 from mbt.application.ipod.class_iod import IODManager,IODItem,EnumIODItemScope
 from mbt.application.ipod.model_iod import IODsTreeModel,BaseIODItemTreeNode
-from mbt.gui.ipod import IODItemEditor
+from mbt.gui.ipode import IODItemEditor
 
 
 

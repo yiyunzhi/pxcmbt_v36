@@ -25,7 +25,6 @@ from .class_workbench import MBTProjectOrientedWorkbench
 
 class MBTWorkbenchProjectContentProvider(ContentProvider):
     VERSION = '1.0.0'
-
     def __init__(self, workbench: MBTProjectOrientedWorkbench, **kwargs):
         ContentProvider.__init__(self, **kwargs, authority=workbench.uid)
         self.overrideable = False

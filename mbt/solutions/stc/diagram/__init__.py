@@ -19,4 +19,4 @@
 #
 #
 # ------------------------------------------------------------------------------
-
+from .class_diagram_scene import STCDiagramGraphScene

@@ -43,11 +43,12 @@ from ..diagram.class_stc_diagram_gui_mode import STCDiagramGUIMode
 from ..diagram.class_diagram_scene import STCDiagramGraphScene
 from ..diagram.class_navigation import GRAPHVIEW_CTX_MENU_DEF, ELEMENT_CTX_MENU_DEF
 from ..diagram.define import *
+from ..application.class_ipode_impl import StcIPODE
 
 
 class STCDiagramView(wx.Panel):
 
-    def __init__(self, parent):
+    def __init__(self, parent, scene=None,view_setting=None):
         wx.Panel.__init__(self, parent, style=wx.WANTS_CHARS)
         self._shapeEventShape = None
         self._pendedElementCreate = None
@@ -55,24 +56,25 @@ class STCDiagramView(wx.Panel):
         self.tabSearchCtrl = wxpc.PopupDialog(self, NodeComboCtrlPanel(self))
         self.tabSearchCtrlVisibleState = False
         self.elementFactory = None
+        self.ipod: StcIPODE = None
         # self.tabSearchCtrl.SetWindowStyleFlag(self.tabSearchCtrl.WindowStyleFlag|wx.RESIZE_BORDER)
         self._infoTextCtrl = wx.StaticText(self, wx.ID_ANY, '')
 
         self._currentModeToolId = EnumSTCMenuId.DESIGN_MODE
         self.toolbar = self._init_toolbar()
         self._reset_tool_mode()
+        if scene is None:
+            self._scene = STCDiagramGraphScene()
+        else:
+            self._scene = scene
 
-        self._scene = STCDiagramGraphScene()
-        self._scene.accept_shape(IDENTITY_ALL)
-        self._scene.accept_top_shape(IDENTITY_ALL)
-
-        self.view = STCGraphView(self, scene=self._scene)
+        self.view = STCGraphView(self, scene=self._scene,setting=view_setting)
         self.view.guiMode = STCDiagramGUIMode(self.view)
-
-        self.view.add_style(EnumGraphViewStyleFlag.GRID_SHOW)
-        self.view.add_style(EnumGraphViewStyleFlag.GRID_USE)
-        self.view.add_style(EnumGraphViewStyleFlag.GRADIENT_BACKGROUND)
-        self.view.add_style(EnumGraphViewStyleFlag.PROCESS_MOUSEWHEEL)
+        if view_setting is None:
+            self.view.add_style(EnumGraphViewStyleFlag.GRID_SHOW)
+            self.view.add_style(EnumGraphViewStyleFlag.GRID_USE)
+            self.view.add_style(EnumGraphViewStyleFlag.GRADIENT_BACKGROUND)
+            self.view.add_style(EnumGraphViewStyleFlag.PROCESS_MOUSEWHEEL)
 
         self.view.initial_event_table()
 
@@ -101,6 +103,10 @@ class STCDiagramView(wx.Panel):
     @property
     def scene(self) -> GraphScene:
         return self._scene
+
+    @scene.setter
+    def scene(self, scene: GraphScene):
+        self.view.scene = scene
 
     @property
     def currentShapeEventAffectedElement(self):

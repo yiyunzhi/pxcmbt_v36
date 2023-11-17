@@ -3,7 +3,22 @@ children:
   extension: .obj
   name: meta
   permission: RW
-  reversion: 0
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: ipod
+  permission: RW
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: visual
+  permission: RW
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: whitebox
+  permission: RW
+  reversion: 1
 dirPath: .
 extension: ''
 name: e381ed46

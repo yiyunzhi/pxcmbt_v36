@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import wx
 
 # ------------------------------------------------------------------------------
 #                                                                            --
@@ -6,10 +7,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : _test_evt_editor.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : _test_evt_editor.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,6 +20,13 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .base import MBTViewManager, MBTContentContainer,MBTViewManagerException
-from .base import ChangeDetectableContentElement,MBTContentException
-from .class_white_box import IWhiteBox
+from mbt.gui.ipode.event_view import IPODEEventView,EventItemManager
+
+_evt_mgr=EventItemManager()
+
+app = wx.App()
+frame = wx.Frame(None)
+view = IPODEEventView(frame)
+view.set_content(_evt_mgr)
+frame.Show()
+app.MainLoop()

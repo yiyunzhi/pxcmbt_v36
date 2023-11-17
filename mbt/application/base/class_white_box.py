@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : class_white_box.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : class_white_box.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,4 +19,16 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .iod_item_editor import IODItemEditorException,IODItemEditor
+
+class IWhiteBox:
+    """
+    base class for test case generation.
+    the method get_access_routes generate all possible route for behaviours.
+    """
+    def __init__(self):
+        pass
+    def get_criterion(self):
+        "criterion: coverage----"
+        pass
+    def get_access_routes(self):
+        raise NotImplementedError

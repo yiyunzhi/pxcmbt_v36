@@ -59,7 +59,7 @@ class STCEditorView(wx.Panel, MBTUniView):
         self.rbSplitter = wx.SplitterWindow(self.splitter, wx.ID_ANY, style=wx.SP_THIN_SASH)
         self.rbSplitter.SetSplitMode(wx.SPLIT_VERTICAL)
 
-        self.diagramView = STCDiagramView(self.splitter)
+        self.diagramView = STCDiagramView(self.splitter,scene=kwargs.get('diagram_scene'),view_setting=kwargs.get('view_setting'))
         self.sideView = STCEditorSide(self.rbSplitter)
         self.pvp = _PropViewPlaceholder(self.rbSplitter)
 

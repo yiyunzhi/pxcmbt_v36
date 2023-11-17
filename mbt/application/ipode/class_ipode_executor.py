@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : class_ipod_executor.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : class_ipod_executor.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,6 +19,15 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .base import MBTViewManager, MBTContentContainer,MBTViewManagerException
-from .base import ChangeDetectableContentElement,MBTContentException
-from .class_white_box import IWhiteBox
+from .class_ipod import BaseIPOD
+
+
+class BaseIPODExecutor:
+    def __init__(self, ipod: BaseIPOD):
+        self.ipod = ipod
+
+    def execute_once(self):
+        pass
+
+    def execute(self):
+        pass

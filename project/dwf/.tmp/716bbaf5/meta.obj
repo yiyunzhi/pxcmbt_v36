@@ -3,7 +3,17 @@ children:
   extension: .obj
   name: meta
   permission: RW
-  reversion: 0
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: properties
+  permission: RW
+  reversion: 1
+- dirPath: ''
+  extension: .obj
+  name: m_bind
+  permission: RW
+  reversion: 1
 dirPath: .
 extension: ''
 name: 716bbaf5

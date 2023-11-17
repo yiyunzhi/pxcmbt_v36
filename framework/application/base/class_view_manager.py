@@ -154,6 +154,9 @@ class ViewManager(anytree.NodeMixin):
     def create_view(self, **kwargs) -> ZView:
         return self._view
 
+    def create_content_container(self, **kwargs):
+        return self._contentContainer
+
     @property
     def view(self) -> ZView:
         return self._view
@@ -178,6 +181,10 @@ class ViewManager(anytree.NodeMixin):
     @property
     def undoStack(self) -> wx.CommandProcessor:
         return self._undoStack
+
+    @property
+    def appInstance(self):
+        return wx.App.GetInstance()
 
     def set_view(self, view):
         self._view = view

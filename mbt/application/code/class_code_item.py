@@ -143,7 +143,7 @@ class FunctionItem(CodeItem):
         CodeItem.__init__(self, **kwargs)
         self.code = kwargs.get('code', '#-----here start coding. indented block required-----\npass')
         self.retValDataType = kwargs.get('retValDataType', EnumDataType.VOID)
-        self.retValType = kwargs.get('retValDataType', EnumValueType.VALUE)
+        self.retValType = kwargs.get('retValType', EnumValueType.VALUE)
         self.sort_children()
 
     @property
@@ -251,3 +251,39 @@ class CodeItemManager(Serializable):
                 _allowed.append(('_klass_', VariableItem.__name__))
 
         return _allowed
+    def group_by_scope(self) -> dict:
+        _d = dict()
+        for x in self.ciRoot.children:
+            if x.scope not in _d:
+                _d.update({x.scope: [x]})
+            else:
+                _d[x.scope].append(x)
+        return _d
+
+    def get_all(self) -> tuple:
+        return self.ciRoot.children
+
+    def get_by_scope(self, scope: int) -> tuple:
+        return anytree.findall(self.ciRoot, lambda x: x.scope == scope)
+
+    def get_by_uid(self, uid: str) -> CodeItem:
+        return anytree.find(self.ciRoot, lambda x: x.uuid == uid)
+
+    def is_exist(self, uid: str) -> bool:
+        return self.get_by_uid(uid) is not None
+
+    def add_code_item(self, ci: CodeItem):
+        _uid = ci.uuid
+        if not self.is_exist(_uid):
+            ci.parent = self.ciRoot
+
+    def remove_code_item(self, uid):
+        _ci = self.get_by_uid(uid)
+        if _ci is not None:
+            _ci.parent = None
+            del _ci
+
+    def update_code_item(self, ci: CodeItem):
+        _ci = self.get_by_uid(ci.uuid)
+        if _ci is not None:
+            _ci.update_from(ci)

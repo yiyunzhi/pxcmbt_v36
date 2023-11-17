@@ -31,7 +31,7 @@ from framework.application.base import Serializable, ChangeDetectable
 from framework.application.utils_helper import util_get_computer_name
 from mbt.application.define import EnumTEProtocol
 from mbt.application.project import ProjectContentContractor, ProjectContentProvider
-from mbt.application.base import MBTContentContainer
+from mbt.application.base import MBTContentContainer, ChangeDetectableContentElement
 
 
 class TestCaseSettingContentException(Exception): pass
@@ -127,32 +127,13 @@ class SettingOutlineModelBindingContent(Serializable, ChangeDetectable):
         }
 
 
-@dataclass
-class _ContentElement:
-    ready: bool = False
-    path: str = ''
-    name: str = ''
-    extension: str = '.obj'
-    data: ChangeDetectable = None
-
-    def mark_state(self):
-        if self.data is not None and self.ready:
-            self.data.mark_change_state()
-            self.inspect_change()
-
-    def inspect_change(self):
-        if self.data is None or not self.ready:
-            return False
-        return self.data.is_changed()
-
-
 class TestCaseSettingContentContainer(MBTContentContainer):
     def __init__(self, **kwargs):
         MBTContentContainer.__init__(self, **kwargs)
         self.projectContentContractor = ProjectContentContractor()
         self.compositeContent = dict()
-        self.compositeContent.update({'properties': _ContentElement(name='properties', data=SettingPropertiesContent()),
-                                      'm_bind': _ContentElement(name='m_bind', data=SettingOutlineModelBindingContent())})
+        self.compositeContent.update({'properties': ChangeDetectableContentElement(name='properties', data=SettingPropertiesContent()),
+                                      'm_bind': ChangeDetectableContentElement(name='m_bind', data=SettingOutlineModelBindingContent())})
 
     def prepare(self):
         # todo: check outline bind uid is exist.
@@ -184,7 +165,7 @@ class TestCaseSettingContentContainer(MBTContentContainer):
         # assigned content from external is not allowed. use ContentResolver instead.
         Warning('not used method called.')
 
-    def get(self, el_name: str) -> _ContentElement:
+    def get(self, el_name: str) -> ChangeDetectableContentElement:
         return self.compositeContent.get(el_name)
 
     def reset_to_default(self, which: str):
@@ -198,7 +179,7 @@ class TestCaseSettingContentContainer(MBTContentContainer):
         """
         if not self.has(which):
             return
-        _app = wx.App.GetInstance()
+        _app = self.manager.appInstance
         _el = self.compositeContent.get(which)
         if not _el.inspect_change():
             # if no changed no necessary to restore.
@@ -221,7 +202,7 @@ class TestCaseSettingContentContainer(MBTContentContainer):
         return any([c.inspect_change() for k, c in self.compositeContent.items()])
 
     def change_apply(self, el_name: str = None):
-        _app = wx.App.GetInstance()
+        _app = self.manager.appInstance
         _ret = True
         if el_name is None:
             for x, v in self.compositeContent.items():

@@ -14,6 +14,7 @@
 # todo: solution and addon could also register the contentProvider.
 # todo: node should expose a content named "export" for external reference.(.Version,...)??
 # todo: contextMenu of IODItem? for what?
+# todo: PYSMT Lib for verlidation of the satisfied ability for condition expression in stc!!!
 # todo: <-15>sideEditor label has no tooltip,
 # todo: <-15><nextVersion>extend anyTree import/export method for attriter,importer with classMap,
 

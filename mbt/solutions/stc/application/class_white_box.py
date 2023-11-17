@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : class_white_box.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : class_white_box.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,6 +19,19 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .base import MBTViewManager, MBTContentContainer,MBTViewManagerException
-from .base import ChangeDetectableContentElement,MBTContentException
-from .class_white_box import IWhiteBox
+from framework.application.base import ChangeDetectable, Serializable
+from mbt.application.base import IWhiteBox
+
+
+class STCWhitebox(IWhiteBox, Serializable, ChangeDetectable):
+    serializeTag = '!STCWhitebox'
+
+    def __init__(self):
+        IWhiteBox.__init__(self)
+        self.dealIPODEReversion = None
+
+    def get_criterion(self):
+        pass
+
+    def get_access_routes(self):
+        pass

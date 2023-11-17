@@ -25,7 +25,7 @@ from framework.application.base import ContentableMinxin
 from framework.application.validator import TextValidator
 
 from mbt.application.define import EnumDataType
-from mbt.application.ipod import EnumIODItemScope, IODItem
+from mbt.application.ipode import EnumIODItemScope, IODItem
 from mbt.gui.widgets import BasicProfileEditPanel
 
 

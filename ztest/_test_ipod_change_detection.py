@@ -6,10 +6,10 @@
 #                                                                            --
 # ------------------------------------------------------------------------------
 # Project       : 
-# Sourcefile(s) : __init__.py.py
+# Sourcefile(s) : _test_ipod_change_detection.py
 # ------------------------------------------------------------------------------
 #
-# File          : __init__.py.py
+# File          : _test_ipod_change_detection.py
 #
 # Author(s)     : Gaofeng Zhang
 #
@@ -19,6 +19,16 @@
 #
 #
 # ------------------------------------------------------------------------------
-from .base import MBTViewManager, MBTContentContainer,MBTViewManagerException
-from .base import ChangeDetectableContentElement,MBTContentException
-from .class_white_box import IWhiteBox
+import wx
+app=wx.App()
+from mbt.solutions.stc.application.class_iod_define import StcIPODE
+from mbt.application.code import FunctionItem
+
+c=StcIPODE()
+c.mark_change_state()
+c.is_changed()
+print(c._cmLastDumpBytes)
+_f=FunctionItem(name='KK')
+c.ciMgr.add_code_item(_f)
+c.is_changed()
+print(c._cmLastDumpBytes)

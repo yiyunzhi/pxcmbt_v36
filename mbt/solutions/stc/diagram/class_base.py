@@ -32,7 +32,7 @@ from framework.gui.wxgraph import (RoundRectShape,
                                    GridShapeStylesheet,
                                    CurveShape, GraphScene,
                                    LineShapeStylesheet,
-                                   EnumShapeStyleFlags, EnumHandleType, WxShapeBaseState, ShapeDataObject,EnumShapeHAlign,EnumShapeVAlign)
+                                   EnumShapeStyleFlags, EnumHandleType, WxShapeBaseState, ShapeDataObject, EnumShapeHAlign, EnumShapeVAlign)
 from .define import EnumLabelType
 
 
@@ -223,10 +223,12 @@ class EditableLabelElement(EditTextShape, Serializable):
 
     def create_handles(self) -> None:
         self.add_handle(EnumHandleType.LEFT_TOP)
+
     def handle_dragging(self, pos: wx.Point):
         super().handle_dragging(pos)
-        self.verticalAlign=EnumShapeVAlign.NONE
-        self.horizontalAlign=EnumShapeHAlign.NONE
+        self.verticalAlign = EnumShapeVAlign.NONE
+        self.horizontalAlign = EnumShapeHAlign.NONE
+
 
 class DiagramRoundRectElement(RoundRectShape, Serializable):
     serializeTag = '!DiagramRoundRectElement'

@@ -23,12 +23,12 @@ import wx
 from wx.lib.agw import aui, labelbook
 from framework.gui.wxgraph import WxGraphViewOutline
 from framework.gui.widgets import StaticCaptionBar
+from mbt.gui.ipode import IPODEEventView, IODView
 from .class_image_resources import STCEditorSideImageList
 from .stc_editor_side_history import HistoryView
 from .stc_editor_side_preference import PreferenceView
 from .stc_editor_side_graph_tree import GraphTreeView
 from .stc_editor_side_code_slot import CodeSlotEditor
-from .stc_editor_side_iod_view import IODViewEditor
 
 
 class STCEditorSide(wx.Panel):
@@ -45,13 +45,16 @@ class STCEditorSide(wx.Panel):
         self.graphPreferenceView = PreferenceView(self.pageBook)
         self.graphTreeView = GraphTreeView(self.pageBook)
         self.codeSlotView = CodeSlotEditor(self.pageBook)
-        self.iodView = IODViewEditor(self.pageBook)
+        self.iodView = IODView(self.pageBook)
+        self.evtView = IPODEEventView(self.pageBook)
         _il = STCEditorSideImageList()
         self.pageBook.AssignImageList(_il)
         self.pageBook.AddPage(self.graphTreeView, 'Graph Node Tree View', select=True,
                               imageId=_il.name2index('structure'))
         self.pageBook.AddPage(self.iodView, 'IOD',
                               imageId=_il.name2index('iod'))
+        self.pageBook.AddPage(self.evtView, 'Events',
+                              imageId=_il.name2index('event'))
         self.pageBook.AddPage(self.codeSlotView, 'CodeSlot',
                               imageId=_il.name2index('code'))
         self.pageBook.AddPage(self.graphPreferenceView, 'Preferences',
@@ -78,7 +81,7 @@ class STCEditorSide(wx.Panel):
         self.graphTreeView.set_graph_view(_graph_view)
 
     def update_caption(self, txt: str):
-        self.captionBar.set_caption_text(txt)
+        self.captionBar.set_caption_text('AsideEdit: ' + txt)
 
     def on_note_page_changed(self, evt: wx.CommandEvent):
         _selection = evt.GetSelection()

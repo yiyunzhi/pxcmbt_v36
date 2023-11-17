@@ -91,9 +91,11 @@ class ModelContentDeleteContract(ContentContract):
 
 
 class ModelContentProvider(MBTWorkbenchProjectContentProvider):
+    AUTHORITY = 'ModelWb'
 
     def __init__(self, workbench: MBTProjectOrientedWorkbench, **kwargs):
         MBTWorkbenchProjectContentProvider.__init__(self, workbench, **kwargs)
+        self.authority = self.AUTHORITY
         assert workbench.uid == WB_MODEL_UID, TypeError('Workbench UID mismatched.')
 
     def insert(self, contract: ModelContentInsertContract) -> bool:

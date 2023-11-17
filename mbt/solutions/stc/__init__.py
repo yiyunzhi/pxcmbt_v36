@@ -21,7 +21,7 @@
 # ------------------------------------------------------------------------------
 import os
 from mbt.application.class_application_context import MBTApplicationContext
-from mbt.solutions.stc.stc_mc import STCEditorManager, STCEditorContentContainer
+from mbt.solutions.stc.stc_mc import STCEditorManager
 
 from mbt.solutions.stc.gui.stc_editor_view import STCEditorView
 

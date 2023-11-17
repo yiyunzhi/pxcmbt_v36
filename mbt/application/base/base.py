@@ -21,9 +21,12 @@ import traceback
 #
 #
 # ------------------------------------------------------------------------------
-import wx
-from framework.application.base import ZViewContentContainer, ViewManager
+import wx, dataclasses
+from framework.application.base import ZViewContentContainer, ViewManager, ChangeDetectable
 from mbt.application.log.class_logger import get_logger
+
+
+class MBTViewManagerException(Exception): pass
 
 
 class MBTContentContainer(ZViewContentContainer):
@@ -44,6 +47,10 @@ class MBTViewManager(wx.EvtHandler, ViewManager):
     @property
     def contentContainer(self) -> MBTContentContainer:
         return self._contentContainer
+
+    @property
+    def appInstance(self) -> 'MBTApplication':
+        return wx.App.GetInstance()
 
     def get_prop_container(self):
         pass
@@ -68,3 +75,25 @@ class MBTViewManager(wx.EvtHandler, ViewManager):
     def print_traceback(self):
         if self.log.getEffectiveLevel() == logging.DEBUG:
             traceback.print_exc()
+
+
+class MBTContentException(Exception): pass
+
+
+@dataclasses.dataclass
+class ChangeDetectableContentElement:
+    ready: bool = False
+    path: str = ''
+    name: str = ''
+    extension: str = '.obj'
+    data: ChangeDetectable = None
+
+    def mark_state(self):
+        if self.data is not None and self.ready:
+            self.data.mark_change_state()
+            self.inspect_change()
+
+    def inspect_change(self):
+        if self.data is None or not self.ready:
+            return False
+        return self.data.is_changed()

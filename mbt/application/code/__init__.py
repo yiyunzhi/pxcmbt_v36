@@ -21,5 +21,5 @@
 # ------------------------------------------------------------------------------
 from .define import *
 from .class_code_item import CodeItem, FunctionItem, VariableItem,CodeItemManager
-from .model import CodeTreeModel, BaseCodeItemTreeNode
+from .model import CodeTreeModel, BaseFuncCodeItemTreeNode
 from .class_impl import ImplItem,ImplItemManager

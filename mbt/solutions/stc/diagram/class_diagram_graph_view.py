@@ -28,40 +28,8 @@ from framework.gui.wxgraph import (GraphView, WxShapeBase, GV_DAT_FORMAT_ID, Gra
 from .class_base import STCDiagramElementDataObject
 
 
-class STCGraphViewSetting(GraphViewSetting, Serializable):
-    serializeTag = '!STCGraphViewSetting'
-
-    def __init__(self, **kwargs):
-        GraphViewSetting.__init__(self, **kwargs)
-
-    @property
-    def serializer(self):
-        return {'enableGC': self.enableGC,
-                'backgroundColor': self.backgroundColor,
-                'commonHoverColor': self.commonHoverColor,
-                'gradientFrom': self.gradientFrom,
-                'gradientTo': self.gradientTo,
-                'pasteOffset': self.pasteOffset,
-                'gridSize': self.gridSize,
-                'gridLineMult': self.gridLineMult,
-                'gridColor': self.gridColor,
-                'gridStyle': self.gridStyle,
-                'shadowOffset': self.shadowOffset,
-                'shadowFillColor': self.shadowFillColor,
-                'shadowStyle': self.shadowStyle,
-                'scale': self.scale,
-                'minScale': self.minScale,
-                'maxScale': self.maxScale,
-                'style': self.style,
-                'printHAlign': self.printHAlign,
-                'printVAlign': self.printVAlign,
-                'printMode': self.printMode
-                }
-
-
 class STCGraphView(GraphView):
     def __init__(self, parent, scene, undo_stack=None, setting=None):
-        # todo: setting must be also deserialized.
         GraphView.__init__(self, parent, scene, undo_stack, setting)
         self.shapeDataObjectType = STCDiagramElementDataObject
 
@@ -70,5 +38,4 @@ class STCGraphView(GraphView):
         # todo: remove the not serializable element
 
     def on_shape_fails_notified(self, element: WxShapeBase, reason: str):
-        _ret=FeedbackDialogs.show_msg_dialog(_('Fails'), '{} fails since:\n{}'.format(element, reason))
-
+        _ret = FeedbackDialogs.show_msg_dialog(_('Fails'), '{} fails since:\n{}'.format(element, reason))

@@ -72,7 +72,7 @@ class ModelWorkbench(MBTProjectOrientedWorkbench):
                                                  item_class=ProjectNodeEditorTypeFactoryItem)
 
     def _do_find_this_child_by_uid(self, uid):
-        return Project.find(self.rootNode, lambda x: x.uuid == uid.uid)
+        return Project.find(self.rootNode, lambda x: x.uuid == uid)
 
     def _update_solution_node_icon(self):
         _slt_nodes = self.viewManager.find_all(self.rootNode, lambda x: x.stereotype == ProjectTreeNode.NODE_ST_SOLUTION)
@@ -137,7 +137,7 @@ class ModelWorkbench(MBTProjectOrientedWorkbench):
 
     def open_project_node(self, uid, **kwargs):
         if self.viewManager is None:
-            raise ModelWorkbenchException('viewManager was not initialized.')
+            raise ModelWorkbenchException('workbench viewManager was not initialized.')
         if not self.is_my_descendant(uid):
             raise ModelWorkbenchException('not a valid node parameter for editing in this workbench.')
         _hash = kwargs.get('hash')

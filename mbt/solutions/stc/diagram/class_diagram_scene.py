@@ -36,7 +36,6 @@ class STCDiagramGraphScene(GraphScene):
             self.accept_shape(x)
             self.accept_top_shape(x)
 
-
     def deserialize(self, stream: str):
         _streamer = AppYamlStreamer()
         _lst = _streamer.stream_load(stream)
